@@ -6,6 +6,7 @@
 </head>
 <body>
     <h1>Chat App Homepage</h1>
+    <h3>Hey, {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}Guest{% endif %}</h3>
     <form action="/chat">
         <div>
             <label>Enter Username</label>
