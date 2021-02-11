@@ -7,16 +7,10 @@
 <body>
     <h1>Chat App Homepage</h1>
     <h3>Hey, {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}Guest{% endif %}</h3>
-    <form action="/chat">
-        <div>
-            <label>Enter Username</label>
-            <input type="text" name="username">
-        </div>
-        <div>
-            <label>Enter Room ID</label>
-            <input type="text" name="room_id">
-        </div>
-        <button type="submit">Submit</button>
-    </form>
+    <ul>
+        {% for room in rooms %}
+            <li><a href="/rooms/{{room._id.room_id}}">{{ room.name }}</a></li>
+        {% endfor %}
+    </ul>
 </body>
 </html>
