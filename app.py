@@ -5,8 +5,9 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_socketio import SocketIO, join_room
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from bson.json_util import dumps
+from pymongo.errors import DuplicateKeyError
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
-    is_room_admin, update_room, remove_room_members, save_message, get_messages
+    is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user
 
 app = Flask(__name__)
 app.secret_key = "my secret key"
@@ -22,7 +23,27 @@ def home():
     if current_user.is_authenticated:
         rooms = get_rooms_for_user(current_user.username)
         print('rooms', rooms)
+    else:
+        return render_template('login.html')
     return render_template('index.html', rooms=rooms)
+
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+
+    message = ''
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        try:
+            save_user(username, email, password)
+            return redirect(url_for('login'))
+        except DuplicateKeyError:
+            message = "User already exists!"
+    return render_template('signup.html', message=message)
 
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -91,30 +112,25 @@ def edit_room(room_id):
     room = get_room(room_id)
     if room and is_room_admin(room_id, current_user.username):
         existing_room_members = [member['_id']['username'] for member in get_room_members(room_id)]
-        room_members_str = ','.join(existing_room_members)
-
+        room_members_str = ",".join(existing_room_members)
         message = ''
-
         if request.method == 'POST':
             room_name = request.form.get('room_name')
             room['name'] = room_name
             update_room(room_id, room_name)
+
             new_members = [username.strip() for username in request.form.get('members').split(',')]
             members_to_add = list(set(new_members) - set(existing_room_members))
             members_to_remove = list(set(existing_room_members) - set(new_members))
-
-            if len(members_to_add) > 1:
+            if len(members_to_add):
                 add_room_members(room_id, room_name, members_to_add, current_user.username)
-
-            if len(members_to_remove) > 1:
+            if len(members_to_remove):
                 remove_room_members(room_id, members_to_remove)
-
-            message = 'changes saved successfully'
-            room_members_str = ','.join(new_members)
-
+            message = 'Room edited successfully'
+            room_members_str = ",".join(new_members)
         return render_template('edit_room.html', room=room, room_members_str=room_members_str, message=message)
     else:
-        return 'Room not found', 404
+        return "Room not found", 404
 
 
 @socketio.on('send_message')
