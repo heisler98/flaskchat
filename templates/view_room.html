@@ -5,22 +5,35 @@
     <title>Chatting</title>
 </head>
 <body>
-    <h1>Welcome to {{ room.name }}</h1>
-    <div id="messages"></div>
-    <form id="message_input_form">
-        <input type="text" id="message_input" placeholder="Enter message">
-        <button type="submit">Send</button>
-    </form>
+<h1>Welcome to {{ room.name }}</h1>
+<button type="button" id="load_older_messages_btn">load older messages</button>
+<div id="messages">
+    {% for message in messages %}
+        <div><b>{{ message.time_sent }}&nbsp;{{ message.sender }}&nbsp;</b>{{ message.text }}</div>
+    {% endfor %}
+</div>
 
-    <ul>
-        {% for member in room_members %}
-            {% if member.is_room_admin == true %}
-            <li>{{ member._id.username }} (admin)</li>
-            {% else %}
-            <li>{{ member._id.username }}</li>
-            {% endif %}
-        {% endfor %}
-    </ul>
+<form id="message_input_form">
+    <input type="text" id="message_input" placeholder="Enter message">
+    <button type="submit">Send</button>
+</form>
+
+<ul>
+    {% for member in room_members %}
+        {% if member.is_room_admin == true %}
+        <li>{{ member._id.username }} (admin)</li>
+        {% else %}
+        <li>{{ member._id.username }}</li>
+        {% endif %}
+    {% endfor %}
+</ul>
+
+<form action="/">
+    <input type="submit" value="leave" />
+</form>
+<form action="/rooms/{{room._id}}/edit">
+    <input type="submit" value="edit" />
+</form>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.0/socket.io.js"></script>
 <script>
@@ -49,6 +62,29 @@
         }
     });
 
+    let page = 0;
+
+    document.getElementById("load_older_messages_btn").onclick = (e) => {
+        page += 1;
+        fetch("/rooms/{{ room._id }}/messages?page=" + page, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => {
+            response.json().then(messages => {
+                messages.reverse().forEach(message => prepend_message(message.text, message.sender, message.time_sent));
+            })
+        })
+    };
+
+    function prepend_message(message, username, time_sent) {
+        const newNode = document.createElement('div');
+        newNode.innerHTML = `<b>${username}&nbsp;${time_sent}:&nbsp;</b> ${message}`;
+        const messages_div = document.getElementById('messages');
+        messages_div.insertBefore(newNode, messages_div.firstChild);
+    }
+
     window.onbeforeunload = function () {
         socket.emit('leave_room', {
             username: '{{ username }}',
@@ -59,7 +95,7 @@
     socket.on('receive_message', function (data) {
         console.log(data);
         const newNode = document.createElement('div');
-        newNode.innerHTML = `<b>${data.username}:&nbsp;</b> ${data.message}`;
+        newNode.innerHTML = `<b>${data.username}:&nbsp;${ data.time_sent }&nbsp;</b> ${data.message}`;
         document.getElementById('messages').appendChild(newNode);
     })
 
@@ -67,6 +103,13 @@
         console.log(data);
         const newNode = document.createElement('div');
         newNode.innerHTML = `<b>${data.username}</b> has joined the room.`;
+        document.getElementById('messages').appendChild(newNode);
+    })
+
+    socket.on('leave_room_announcement', function (data) {
+        console.log(data);
+        const newNode = document.createElement('div');
+        newNode.innerHTML = `<b>${data.username}</b> has left the room.`;
         document.getElementById('messages').appendChild(newNode);
     })
 </script>
