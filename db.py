@@ -15,6 +15,28 @@ users_collection = chat_db.get_collection('users')
 rooms_collection = chat_db.get_collection('rooms')
 room_members_collection = chat_db.get_collection('room_members')
 messages_collection = chat_db.get_collection('messages')
+direct_message_collection = chat_db.get_collection('dm_rooms')
+
+
+def get_dm(user_one, user_two):
+    room_title = ''
+    if len(user_one) > 0 and len(user_two) > 0:
+        if user_one[0] > user_two[0]:
+            room_title = user_two.username + user_one.username
+        else:
+            room_title = user_one.username + user_two.username
+    return direct_message_collection.find({'_id': room_title})
+
+
+def create_dm_pair(user_one, user_two):
+    room_title = ''
+    if len(user_one) > 0 and len(user_two) > 0:
+        if user_one[0] > user_two[0]:
+            room_title = user_two.username + user_one.username
+        else:
+            room_title = user_one.username + user_two.username
+    direct_message_collection.insert_one({'_id': room_title})
+    print('creating direct message pair between', user_one, user_two)
 
 
 def save_user(username, email, password):
@@ -22,15 +44,24 @@ def save_user(username, email, password):
     users_collection.insert_one({'_id': username, 'email': email, 'password': password_hash})
 
 
+def get_all_users():
+    users = users_collection.find({})
+    list_of_users = []
+    for user in users:
+        list_of_users.append(user)
+    return list_of_users
+
+
 def get_user(username):
     user_data = users_collection.find_one({'_id': username})
     return User(user_data['_id'], user_data['email'], user_data['password']) if user_data else None
 
 
-def save_room(room_name, created_by):
+def save_room(room_name, created_by, is_dm):
     room_id = rooms_collection.insert_one(
-        {'name': room_name, 'created_by': created_by, 'created_at': datetime.now()}).inserted_id
-    add_room_member(room_id, room_name, created_by, created_by, is_admin=True)
+        {'name': room_name, 'created_by': created_by, 'created_at': datetime.now(), 'is_dm': is_dm}).inserted_id
+    if not is_dm:
+        add_room_member(room_id, room_name, created_by, created_by, is_admin=True)
     return room_id
 
 
@@ -88,7 +119,7 @@ def save_message(room_id, text, sender):
     messages_collection.insert_one({'room_id': room_id, 'text': text, 'sender': sender, 'time_sent': current_time})
 
 
-MESSAGE_FETCH_LIMIT = 3
+MESSAGE_FETCH_LIMIT = 50
 
 
 def get_messages(room_id, page=0):

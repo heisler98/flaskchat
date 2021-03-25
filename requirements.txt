@@ -4,3 +4,4 @@ eventlet
 pymongo
 werkzeug
 flask-login
+Flask-JWT

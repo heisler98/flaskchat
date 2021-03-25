@@ -5,9 +5,10 @@ from flask import Flask, render_template, request, redirect, url_for
 from flask_socketio import SocketIO, join_room
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from bson.json_util import dumps
+from flask_jwt import JWT, jwt_required, current_identity
 from pymongo.errors import DuplicateKeyError
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
-    is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user
+    is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, get_dm
 
 app = Flask(__name__)
 app.secret_key = "my secret key"
@@ -15,6 +16,11 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 socketio = SocketIO(app)
+
+
+@app.route('/hello')
+def ios_test_endpoint():
+    return "Hello world!"
 
 
 @app.route('/')
@@ -71,6 +77,18 @@ def logout():
     return redirect('/')
 
 
+@app.route('/members')
+@login_required
+def members_list():
+    message = ''
+    list_of_users = get_all_users()
+    return render_template('members.html', users=list_of_users)
+
+
+def create_chat():
+    message = ''
+
+
 @app.route('/create-room', methods=['GET', 'POST'])
 @login_required
 def create_room():
@@ -79,7 +97,7 @@ def create_room():
         room_name = request.form.get('room_name')
         usernames = [username.strip() for username in request.form.get('members').split(',')]
         if len(room_name) and len(usernames):
-            room_id = save_room(room_name, current_user.username)
+            room_id = save_room(room_name, current_user.username, is_dm=False)
             if current_user.username in usernames:
                 usernames.remove(current_user.username)
             add_room_members(room_id, room_name, usernames, current_user.username)
@@ -92,16 +110,22 @@ def create_room():
 @app.route('/rooms/<room_id>/')
 @login_required
 def view_room(room_id):
-    print('!! view room', current_user.username, room_id)
     room = get_room(room_id)
+    try:
+        is_dm = room['is_dm']
+    except KeyError:
+        is_dm = False
     if room and is_room_member(room_id, current_user.username):
         room_members = get_room_members(room_id)
         messages = get_messages(room_id)
+        rooms = get_rooms_for_user(current_user.username)
         return render_template('view_room.html',
                                username=current_user.username,
-                               room=room,
+                               this_room=room,
                                messages=messages,
-                               room_members=room_members)
+                               room_members=room_members,
+                               other_rooms=rooms,
+                               is_dm=is_dm)
     else:
         return "Room not found", 404
 
@@ -135,6 +159,7 @@ def edit_room(room_id):
 
 @socketio.on('send_message')
 def handle_send_message_event(data):
+    print('handle_send_message_event')
     app.logger.info("{} has sent message to the room {}: {}".format(data['username'], data['room'], data['message']))
     data['time_sent'] = datetime.now().strftime('%H:%M')
     save_message(data['room'], data['message'], data['username'])
