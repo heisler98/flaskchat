@@ -2,10 +2,10 @@
 
 from datetime import datetime
 from bson import ObjectId
-from pymongo import MongoClient, DESCENDING, ASCENDING
+from pymongo import MongoClient, DESCENDING
 from werkzeug.security import generate_password_hash
 
-from user import User
+from model.user import User
 
 client = MongoClient(
     'mongodb+srv://user:SecurePassword@cluster0.ojjqo.mongodb.net/<dbname>?retryWrites=true&w=majority')

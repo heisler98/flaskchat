@@ -1,5 +1,5 @@
 # github.com/colingoodman
-
+import json
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for
 from flask_socketio import SocketIO, join_room
@@ -17,11 +17,109 @@ login_manager.init_app(app)
 login_manager.login_view = 'login'
 socketio = SocketIO(app)
 
+##### NEW CODE
 
-@app.route('/hello')
+
+class Response:
+    response_code = 0
+    context = ''
+    child = None
+
+    def __init__(self, response_code, context):
+        self.response_code = response_code
+        self.context = context
+        self.child = None
+
+    def __init__(self, response_code):
+        self.response_code = response_code
+        self.child = None
+
+    # creates and returns a json of this response object
+    def get_json(self):
+        response_data = {'response': self.response_code, 'context': self.context, 'content': self.child}
+        json_dump = json.dumps(response_data)
+        json_object = json.loads(json_dump)
+
+        return json_object
+
+
+@app.route('/login', methods=['POST'])
+def login(json_input):
+    if current_user.is_authenticated:  # prevents user from logging in again
+        return Response(401).get_json()
+
+    try:
+        input_data = json.load(json_input)
+
+        user_object = input_data['child']
+        username = user_object['username']
+        password = user_object['password']
+    except:
+        return Response(400).get_json()
+
+    if request.method == 'POST':
+        user = get_user(username)
+
+        if user and user.check_password(password):
+            login_user(user)
+            app.logger.info('%s logged in successfully', user.username)
+            return Response(200).get_json()
+        else:
+            app.logger.info('%s failed to log in', user.username)
+            return Response(200, 'wrong password').get_json()
+    else:
+        return Response(405).get_json()
+
+    return Response(500).get_json()
+
+
+@app.route('/logout')
+@login_required
+def logout(json_input):
+    try:
+        input_data = json.load(json_input)
+
+        user_object = input_data['child']
+        username = user_object['username']
+    except:
+        return Response(400).get_json()
+
+    user = get_user(username)
+
+    try:
+        logout_user()
+        app.logger.info('%s logged in successfully', user.username)
+        return Response(200, 'successful logout').get_json()
+    except:
+        return Response(500).get_json()
+
+
+@app.route('/room')
+def add_room():
+    return 0
+
+
+@app.route('/room/{roomId}')
+def single_room():
+    return 0
+
+
+@app.route('/user')
+def add_user():
+    return 0
+
+
+@app.route('/user/{userId}')
+def single_user():
+    return 0
+
+
+@app.route('/')
 def ios_test_endpoint():
     return "Hello world!"
 
+
+##### OLD CODE
 
 @app.route('/')
 def home():
@@ -50,31 +148,6 @@ def signup():
         except DuplicateKeyError:
             message = "User already exists!"
     return render_template('signup.html', message=message)
-
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if current_user.is_authenticated:  # prevents user from logging in again
-        return redirect('/')
-    message = ''
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password_input = request.form.get('password')
-        user = get_user(username)
-
-        if user and user.check_password(password_input):
-            login_user(user)
-            return redirect('/')
-        else:
-            message = 'Failed to login.'
-    return render_template('login.html', message=message)
-
-
-@app.route('/logout')
-@login_required
-def logout():
-    logout_user()
-    return redirect('/')
 
 
 @app.route('/members')
