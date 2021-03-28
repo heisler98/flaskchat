@@ -20,6 +20,8 @@ socketio = SocketIO(app)
 
 ##### NEW CODE
 
+connectedUsers = {};
+
 
 class Response:
     response_code = 0
