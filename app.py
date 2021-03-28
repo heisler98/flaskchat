@@ -55,7 +55,7 @@ def login(json_input):
         username = user_object['username']
         password = user_object['password']
     except:
-        return Response(400).get_json()
+        return Response(400, 'unable to parse request').get_json()
 
     if request.method == 'POST':
         user = get_user(username)

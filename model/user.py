@@ -1,13 +1,14 @@
 # github.com/colingoodman
 
 from werkzeug.security import check_password_hash
+import json
 
 
 class User:
     def __init__(self, username, email, password):
         self.username = username
         self.email = email
-        self.password = password
+        self.password = password  # hash of user password
 
     @staticmethod
     def is_authenticated(self):
@@ -26,3 +27,11 @@ class User:
 
     def check_password(self, password_input):
         return check_password_hash(self.password, password_input)
+
+    def get_json(self):
+        output = {'username': self.username, 'password': self.password, 'email': self.email}
+
+        json_dump = json.dumps(output)
+        json_object = json.loads(json_dump)
+
+        return json_object
