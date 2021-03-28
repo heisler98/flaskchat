@@ -1,5 +1,6 @@
 # github.com/colingoodman
 import json
+from model.message import Message, Reaction
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for
 from flask_socketio import SocketIO, join_room
@@ -232,11 +233,29 @@ def edit_room(room_id):
 
 @socketio.on('send_message')
 def handle_send_message_event(data):
-    print('handle_send_message_event')
-    app.logger.info("{} has sent message to the room {}: {}".format(data['username'], data['room'], data['message']))
-    data['time_sent'] = datetime.now().strftime('%H:%M')
-    save_message(data['room'], data['message'], data['username'])
-    socketio.emit('receive_message', data, room=data['room'])
+    timestamp = datetime.now().strftime('%H:%M')
+
+    # unpack the delivered json object
+    try:
+        input_data = json.load(data)
+
+        message_object = input_data['child']
+        username = message_object['username']
+        room = message_object['room']
+        content = message_object['message']
+    except:
+        socketio.emit(500)
+
+    # log that a message was sent
+    app.logger.info("{} to {} @ {}: {}".format(username, room, timestamp, content))
+
+    # create a new message object with a json accordingly
+    new_message = Message(username, room, content, timestamp)
+    new_message_json = new_message.get_json()
+
+    # put this new message in the database and send it out
+    save_message(new_message)
+    socketio.emit(new_message_json)
 
 
 @socketio.on('join_room')
