@@ -5,6 +5,10 @@ import json
 
 
 class User:
+    username = ''
+    email = ''
+    password = ''
+
     def __init__(self, username, email, password):
         self.username = username
         self.email = email

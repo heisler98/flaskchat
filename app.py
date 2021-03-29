@@ -12,6 +12,9 @@ from db import get_user, save_room, add_room_members, get_rooms_for_user, get_ro
     is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, get_dm
 import requests
 
+from model.room import Room
+from model.user import User
+
 app = Flask(__name__)
 app.secret_key = "my secret key"
 login_manager = LoginManager()
@@ -53,8 +56,6 @@ def login():
         return Response(401).get_json()
 
     try:
-        #input_data = json.load(json_input)
-
         user_object = json_input['child']
         username = user_object['username']
         password = user_object['password']
@@ -80,10 +81,9 @@ def login():
 @app.route('/logout')
 @login_required
 def logout(json_input):
+    json_input = request.get_json(force=True)
     try:
-        input_data = json.load(json_input)
-
-        user_object = input_data['child']
+        user_object = json_input['child']
         username = user_object['username']
     except:
         return Response(400).get_json()
@@ -98,9 +98,32 @@ def logout(json_input):
         return Response(500).get_json()
 
 
-@app.route('/room')
+@app.route('/room', methods=['POST'])
 def add_room():
-    return 0
+    json_input = request.get_json(force=True)
+
+    try:
+        token = json_input['token']
+        child = json_input['child']
+
+        room_name = child['name']
+        room_members = child['members']
+    except:
+        return Response(400, 'unable to parse request').get_json()
+
+    usernames = [username.strip() for username in request.form.get('members').split(',')]
+
+    if request.method == 'POST':
+        if len(room_name) and len(room_members):
+            room_id = save_room(room_name, current_user.username)
+
+            if current_user.username in usernames:
+                room_members.remove(current_user.username)
+            add_room_members(room_id, room_name, usernames, current_user.username)
+
+            return Response(200, 'New room created').get_json()
+
+    return Response(500, 'Error creating new room').get_json()
 
 
 @app.route('/room/{roomId}')

@@ -57,11 +57,9 @@ def get_user(username):
     return User(user_data['_id'], user_data['email'], user_data['password']) if user_data else None
 
 
-def save_room(room_name, created_by, is_dm):
+def save_room(room_name, created_by):
     room_id = rooms_collection.insert_one(
-        {'name': room_name, 'created_by': created_by, 'created_at': datetime.now(), 'is_dm': is_dm}).inserted_id
-    if not is_dm:
-        add_room_member(room_id, room_name, created_by, created_by, is_admin=True)
+        {'name': room_name, 'created_by': created_by, 'created_at': datetime.now()}).inserted_id
     return room_id
 
 
