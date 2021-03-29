@@ -10,6 +10,7 @@ from flask_jwt import JWT, jwt_required, current_identity
 from pymongo.errors import DuplicateKeyError
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
     is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, get_dm
+import requests
 
 app = Flask(__name__)
 app.secret_key = "my secret key"
@@ -22,7 +23,6 @@ socketio = SocketIO(app)
 
 connectedUsers = {};
 
-
 class Response:
     response_code = 0
     context = ''
@@ -33,9 +33,8 @@ class Response:
         self.context = context
         self.child = None
 
-    def __init__(self, response_code):
-        self.response_code = response_code
-        self.child = None
+    def set_child(self, child):
+        self.child = child
 
     # creates and returns a json of this response object
     def get_json(self):
@@ -47,14 +46,16 @@ class Response:
 
 
 @app.route('/login', methods=['POST'])
-def login(json_input):
+def login():
+    json_input = request.get_json(force=True)
+
     if current_user.is_authenticated:  # prevents user from logging in again
         return Response(401).get_json()
 
     try:
-        input_data = json.load(json_input)
+        #input_data = json.load(json_input)
 
-        user_object = input_data['child']
+        user_object = json_input['child']
         username = user_object['username']
         password = user_object['password']
     except:
@@ -109,22 +110,32 @@ def single_room():
 
 @app.route('/user')
 def add_user():
-    return 0
+    return "/user"
 
 
-@app.route('/user/{userId}')
-def single_user():
-    return 0
+@app.route('/user/<user>', methods=['GET'])
+def single_user(user):
+    # json_input = request.get_json(force=True) # there should not be an input here
+    requested_user = get_user(user)
+
+    output = Response(200, 'here is a user')
+    output.set_child(requested_user.get_json())
+    return output.get_json()
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def ios_test_endpoint():
-    return "Hello world!"
+    json_data = request.get_json(force=True)
+    secret = json_data["secret"]
+    child = json_data["child"]
+    username = child["username"]
+    password = child["password"]
+    return str(username + password)
 
 
 ##### OLD CODE
 
-@app.route('/')
+@app.route('/test')
 def home():
     rooms = []
     if current_user.is_authenticated:
