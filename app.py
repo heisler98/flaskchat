@@ -10,17 +10,32 @@ from flask_jwt import JWT, jwt_required, current_identity
 from pymongo.errors import DuplicateKeyError
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
     is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, get_dm
-import requests
+from werkzeug.security import safe_str_cmp
 
 from model.room import Room
 from model.user import User
 
 app = Flask(__name__)
-app.secret_key = "my secret key"
+app.secret_key = "1"
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 socketio = SocketIO(app)
+
+### JWT
+
+
+def authenticate(username, password):
+    username_table = {u.username: u for u in get_all_users()}
+    user = username_table.get(username, None)
+    if user and safe_str_cmp(user.password.encode('utf-8'), password.encode('utf-8')):
+        return user
+
+
+def identity(payload):
+    userid_table = {u.id: u for u in get_all_users()}
+    user_id = payload['identity']
+    return userid_table.get(user_id, None)
 
 ##### NEW CODE
 
@@ -53,7 +68,7 @@ def login():
     json_input = request.get_json(force=True)
 
     if current_user.is_authenticated:  # prevents user from logging in again
-        return Response(401).get_json()
+        return Response(401, 'Already logged in').get_json()
 
     try:
         user_object = json_input['child']
@@ -66,9 +81,9 @@ def login():
         user = get_user(username)
 
         if user and user.check_password(password):
-            login_user(user)
+            login_user(user, remember=True)
             app.logger.info('%s logged in successfully', user.username)
-            return Response(200).get_json()
+            return Response(200, str(current_user.username + ' has been logged in.')).get_json()
         else:
             app.logger.info('%s failed to log in', user.username)
             return Response(200, 'wrong password').get_json()
@@ -78,7 +93,13 @@ def login():
     return Response(500).get_json()
 
 
-@app.route('/logout')
+@app.route('/whoami', methods=['GET'])
+@login_required
+def who():
+    return Response(200, current_user.username).get_json()
+
+
+@app.route('/logout', methods=['POST'])
 @login_required
 def logout(json_input):
     json_input = request.get_json(force=True)
@@ -128,12 +149,34 @@ def add_room():
 
 @app.route('/room/{roomId}')
 def single_room():
-    return 0
+    json_input = request.get_json(force=True)
+
+    try:
+        token = json_input['token']
+    except:
+        pass
 
 
-@app.route('/user')
+@app.route('/user', methods=['POST'])
 def add_user():
-    return "/user"
+    json_input = request.get_json(force=True)
+
+    try:
+        token = json_input['token']
+        child = json_input['child']
+
+        username = child['username']
+        password = child['password']
+        email = child['email']
+    except Exception as err:
+        return Response(400, str(err)).get_json()
+
+    try:
+        save_user(username, email, password)
+    except DuplicateKeyError as err:
+        return Response(400, str(err)).get_json()
+
+    return Response(200, 'created a user').get_json()
 
 
 @app.route('/user/<user>', methods=['GET'])
@@ -323,8 +366,11 @@ def handle_leave_room_event(data):
 
 
 @login_manager.user_loader
-def load_user(username):
-    return get_user(username)
+def load_user(user_id):
+    try:
+        return User.query.get(user_id)
+    except:
+        return None
 
 
 if __name__ == '__main__':

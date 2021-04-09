@@ -3,6 +3,7 @@
 from datetime import datetime
 from bson import ObjectId
 from pymongo import MongoClient, DESCENDING
+from pymongo.errors import DuplicateKeyError
 from werkzeug.security import generate_password_hash
 
 from model.user import User
@@ -41,7 +42,22 @@ def create_dm_pair(user_one, user_two):
 
 def save_user(username, email, password):
     password_hash = generate_password_hash(password)
-    users_collection.insert_one({'_id': username, 'email': email, 'password': password_hash})
+    current_user = users_collection.values.count({"username": username})
+    user_data = users_collection.find_one({'username': username})
+
+    print(type(user_data))
+    print(user_data)
+
+    if user_data:
+        raise DuplicateKeyError('User already exists.')
+
+    identifier = hash(username)
+    users_collection.insert_one({'_id': identifier,
+                                 'name_first': '',
+                                 'name_last': '',
+                                 'username': username,
+                                 'email': email,
+                                 'password': password_hash})
 
 
 def get_all_users():
@@ -53,8 +69,8 @@ def get_all_users():
 
 
 def get_user(username):
-    user_data = users_collection.find_one({'_id': username})
-    return User(user_data['_id'], user_data['email'], user_data['password']) if user_data else None
+    user_data = users_collection.find_one({'username': username})
+    return User(user_data['username'], user_data['email'], user_data['password']) if user_data else None
 
 
 def save_room(room_name, created_by):
