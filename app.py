@@ -7,7 +7,8 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from bson.json_util import dumps
 from pymongo.errors import DuplicateKeyError
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
-    is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users
+    is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, find_dm, create_dm, \
+    get_room_id
 
 app = Flask(__name__)
 app.secret_key = "my secret key"
@@ -24,7 +25,8 @@ def home():
     if current_user.is_authenticated:
         rooms = get_rooms_for_user(current_user.username)
         users = get_all_users()
-        print('rooms', rooms)
+        print(rooms)
+        print(users)
     else:
         return render_template('login.html')
     return render_template('index.html', rooms=rooms, users=users)
@@ -84,7 +86,7 @@ def create_room():
             room_id = save_room(room_name, current_user.username)
             if current_user.username in usernames:
                 usernames.remove(current_user.username)
-            add_room_members(room_id, room_name, usernames, current_user.username)
+            add_room_members(room_id, room_name, usernames, current_user.username, is_dm=False)
             return redirect(url_for('view_room', room_id=room_id))
         else:
             message = 'Failed to create room'
@@ -96,16 +98,40 @@ def create_room():
 def view_room(room_id):
     print('!! view room', current_user.username, room_id)
     room = get_room(room_id)
+    is_dm = False
+
+    try:
+        is_dm = room['is_dm']
+    except:
+        is_dm = False
+
     if room and is_room_member(room_id, current_user.username):
         room_members = get_room_members(room_id)
         messages = get_messages(room_id)
         return render_template('view_room.html',
                                username=current_user.username,
+                               is_dm=is_dm,
                                room=room,
                                messages=messages,
                                room_members=room_members)
+    elif room and not is_room_member(room_id, current_user.username):
+        return "Not authorized", 400
     else:
         return "Room not found", 404
+
+
+@app.route('/view_dm/<other_user>')
+@login_required
+def view_dm(other_user):
+    user_one = current_user
+    user_two = get_user(other_user)
+
+    target_room = find_dm(user_one, user_two)
+    if target_room:
+        return redirect(url_for('view_room', room_id=target_room))
+    else:
+        new_dm = create_dm(user_one, user_two)
+        return redirect(url_for('view_room', room_id=new_dm))
 
 
 @app.route('/rooms/<room_id>/edit', methods=['GET', 'POST'])
@@ -125,12 +151,14 @@ def edit_room(room_id):
             members_to_add = list(set(new_members) - set(existing_room_members))
             members_to_remove = list(set(existing_room_members) - set(new_members))
             if len(members_to_add):
-                add_room_members(room_id, room_name, members_to_add, current_user.username)
+                add_room_members(room_id, room_name, members_to_add, current_user.username, is_dm=False)
             if len(members_to_remove):
                 remove_room_members(room_id, members_to_remove)
             message = 'Room edited successfully'
             room_members_str = ",".join(new_members)
         return render_template('edit_room.html', room=room, room_members_str=room_members_str, message=message)
+    elif room and not is_room_member(room_id, current_user.username):
+        return "You are not authorized to edit this room.", 400
     else:
         return "Room not found", 404
 

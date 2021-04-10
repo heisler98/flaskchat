@@ -21,23 +21,61 @@ def save_user(username, email, password):
     password_hash = generate_password_hash(password)
     users_collection.insert_one({'_id': username, 'email': email, 'password': password_hash})
 
+    target_room = 'garbage'
+    target_room_id = get_room_id(target_room)
+    add_room_member(target_room_id, target_room, username, None, is_admin=False)
+
 
 def get_user(username):
     user_data = users_collection.find_one({'_id': username})
     return User(user_data['_id'], user_data['email'], user_data['password']) if user_data else None
 
 
-def save_room(room_name, created_by):
+def find_dm(user_one, user_two):
+    room_title = ''
+    if user_one and user_two:
+        if user_one.username[0] > user_two.username[0]:
+            room_title = user_two.username + user_one.username
+        else:
+            room_title = user_one.username + user_two.username
+
+    room = rooms_collection.find_one({'name': room_title})
+
+    if room:
+        return room['_id']
+    else:
+        return None
+
+
+def create_dm(user_one, user_two):
+    room_title = ''
+    if user_one and user_two:
+        if user_one.username[0] > user_two.username[0]:
+            room_title = user_two.username + user_one.username
+        else:
+            room_title = user_one.username + user_two.username
+
     room_id = rooms_collection.insert_one(
-        {'name': room_name, 'created_by': created_by, 'created_at': datetime.now()}).inserted_id
-    add_room_member(room_id, room_name, created_by, created_by, is_admin=True)
+        {'name': room_title, 'is_dm': True, 'created_by': None, 'created_at': datetime.now()}).inserted_id
+
+    add_room_member(room_id, room_title, user_one.username, None, is_dm=True, is_admin=False)
+    add_room_member(room_id, room_title, user_two.username, None, is_dm=True, is_admin=False)
+
     return room_id
 
 
-def add_room_member(room_id, room_name, username, added_by, is_admin=False):
+def save_room(room_name, created_by):
+    room_id = rooms_collection.insert_one(
+        {'name': room_name, 'is_dm': False, 'created_by': created_by, 'created_at': datetime.now()}).inserted_id
+    add_room_member(room_id, room_name, created_by, created_by, is_dm=False, is_admin=True)
+    return room_id
+
+
+def add_room_member(room_id, room_name, username, added_by, is_dm, is_admin=False):
     room_members_collection.insert_one({'_id': {'room_id': ObjectId(room_id), 'username': username},
                                         'name': room_name,
                                         'added_by': added_by,
+                                        'is_dm': is_dm,
                                         'added_at': datetime.now(),
                                         'is_room_admin': is_admin})
 
@@ -46,16 +84,33 @@ def get_all_users():
     return users_collection.find({})
 
 
-def add_room_members(room_id, room_name, usernames, added_by):
+def find_room_with_two():
+    return room_members_collection.find({})
+
+
+def add_room_members(room_id, room_name, usernames, added_by, is_dm):
     room_members_collection.insert_many([{'_id': {'room_id': ObjectId(room_id), 'username': username},
                                           'name': room_name,
+                                          'is_dm': is_dm,
                                           'added_by': added_by,
                                           'added_at': datetime.now(),
                                           'is_room_admin': False} for username in usernames])
 
 
+def get_room_id(room_name):
+    target = rooms_collection.find({'name': room_name})
+
+    if target:
+        return target['_id']
+    else:
+        return None
+
+
 def get_room(room_id):
-    return rooms_collection.find_one({'_id': ObjectId(room_id)})
+    try:
+        return rooms_collection.find_one({'_id': ObjectId(room_id)})
+    except Exception as e:
+        raise Exception(room_id, e)
 
 
 def update_room(room_id, room_name):

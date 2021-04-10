@@ -5,11 +5,21 @@
     <title>Chatting</title>
 </head>
 <body>
-<h1>{{ room.name }}</h1>
+<h1>
+    {% if is_dm == true %}
+    DM
+    {% else %}
+    {{room.name}}
+    {% endif %}
+</h1>
 <button type="button" id="load_older_messages_btn">load older messages</button>
 <div id="messages">
     {% for message in messages %}
-        <div><b>{{ message.time_sent }}&nbsp;{{ message.sender }}&nbsp;</b>{{ message.text }}</div>
+        <div class="avatar">
+             <img src="https://bit.ly/3a1pfN9" alt="alternatetext" style="width:25px;height:25px;">
+        </div>
+        <div class="message-body"><b>{{ message.time_sent }}&nbsp;{{ message.sender }}&nbsp;</b>
+            <br>{{ message.text }}</div>
     {% endfor %}
 </div>
 
