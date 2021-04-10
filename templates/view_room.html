@@ -15,16 +15,20 @@
 <button type="button" id="load_older_messages_btn">load older messages</button>
 <div id="messages">
     {% for message in messages %}
+    <div style="display:flex">
         <div class="avatar">
              <img src="https://bit.ly/3a1pfN9" alt="alternatetext" style="width:25px;height:25px;">
         </div>
-        <div class="message-body"><b>{{ message.time_sent }}&nbsp;{{ message.sender }}&nbsp;</b>
-            <br>{{ message.text }}</div>
+        <div class="message-body" style="flex-grow:1"><b>{{ message.time_sent }}&nbsp;{{ message.sender }}&nbsp;</b>
+            <br>{{ message.text }}
+        </div>
+    </div>
+
     {% endfor %}
 </div>
 
 <form id="message_input_form">
-    <input type="text" id="message_input" placeholder="Enter message">
+    <input type="text" id="message_input" placeholder="Enter message" autocomplete="off">
     <button type="submit">Send</button>
 </form>
 
