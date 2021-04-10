@@ -42,6 +42,10 @@ def add_room_member(room_id, room_name, username, added_by, is_admin=False):
                                         'is_room_admin': is_admin})
 
 
+def get_all_users():
+    return users_collection.find({})
+
+
 def add_room_members(room_id, room_name, usernames, added_by):
     room_members_collection.insert_many([{'_id': {'room_id': ObjectId(room_id), 'username': username},
                                           'name': room_name,
@@ -88,7 +92,7 @@ def save_message(room_id, text, sender):
     messages_collection.insert_one({'room_id': room_id, 'text': text, 'sender': sender, 'time_sent': current_time})
 
 
-MESSAGE_FETCH_LIMIT = 3
+MESSAGE_FETCH_LIMIT = 30
 
 
 def get_messages(room_id, page=0):

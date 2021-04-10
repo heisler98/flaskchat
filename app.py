@@ -7,7 +7,7 @@ from flask_login import LoginManager, login_user, login_required, logout_user, c
 from bson.json_util import dumps
 from pymongo.errors import DuplicateKeyError
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
-    is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user
+    is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users
 
 app = Flask(__name__)
 app.secret_key = "my secret key"
@@ -20,12 +20,14 @@ socketio = SocketIO(app)
 @app.route('/')
 def home():
     rooms = []
+    users = []
     if current_user.is_authenticated:
         rooms = get_rooms_for_user(current_user.username)
+        users = get_all_users()
         print('rooms', rooms)
     else:
         return render_template('login.html')
-    return render_template('index.html', rooms=rooms)
+    return render_template('index.html', rooms=rooms, users=users)
 
 
 @app.route('/signup', methods=['GET', 'POST'])

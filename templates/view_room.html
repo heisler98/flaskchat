@@ -5,7 +5,7 @@
     <title>Chatting</title>
 </head>
 <body>
-<h1>Welcome to {{ room.name }}</h1>
+<h1>{{ room.name }}</h1>
 <button type="button" id="load_older_messages_btn">load older messages</button>
 <div id="messages">
     {% for message in messages %}
