@@ -99,6 +99,11 @@ def view_room(room_id):
     app.logger.info('{} is viewing {}'.format(current_user.username, room_id))
     room = get_room(room_id)
     is_dm = False
+    rooms = []
+    users = []
+    rooms = get_rooms_for_user(current_user.username)
+    users = get_all_users()
+    is_admin = is_room_admin(room_id, current_user.username)
 
     try:
         is_dm = room['is_dm']
@@ -112,6 +117,9 @@ def view_room(room_id):
                                username=current_user.username,
                                is_dm=is_dm,
                                room=room,
+                               rooms=rooms,
+                               users=users,
+                               is_admin=is_admin,
                                messages=messages,
                                room_members=room_members)
     elif room and not is_room_member(room_id, current_user.username):
