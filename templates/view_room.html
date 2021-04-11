@@ -23,7 +23,7 @@
 </div>
 
 <div style="display: flex;">
-    <div id="rooms" style="padding: .5rem; border: black 3px double;">
+    <div id="rooms" style="padding: .5rem;">
         <p>Rooms</p>
         <ul>
             {% for room in rooms %}
@@ -42,7 +42,7 @@
         </ul>
     </div>
     <div style="flex-grow: 1;">
-        <div id="messages" style="overflow-y: scroll; width: 100%; padding: .5rem; max-height: 60vh; border: black 3px double;">
+        <div id="messages" style="overflow-y: scroll; width: 100%; padding: .5rem; max-height: 60vh; border: black 3px solid;">
             {% for message in messages %}
             <div style="display:flex; margin-bottom: .25rem;">
                 <div class="avatar" style="margin-right: .25rem;">
@@ -62,7 +62,7 @@
             <button type="submit">Send</button>
         </form>
     </div>
-    <div style="padding: .5rem; border: black 3px double; min-width: 100px;"">
+    <div style="padding: .5rem; min-width: 100px;">
         <ul>
             {% for member in room_members %}
                 {% if member.is_room_admin == true %}
