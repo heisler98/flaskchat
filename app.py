@@ -16,17 +16,16 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 socketio = SocketIO(app)
-
+# app.logger.info("{} has joined the room {}".format(data['username'], data['room']))
 
 @app.route('/')
 def home():
     rooms = []
     users = []
+    app.logger.info('Visitor from {}'.format(request.remote_addr))
     if current_user.is_authenticated:
         rooms = get_rooms_for_user(current_user.username)
         users = get_all_users()
-        print(rooms)
-        print(users)
     else:
         return render_template('login.html')
     return render_template('index.html', rooms=rooms, users=users)
@@ -96,7 +95,8 @@ def create_room():
 @app.route('/rooms/<room_id>/')
 @login_required
 def view_room(room_id):
-    print('!! view room', current_user.username, room_id)
+    # print('!! view room', current_user.username, room_id)
+    app.logger.info('{} is viewing {}'.format(current_user.username, room_id))
     room = get_room(room_id)
     is_dm = False
 
@@ -147,6 +147,8 @@ def edit_room(room_id):
             room['name'] = room_name
             update_room(room_id, room_name)
 
+            app.logger.info('{} edited room {} from {}'.format(current_user.username, room_name, request.remote_addr))
+
             new_members = [username.strip() for username in request.form.get('members').split(',')]
             members_to_add = list(set(new_members) - set(existing_room_members))
             members_to_remove = list(set(existing_room_members) - set(new_members))
@@ -157,7 +159,7 @@ def edit_room(room_id):
             message = 'Room edited successfully'
             room_members_str = ",".join(new_members)
         return render_template('edit_room.html', room=room, room_members_str=room_members_str, message=message)
-    elif room and not is_room_member(room_id, current_user.username):
+    elif room and not is_room_admin(room_id, current_user.username):
         return "You are not authorized to edit this room.", 400
     else:
         return "Room not found", 404
@@ -173,16 +175,16 @@ def handle_send_message_event(data):
 
 @socketio.on('join_room')
 def handle_join_room_event(data):
-    print('handle_join_room_event', data)
+    # print('handle_join_room_event', data)
     app.logger.info("{} has joined the room {}".format(data['username'], data['room']))
     join_room(data['room'])
-    socketio.emit('join_room_announcement', data)
+    # socketio.emit('join_room_announcement', data)
 
 
 @app.route('/rooms/<room_id>/messages/')
 @login_required
 def get_older_messages(room_id):
-    print('!! view room', current_user.username, room_id)
+    # print('!! view room', current_user.username, room_id)
     room = get_room(room_id)
     if room and is_room_member(room_id, current_user.username):
         page = int(request.args.get('page', 0))
@@ -194,7 +196,7 @@ def get_older_messages(room_id):
 
 @socketio.on('leave_room')
 def handle_leave_room_event(data):
-    print('handle_leave_room_event', data)
+    # print('handle_leave_room_event', data)
     app.logger.info("{} has left the room {}".format(data['username'], data['room']))
     socketio.emit('leave_room_announcement', data)
 
@@ -205,4 +207,4 @@ def load_user(username):
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, host='0.0.0.0', debug=True)
