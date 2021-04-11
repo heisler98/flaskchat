@@ -5,19 +5,24 @@
     <title>SquidChat Tech Demo</title>
 </head>
 <body>
-<h1>Sign Up</h1>
-<h3>{{ message }}</h3>
-<form method="post" action="/signup">
-    <label>Username:</label>
-    <input type="text" name="username">
-    <br>
-    <label>Email:</label>
-    <input type="email" name="email">
-    <br>
-    <label>Password:</label>
-    <input type="password" name="password">
-    <br>
-    <button type="submit">Submit</button>
-</form>
+    <div style="max-width: 300px; margin-top:5rem; margin-left: auto; margin-right: auto;">
+        <h1>Sign Up</h1>
+        <h3>{{ message }}</h3>
+        <div>
+            <form style="padding: 1rem; border: black 1px solid;" method="post" action="/signup">
+                <label style="margin-bottom: .5rem; display: block;">Username:
+                <input type="text" style="width: 100%" name="username">
+                </label>
+                <label style="margin-bottom: .5rem; display: block;">Email:
+                <input type="email"  style="width: 100%" name="email">
+                </label>
+                <label style="margin-bottom: .5rem; display: block;">Password:
+                <input type="password"  style="width: 100%" name="password">
+                </label>
+                <button type="submit">Submit</button>
+            </form>
+        </div>
+        <a style="float: right; margin-top: 1rem;" href="/login">Login</a>
+    </div>
 </body>
 </html>
