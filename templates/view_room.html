@@ -41,8 +41,8 @@
             {% endfor %}
         </ul>
     </div>
-    <div>
-        <div id="messages" style="overflow-y: scroll; padding: .5rem; max-height: 60vh; border: black 3px double;">
+    <div style="flex-grow: 1;">
+        <div id="messages" style="overflow-y: scroll; width: 100%; padding: .5rem; max-height: 60vh; border: black 3px double;">
             {% for message in messages %}
             <div style="display:flex; margin-bottom: .25rem;">
                 <div class="avatar" style="margin-right: .25rem;">
