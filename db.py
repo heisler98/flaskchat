@@ -15,6 +15,7 @@ users_collection = chat_db.get_collection('users')
 rooms_collection = chat_db.get_collection('rooms')
 room_members_collection = chat_db.get_collection('room_members')
 messages_collection = chat_db.get_collection('messages')
+images_collection = chat_db.get_collection('images')
 
 
 def save_user(username, email, password):
@@ -145,6 +146,19 @@ def is_room_admin(room_id, username):
 def save_message(room_id, text, sender):
     current_time = datetime.now()
     messages_collection.insert_one({'room_id': room_id, 'text': text, 'sender': sender, 'time_sent': current_time})
+
+
+def save_image(sender, room_id, path):
+    current_time = datetime.now()
+    images_collection.insert_one({'room_id': room_id, 'location': path, 'author': sender, 'time_sent': current_time})
+
+
+def locate_image(image_id):
+    return messages_collection.find({'_id': image_id})
+
+
+def get_images_from_user(username):
+    return messages_collection.find({'author': username})
 
 
 MESSAGE_FETCH_LIMIT = 30
