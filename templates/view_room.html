@@ -12,14 +12,24 @@
     {{room.name}}
     {% endif %}
 </h1>
-<button type="button" id="load_older_messages_btn">load older messages</button>
-<div id="messages">
+<div style="display: flex;">
+<button type="button" id="load_older_messages_btn">Load older messages</button>
+<form action="/">
+    <input type="submit" value="Leave" />
+</form>
+<form action="/rooms/{{room._id}}/edit">
+    <input type="submit" value="Edit" />
+</form>
+</div>
+
+<div id="messages" style="overflow-y: scroll; padding: .5rem; max-height: 70vh; border: black 3px double;">
     {% for message in messages %}
-    <div style="display:flex">
-        <div class="avatar">
-             <img src="https://bit.ly/3a1pfN9" alt="alternatetext" style="width:25px;height:25px;">
+    <div style="display:flex; margin-bottom: .25rem;">
+        <div class="avatar" style="margin-right: .25rem;">
+            <!-- <img src="https://bit.ly/3a1pfN9" alt="alternatetext" style="width:25px;height:25px;"> -->
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
-        <div class="message-body" style="flex-grow:1"><b>{{ message.time_sent }}&nbsp;{{ message.sender }}&nbsp;</b>
+        <div class="message-body" style="flex-grow:1"><strong>{{ message.sender }}</strong>&nbsp;<small>{{ message.time_sent }}</small>
             <br>{{ message.text }}
         </div>
     </div>
@@ -28,7 +38,7 @@
 </div>
 
 <form id="message_input_form">
-    <input type="text" id="message_input" placeholder="Enter message" autocomplete="off">
+    <textarea style="width: 100%; max-width: 100%; min-height: 50px;" id="message_input" placeholder="Enter message" autocomplete="off"></textarea>
     <button type="submit">Send</button>
 </form>
 
@@ -42,12 +52,6 @@
     {% endfor %}
 </ul>
 
-<form action="/">
-    <input type="submit" value="leave" />
-</form>
-<form action="/rooms/{{room._id}}/edit">
-    <input type="submit" value="edit" />
-</form>
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.0/socket.io.js"></script>
 <script>

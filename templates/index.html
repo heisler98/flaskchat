@@ -7,6 +7,11 @@
 <body>
     <h1>SquidChat Tech Demo</h1>
     <h3>Hey, {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}Guest{% endif %}</h3>
+    <form action="/logout">
+        <input type="submit" value="Log Out" />
+    </form>
+    <div style="border: black 1px solid; padding:.5rem;">
+    <p>Rooms</p>
     <ul>
         {% for room in rooms %}
             {% if room.is_dm != true %}
@@ -14,6 +19,8 @@
             {% endif %}
         {% endfor %}
     </ul>
+    </div>
+    <div style="border: black 1px solid; padding:.5rem;">
     <p>DMs</p>
     <ul>
         {% for user in users %}
@@ -22,5 +29,6 @@
             {% endif %}
         {% endfor %}
     </ul>
+    </div>
 </body>
 </html>
