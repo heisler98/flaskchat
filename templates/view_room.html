@@ -17,7 +17,7 @@
 <form action="/">
     <input type="submit" value="Leave" />
 </form>
-{% if is_room_admin == true %}
+{% if is_admin == true %}
 <form action="/rooms/{{room._id}}/edit">
     <input type="submit" value="Edit" />
 </form>
