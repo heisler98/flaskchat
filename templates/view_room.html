@@ -129,7 +129,17 @@
 
     function prepend_message(message, username, time_sent) {
         const newNode = document.createElement('div');
-        newNode.innerHTML = `<b>${username}&nbsp;${time_sent}:&nbsp;</b> ${message}`;
+        var nodeAttr = document.createAttribute('style');
+        nodeAttr.value = 'display:flex; margin-bottom: .25rem;';
+        newNode.setAttributeNode(nodeAttr);
+        newNode.innerHTML = `<div class="avatar" style="margin-right: .25rem;">
+                    <!-- <img src="https://bit.ly/3a1pfN9" alt="alternatetext" style="width:25px;height:25px;"> -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <div class="message-body" style="flex-grow:1"><strong>${username}</strong>&nbsp;<small>${time_sent}</small>
+                    <br>${message}
+                </div>`;
+
         const messages_div = document.getElementById('messages');
         messages_div.insertBefore(newNode, messages_div.firstChild);
     }
@@ -143,8 +153,19 @@
 
     socket.on('receive_message', function (data) {
         console.log(data);
+
         const newNode = document.createElement('div');
-        newNode.innerHTML = `<b>${data.username}:&nbsp;${ data.time_sent }&nbsp;</b> ${data.message}`;
+        var nodeAttr = document.createAttribute('style');
+        nodeAttr.value = 'display:flex; margin-bottom: .25rem;';
+        newNode.setAttributeNode(nodeAttr);
+        newNode.innerHTML = `<div class="avatar" style="margin-right: .25rem;">
+                    <!-- <img src="https://bit.ly/3a1pfN9" alt="alternatetext" style="width:25px;height:25px;"> -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <div class="message-body" style="flex-grow:1"><strong>${data.username}</strong>&nbsp;<small>${data.time_sent}</small>
+                    <br>${data.message}
+                </div>`;
+
         document.getElementById('messages').appendChild(newNode);
         var objDiv = document.getElementById("messages");
         objDiv.scrollTop = objDiv.scrollHeight;
@@ -152,16 +173,10 @@
 
     socket.on('join_room_announcement', function (data) {
         console.log(data);
-        const newNode = document.createElement('div');
-        newNode.innerHTML = `<b>${data.username}</b> has joined the room.`;
-        document.getElementById('messages').appendChild(newNode);
     })
 
     socket.on('leave_room_announcement', function (data) {
         console.log(data);
-        const newNode = document.createElement('div');
-        newNode.innerHTML = `<b>${data.username}</b> has left the room.`;
-        document.getElementById('messages').appendChild(newNode);
     })
 </script>
 </html>
