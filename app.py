@@ -8,7 +8,7 @@ from bson.json_util import dumps
 from pymongo.errors import DuplicateKeyError
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
     is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, find_dm, create_dm, \
-    get_room_id
+    get_room_id, update_user
 
 app = Flask(__name__)
 app.secret_key = "my secret key"
@@ -140,6 +140,20 @@ def view_dm(other_user):
     else:
         new_dm = create_dm(user_one, user_two)
         return redirect(url_for('view_room', room_id=new_dm))
+
+
+@app.route('/users/<user_id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_user(user_id):
+    user = get_user(user_id)
+    if user and user_id == current_user.username:
+        message = ''
+        if request.method == 'POST':
+            username = request.form.get('username')
+            email = request.form.get('email')
+            update_user(username, email)
+            message = 'User edited successfully'
+            return render_template('edit_user.html', user=user)
 
 
 @app.route('/rooms/<room_id>/edit', methods=['GET', 'POST'])

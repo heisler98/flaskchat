@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>SquidChat Tech Demo</title>
+</head>
+<body>
+<form method="post">
+    <h1>Editing {{user._id}}</h1>
+    <label>Username:</label>
+    <input type="text" name="username" value="{{user._id}}">
+    <br>
+    <label>Email:</label>
+    <input type="text" name="email" value="{{user.email}}">
+    <br>
+    <button type="submit">Submit</button>
+    <a href="/rooms/{{room._id}}">return</a>
+</form>
+</body>
+</html>

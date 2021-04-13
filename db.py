@@ -27,6 +27,11 @@ def save_user(username, email, password):
     add_room_member(target_room_id, target_room, username, None, is_admin=False)
 
 
+def update_user(username, email):
+    users_collection.update_one({'_id': username}, {'_id': username, 'email': email})
+    return username
+
+
 def get_user(username):
     user_data = users_collection.find_one({'_id': username})
     return User(user_data['_id'], user_data['email'], user_data['password']) if user_data else None
