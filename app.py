@@ -190,7 +190,7 @@ def edit_room(room_id):
 @socketio.on('send_message')
 def handle_send_message_event(data):
     app.logger.info("{} has sent message to the room {}: {}".format(data['username'], data['room'], data['message']))
-    data['time_sent'] = datetime.now().strftime('%H:%M')
+    data['time_sent'] = datetime.now().strftime('%b %m, %H:%M')
     save_message(data['room'], data['message'], data['username'])
     socketio.emit('receive_message', data, room=data['room'])
 
