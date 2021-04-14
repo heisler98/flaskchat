@@ -2,7 +2,7 @@
 
 import os
 from datetime import datetime
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, send_file
 from flask_socketio import SocketIO, join_room
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from bson.json_util import dumps
@@ -10,7 +10,7 @@ from pymongo.errors import DuplicateKeyError
 from werkzeug.utils import secure_filename
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
     is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, find_dm, create_dm, \
-    get_room_id, update_user, save_image
+    get_room_id, update_user, save_image, locate_image
 
 app = Flask(__name__)
 app.secret_key = "my secret key"
@@ -43,28 +43,15 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
-@app.route('/upload/<room_id>', methods=['GET', 'POST'])
-@login_required
+@app.route('/upload/<room_id>', methods=['POST'])
 def upload_file(room_id):
     if request.method == 'POST':
-        # check if the post request has the file part
-        if 'file' not in request.files:
-            # flash('No file part')
-            return redirect(request.url)
         file = request.files['file']
-        # if user does not select file, browser also
-        # submit an empty part without filename
-        if file.filename == '':
-            # flash('No selected file')
-            return redirect(request.url)
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            save_image(current_user.username, room_id, filename)
-            return redirect(url_for('view_room',
-                                    room_id=room_id,
-                                    filename=filename))
-    return None
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        save_image(current_user.username, room_id, filepath)
+    return view_room(room_id)
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -126,6 +113,16 @@ def create_room():
         else:
             message = 'Failed to create room'
     return render_template('create_room.html', message=message)
+
+
+@app.route('/uploads/<image_id>')
+def get_image(image_id):
+    target_image = locate_image(image_id)
+    app.logger.info("{} attempted to view file {}".format(current_user.username, image_id))
+    if target_image:
+        file_path = target_image['location']
+        return send_file(file_path)
+    return 'File not found', 404
 
 
 @app.route('/rooms/<room_id>/')
@@ -239,6 +236,15 @@ def handle_join_room_event(data):
     app.logger.info("{} has joined the room {}".format(data['username'], data['room']))
     join_room(data['room'])
     # socketio.emit('join_room_announcement', data)
+
+
+def emit_image(image_id):
+    image = locate_image(image_id)
+    image_file_path = image['location']
+    time = datetime.now().strftime("%b %d, %H:%M")
+
+    data = {'image_file_path': image_file_path, 'author': image['author'], 'time': time}
+    socketio.emit('receive_image', data)
 
 
 @app.route('/rooms/<room_id>/messages/')

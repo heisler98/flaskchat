@@ -68,10 +68,11 @@
             <input type="text" style="width: 100%; max-width: 100%;" id="message_input" placeholder="Enter message" autocomplete="off">
             <button type="submit">Send</button>
         </form>
-        <form method=post enctype=multipart/form-data id="file_input_form">
-            <input type=file name=file>
-            <input disabled type=submit value=Upload>
-        </form>
+        <!--
+        <form disabled="true" action="http://127.0.0.1:5000/upload/{{room._id}}" method="POST" enctype="multipart/form-data">
+            <input type = "file" name = "file" />
+            <input type = "submit"/>
+        </form>-->
     </div>
     <div style="padding: .5rem; min-width: 100px;">
         <ul>
@@ -118,10 +119,6 @@
             message_input.value = '';
             message_input.focus();
         }
-
-        document.getElementById('file_upload_form').onsubmit = function (e) {
-            e.preventDefault();
-        }
     });
 
     let page = 0;
@@ -164,7 +161,21 @@
         })
     }
 
-    socket.on('receive_message', function (data) {
+    socket.on('receive_image', function (data) {
+        console.log(data);
+        const newNode = document.createElement('div');
+        var nodeAttr = document.createAttribute('style');
+        nodeAttr.value = 'display:flex; margin-bottom: .25rem;';
+        newNode.innerHTML = `<div class="avatar" style="margin-right: .25rem;">
+                    <!-- <img src="https://bit.ly/3a1pfN9" alt="alternatetext" style="width:25px;height:25px;"> -->
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-user"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                </div>
+                <div class="message-body" style="flex-grow:1"><strong>${data.author}</strong>&nbsp;<small>${data.time}</small>
+                    <img src=${data.image_file_path} />
+                </div>`;
+    })
+
+    socket.on('receive_image', function (data) {
         console.log(data);
 
         const newNode = document.createElement('div');

@@ -159,11 +159,11 @@ def save_image(sender, room_id, path):
 
 
 def locate_image(image_id):
-    return messages_collection.find({'_id': image_id})
+    return images_collection.find_one({'_id': ObjectId(image_id)})
 
 
 def get_images_from_user(username):
-    return messages_collection.find({'author': username})
+    return images_collection.find({'author': username})
 
 
 MESSAGE_FETCH_LIMIT = 30
