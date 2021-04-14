@@ -1,14 +1,16 @@
 # github.com/colingoodman
 
+import os
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for
 from flask_socketio import SocketIO, join_room
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from bson.json_util import dumps
 from pymongo.errors import DuplicateKeyError
+from werkzeug.utils import secure_filename
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
     is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, find_dm, create_dm, \
-    get_room_id, update_user
+    get_room_id, update_user, save_image
 
 app = Flask(__name__)
 app.secret_key = "my secret key"
@@ -16,10 +18,15 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 socketio = SocketIO(app)
-# app.logger.info("{} has joined the room {}".format(data['username'], data['room']))
+
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 @app.route('/')
 def home():
+    today = datetime.now()
+    date_string = today.strftime("%A, %B %d, %Y")
     rooms = []
     users = []
     app.logger.info('Visitor from {}'.format(request.remote_addr))
@@ -28,7 +35,36 @@ def home():
         users = get_all_users()
     else:
         return render_template('login.html')
-    return render_template('index.html', rooms=rooms, users=users)
+    return render_template('index.html', rooms=rooms, users=users, time=date_string)
+
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+@app.route('/upload/<room_id>', methods=['GET', 'POST'])
+@login_required
+def upload_file(room_id):
+    if request.method == 'POST':
+        # check if the post request has the file part
+        if 'file' not in request.files:
+            # flash('No file part')
+            return redirect(request.url)
+        file = request.files['file']
+        # if user does not select file, browser also
+        # submit an empty part without filename
+        if file.filename == '':
+            # flash('No selected file')
+            return redirect(request.url)
+        if file and allowed_file(file.filename):
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            save_image(current_user.username, room_id, filename)
+            return redirect(url_for('view_room',
+                                    room_id=room_id,
+                                    filename=filename))
+    return None
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -154,6 +190,8 @@ def edit_user(user_id):
             update_user(username, email)
             message = 'User edited successfully'
             return render_template('edit_user.html', user=user)
+        return render_template('edit_user.html', user=user)
+    return 'Page not found', 400
 
 
 @app.route('/rooms/<room_id>/edit', methods=['GET', 'POST'])
@@ -190,7 +228,7 @@ def edit_room(room_id):
 @socketio.on('send_message')
 def handle_send_message_event(data):
     app.logger.info("{} has sent message to the room {}: {}".format(data['username'], data['room'], data['message']))
-    data['time_sent'] = datetime.now().strftime('%b %m, %H:%M')
+    data['time_sent'] = datetime.now().strftime('%b %d, %H:%M')
     save_message(data['room'], data['message'], data['username'])
     socketio.emit('receive_message', data, room=data['room'])
 

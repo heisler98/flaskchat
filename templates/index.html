@@ -7,10 +7,14 @@
 <body>
     <h1>SquidChat Tech Demo</h1>
     <h3>Hey, {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}Guest{% endif %}</h3>
+    <p>{{time}}</p>
     <form action="/logout">
         <input type="submit" value="Log Out" />
     </form>
-    <div style="border: black 1px solid; padding:.5rem;">
+    <form action="/users/{{current_user.username}}/edit">
+        <input disabled type="submit" value="Profile" />
+    </form>
+    <div style="padding:.5rem;">
     <p>Rooms</p>
     <ul>
         {% for room in rooms %}

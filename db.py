@@ -174,5 +174,5 @@ def get_messages(room_id, page=0):
     messages = list(
         messages_collection.find({'room_id': room_id}).sort('_id', DESCENDING).limit(MESSAGE_FETCH_LIMIT).skip(offset))
     for message in messages:
-        message['time_sent'] = message['time_sent'].strftime("%b %m, %H:%M")
+        message['time_sent'] = message['time_sent'].strftime("%b %d, %H:%M")
     return messages[::-1]
