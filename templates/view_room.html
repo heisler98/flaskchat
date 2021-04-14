@@ -53,7 +53,7 @@
             {% for message in messages %}
             <div style="display:flex; margin-bottom: .25rem;">
                 <div class="avatar" style="margin-right: .25rem;">
-                    <img src=http://127.0.0.1:5000/avatars/{{message.sender}} alt="Avatar for {{message.sender}}" width="40" height="40">
+                    <img src=http://colingoodman.net:5000/avatars/{{message.sender}} alt="Avatar for {{message.sender}}" width="40" height="40">
                 </div>
                 <div class="message-body" style="flex-grow:1"><strong>{{ message.sender }}</strong>&nbsp;<small>{{ message.time_sent }}</small>
                     <br>{{ message.text }}
@@ -142,7 +142,7 @@
         nodeAttr.value = 'display:flex; margin-bottom: .25rem;';
         newNode.setAttributeNode(nodeAttr);
         newNode.innerHTML = `<div class="avatar" style="margin-right: .25rem;">
-                    <img src=http://127.0.0.1:5000/avatars/${username} alt="Avatar for ${username}" width="40" height="40">
+                    <img src=http://colingoodman.net:5000/avatars/${username} alt="Avatar for ${username}" width="40" height="40">
                 </div>
                 <div class="message-body" style="flex-grow:1"><strong>${username}</strong>&nbsp;<small>${time_sent}</small>
                     <br>${message}
@@ -181,7 +181,7 @@
         nodeAttr.value = 'display:flex; margin-bottom: .25rem;';
         newNode.setAttributeNode(nodeAttr);
         newNode.innerHTML = `<div class="avatar" style="margin-right: .25rem;">
-                    <img src=http://127.0.0.1:5000/avatars/${username} alt="Avatar for ${username}" width="40" height="40">
+                    <img src=http://colingoodman.net:5000/avatars/${username} alt="Avatar for ${username}" width="40" height="40">
                 </div>
                 <div class="message-body" style="flex-grow:1"><strong>${data.username}</strong>&nbsp;<small>${data.time_sent}</small>
                     <br>${data.message}
