@@ -91,7 +91,8 @@
 </body>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.0/socket.io.js"></script>
 <script>
-    const socket = io.connect("http://127.0.0.1:5000");
+    var connection_string = "http://127.0.0.1:5000";
+    const socket = io.connect(connection_string);
 
     socket.on('connect', function () {
         socket.emit('join_room', {
@@ -142,7 +143,7 @@
         nodeAttr.value = 'display:flex; margin-bottom: .25rem;';
         newNode.setAttributeNode(nodeAttr);
         newNode.innerHTML = `<div class="avatar" style="margin-right: .25rem;">
-                    <img src=http://colingoodman.net:5000/avatars/${username} alt="Avatar for ${username}" width="40" height="40">
+                    <img src=${connection_string}/avatars/${username} alt="Avatar for ${username}" width="40" height="40">
                 </div>
                 <div class="message-body" style="flex-grow:1"><strong>${username}</strong>&nbsp;<small>${time_sent}</small>
                     <br>${message}
@@ -181,7 +182,7 @@
         nodeAttr.value = 'display:flex; margin-bottom: .25rem;';
         newNode.setAttributeNode(nodeAttr);
         newNode.innerHTML = `<div class="avatar" style="margin-right: .25rem;">
-                    <img src=http://colingoodman.net:5000/avatars/${username} alt="Avatar for ${username}" width="40" height="40">
+                    <img src=${connection_string}/avatars/${data.username} alt="Avatar for ${data.username}" width="40" height="40">
                 </div>
                 <div class="message-body" style="flex-grow:1"><strong>${data.username}</strong>&nbsp;<small>${data.time_sent}</small>
                     <br>${data.message}
