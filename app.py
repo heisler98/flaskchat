@@ -1,6 +1,7 @@
 # github.com/colingoodman
 
 import os
+import re
 from datetime import datetime
 from flask import Flask, render_template, request, redirect, url_for, send_file
 from flask_socketio import SocketIO, join_room
@@ -80,11 +81,16 @@ def signup():
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
-        try:
-            save_user(username, email, password)
-            return redirect(url_for('login'))
-        except DuplicateKeyError:
-            message = "User already exists!"
+
+        if re.match("^[A-Za-z_]*$", username):  # check if username is valid
+            try:
+                save_user(username, email, password)
+                return redirect(url_for('login'))
+            except DuplicateKeyError:
+                message = "User already exists!"
+        else:
+            message = 'Invalid username.'
+
     return render_template('signup.html', message=message)
 
 
