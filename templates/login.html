@@ -7,9 +7,8 @@
 <body>
     <div style="max-width: 300px; margin-top:5rem; margin-left: auto; margin-right: auto;">
         <h1>squid.chat</h1>
-        <h3>{{ message }}</h3>
         <div>
-            <form style="padding: 1rem; border: black 3px inset;" method="post" action="/login">
+            <form style="padding: 1rem; border: black 3px inset; background-color:rgb(255, 204, 255);" method="post" action="/login">
                 <label style="margin-bottom: .5rem; display: block;">username
                 <input type="text" style="width: 100%" name="username">
                 </label>
@@ -19,6 +18,7 @@
                 <button type="submit">Submit</button>
             </form>
         </div>
+        <p style="float: right; margin-top: 1rem;">{{ message }}</p>
         <!--<a style="float: right; margin-top: 1rem;" href="/signup">Sign Up</a>-->
     </div>
 </body>

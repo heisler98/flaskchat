@@ -9,8 +9,9 @@ from bson.json_util import dumps
 from pymongo.errors import DuplicateKeyError
 from werkzeug.utils import secure_filename
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
-    is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, find_dm, create_dm, \
-    get_room_id, update_user, save_image, locate_image
+    is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, find_dm, \
+    create_dm, \
+    get_room_id, update_user, save_image, locate_image, save_avatar
 
 app = Flask(__name__)
 app.secret_key = "my secret key"
@@ -54,6 +55,18 @@ def upload_file(room_id):
     return view_room(room_id)
 
 
+@app.route('/avatar/<user_id>', methods=['POST'])
+def upload_avatar(user_id):
+    if request.method == 'POST' and current_user.username == user_id:
+        app.logger.info('{} changed their avatar'.format(user_id))
+        file = request.files['file']
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        save_avatar(user_id, filepath)
+    return redirect('/users/{}'.format(user_id))
+
+
 @app.route('/signup', methods=['GET', 'POST'])
 def signup():
     if current_user.is_authenticated:
@@ -82,9 +95,24 @@ def login():
         password_input = request.form.get('password')
         user = get_user(username)
 
-        if user and user.check_password(password_input):
+        if not username:
+            message = 'Enter a username.'
+            return render_template('login.html', message=message)
+        if not password_input:
+            message = 'Enter a password.'
+            return render_template('login.html', message=message)
+
+        try:
+            valid_password = user.check_password(password_input)
+        except AttributeError:
+            message = 'Failed to login.'
+            return render_template('login.html', message=message)
+
+        if user and valid_password:
             login_user(user)
             return redirect('/')
+        elif user:
+            message = 'Incorrect password.'
         else:
             message = 'Failed to login.'
     return render_template('login.html', message=message)
@@ -115,7 +143,16 @@ def create_room():
     return render_template('create_room.html', message=message)
 
 
+@app.route('/avatars/<user_id>')
+@login_required
+def get_avatar(user_id):
+    user = get_user(user_id)
+    avatar_path = user.avatar
+    return send_file(avatar_path)
+
+
 @app.route('/uploads/<image_id>')
+@login_required
 def get_image(image_id):
     target_image = locate_image(image_id)
     app.logger.info("{} attempted to view file {}".format(current_user.username, image_id))
@@ -173,6 +210,15 @@ def view_dm(other_user):
     else:
         new_dm = create_dm(user_one, user_two)
         return redirect(url_for('view_room', room_id=new_dm))
+
+
+@app.route('/users/<user_id>', methods=['GET'])
+@login_required
+def view_user(user_id):
+    user = get_user(user_id)
+    avatar_path = user.avatar
+    print(avatar_path)
+    return render_template('profile.html', user=user, username=user_id)
 
 
 @app.route('/users/<user_id>/edit', methods=['GET', 'POST'])

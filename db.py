@@ -34,7 +34,11 @@ def update_user(username, email):
 
 def get_user(username):
     user_data = users_collection.find_one({'_id': username})
-    return User(user_data['_id'], user_data['email'], user_data['password']) if user_data else None
+    try:
+        some_path = user_data['avatar']
+    except:
+        some_path = 'uploads/squid.png'
+    return User(user_data['_id'], user_data['email'], user_data['password'], some_path) if user_data else None
 
 
 def find_dm(user_one, user_two):
@@ -153,13 +157,31 @@ def save_message(room_id, text, sender):
     messages_collection.insert_one({'room_id': room_id, 'text': text, 'sender': sender, 'time_sent': current_time})
 
 
+def save_avatar(user_id, path):
+    current_time = datetime.now()
+    current_avatar = images_collection.find_one({'avatar': True, 'author': user_id})
+    if current_avatar: # if user already has an avatar, update existing record
+        images_collection.replace_one({'avatar': True, 'author': user_id}, {'room_id': None, 'avatar': True,
+                                                                           'location': path, 'author': user_id,
+                                                                           'time_sent': current_time})
+    else:
+        images_collection.insert_one({'room_id': None, 'avatar': True, 'location': path, 'author': user_id,
+                                      'time_sent': current_time})
+    users_collection.update_one({'_id': user_id}, {"$set": {"avatar": path}}, True)
+
+
 def save_image(sender, room_id, path):
     current_time = datetime.now()
-    images_collection.insert_one({'room_id': room_id, 'location': path, 'author': sender, 'time_sent': current_time})
+    images_collection.insert_one({'room_id': room_id, 'avatar': False, 'location': path,
+                                  'author': sender, 'time_sent': current_time})
 
 
 def locate_image(image_id):
     return images_collection.find_one({'_id': ObjectId(image_id)})
+
+
+def get_avatar(user_id):
+    return images_collection.find_one({'avatar': True, 'author': user_id})
 
 
 def get_images_from_user(username):
