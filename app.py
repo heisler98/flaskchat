@@ -61,9 +61,12 @@ def upload_avatar(user_id):
         app.logger.info('{} changed their avatar'.format(user_id))
         file = request.files['file']
         filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
-        save_avatar(user_id, filepath)
+        if filename == '':
+            return redirect('/users/{}'.format(user_id))
+        if file and allowed_file(filename):
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            save_avatar(user_id, filepath)
     return redirect('/users/{}'.format(user_id))
 
 
