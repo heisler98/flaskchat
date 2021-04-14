@@ -81,8 +81,15 @@ def signup():
         username = request.form.get('username')
         email = request.form.get('email')
         password = request.form.get('password')
+        key = request.form.get('key')
 
-        if re.match("^[A-Za-z_]*$", username):  # check if username is valid
+        account_valid = True
+
+        if key != 'secret':
+            account_valid = False
+            message = 'Incorrect key.'
+
+        if re.match("^[A-Za-z_]*$", username) and account_valid:  # check if username is valid
             try:
                 save_user(username, email, password)
                 return redirect(url_for('login'))
@@ -239,10 +246,16 @@ def edit_user(user_id):
         if request.method == 'POST':
             username = request.form.get('username')
             email = request.form.get('email')
+
+            if username != '':
+                pass
+            if email != '':
+                pass
+
             update_user(username, email)
             message = 'User edited successfully'
-            return render_template('edit_user.html', user=user)
-        return render_template('edit_user.html', user=user)
+            return render_template('edit_user.html', user=user, message=message)
+        return render_template('edit_user.html', user=user, message=message)
     return 'Page not found', 400
 
 

@@ -77,9 +77,9 @@
         <ul>
             {% for member in room_members %}
                 {% if member.is_room_admin == true %}
-                <li>{{ member._id.username }} (admin)</li>
+                <li><a href="/users/{{member._id.username}}">{{ member._id.username }}</a>(admin)</li>
                 {% else %}
-                <li>{{ member._id.username }}</li>
+                <li><a href="/users/{{member._id.username}}">{{ member._id.username }}</a></li>
                 {% endif %}
             {% endfor %}
         </ul>

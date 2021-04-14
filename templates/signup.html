@@ -7,22 +7,25 @@
 <body>
     <div style="max-width: 300px; margin-top:5rem; margin-left: auto; margin-right: auto;">
         <h1>Sign Up</h1>
-        <h3>{{ message }}</h3>
         <div>
             <form style="padding: 1rem; border: black 3px double;" method="post" action="/signup">
-                <label style="margin-bottom: .5rem; display: block;">Username:
+                <label style="margin-bottom: .5rem;">username:
                 <input type="text" style="width: 100%" name="username">
                 </label>
-                <label style="margin-bottom: .5rem; display: block;">Email:
+                <label style="margin-bottom: .5rem;">email:
                 <input type="email"  style="width: 100%" name="email">
                 </label>
-                <label style="margin-bottom: .5rem; display: block;">Password:
+                <label style="margin-bottom: .5rem;">password:
                 <input type="password"  style="width: 100%" name="password">
+                </label>
+                <label style="margin-bottom: .5rem;">key:
+                <input type="password"  style="width: 100%" name="key">
                 </label>
                 <button type="submit">Submit</button>
             </form>
+            <p style="float: right; margin-top: 1rem;">{{ message }}</p>
         </div>
-        <a style="float: right; margin-top: 1rem;" href="/login">Login</a>
+        <!--<a style="float: right; margin-top: 1rem;" href="/login">Login</a>-->
     </div>
 </body>
 </html>
