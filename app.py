@@ -173,7 +173,10 @@ def get_avatar(user_id):
 def get_image(image_id):
     target_image = locate_image(image_id)
     app.logger.info("{} attempted to view file {}".format(current_user.username, image_id))
+
     if target_image:
+        image_room = target_image['room_id']
+
         file_path = target_image['location']
         if os.path.exists(file_path):
             return send_file(file_path)

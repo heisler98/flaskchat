@@ -56,11 +56,11 @@
                     <img src=http://colingoodman.net:5000/avatars/{{message.sender}} alt="Avatar for {{message.sender}}" width="40" height="40">
                 </div>
                 {% if message.is_image == true %}
-                <div class="message-body" style="flex-grow:1"><strong>{{ message.sender }}</strong>&nbsp;<small>{{ message.time_sent }}</small>
+                <div class="message-body" style="flex-grow:1; max-width:90%;"><strong>{{ message.sender }}</strong>&nbsp;<small>{{ message.time_sent }}</small>
                     <br> <img src=http://colingoodman.net:5000{{ message.text }}>
                 </div>
                 {% else %}
-                <div class="message-body" style="flex-grow:1"><strong>{{ message.sender }}</strong>&nbsp;<small>{{ message.time_sent }}</small>
+                <div class="message-body" style="fflex-grow:1; max-width:90%;"><strong>{{ message.sender }}</strong>&nbsp;<small>{{ message.time_sent }}</small>
                     <br>{{ message.text }}
                 </div>
                 {% endif %}

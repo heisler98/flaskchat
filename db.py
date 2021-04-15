@@ -108,7 +108,7 @@ def add_room_members(room_id, room_name, usernames, added_by, is_dm):
 
 
 def get_room_id(room_name):
-    target = rooms_collection.find({'name': room_name})
+    target = rooms_collection.find_one({'name': room_name})
 
     if target:
         return target['_id']
