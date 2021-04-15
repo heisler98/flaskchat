@@ -24,7 +24,7 @@ def save_user(username, email, password):
 
     target_room = 'garbage'
     target_room_id = get_room_id(target_room)
-    add_room_member(target_room_id, target_room, username, None, is_admin=False)
+    add_room_member(target_room_id, target_room, username, None, is_admin=False, is_dm=False)
 
 
 def update_user(username, email):
