@@ -175,14 +175,16 @@ def get_image(image_id):
     app.logger.info("{} attempted to view file {}".format(current_user.username, image_id))
     if target_image:
         file_path = target_image['location']
-        return send_file(file_path)
+        if os.path.exists(file_path):
+            return send_file(file_path)
+        else:
+            return 'File not found', 404
     return 'File not found', 404
 
 
 @app.route('/rooms/<room_id>/')
 @login_required
 def view_room(room_id):
-    # print('!! view room', current_user.username, room_id)
     app.logger.info('{} is viewing {}'.format(current_user.username, room_id))
     room = get_room(room_id)
     is_dm = False
@@ -232,9 +234,9 @@ def view_dm(other_user):
 @app.route('/users/<user_id>', methods=['GET'])
 @login_required
 def view_user(user_id):
+    app.logger.info('{} viewing profile of {}'.format(current_user.username, user_id))
     user = get_user(user_id)
     avatar_path = user.avatar
-    print(avatar_path)
     return render_template('profile.html', user=user, username=user_id)
 
 
