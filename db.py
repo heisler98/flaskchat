@@ -152,28 +152,29 @@ def is_room_admin(room_id, username):
         {'_id': {'room_id': ObjectId(room_id), 'username': username}, 'is_room_admin': True})
 
 
-def save_message(room_id, text, sender):
+def save_message(room_id, text, sender, is_image):
     current_time = datetime.now()
-    messages_collection.insert_one({'room_id': room_id, 'text': text, 'sender': sender, 'time_sent': current_time})
+    messages_collection.insert_one({'room_id': room_id, 'text': text, 'sender': sender, 'time_sent': current_time,
+                                    'is_image': is_image})
 
 
 def save_avatar(user_id, path):
     current_time = datetime.now()
     current_avatar = images_collection.find_one({'avatar': True, 'author': user_id})
-    if current_avatar: # if user already has an avatar, update existing record
+    if current_avatar:  # if user already has an avatar, update existing record
         images_collection.replace_one({'avatar': True, 'author': user_id}, {'room_id': None, 'avatar': True,
-                                                                           'location': path, 'author': user_id,
-                                                                           'time_sent': current_time})
+                                                                            'location': path, 'author': user_id,
+                                                                            'time_sent': current_time})
     else:
         images_collection.insert_one({'room_id': None, 'avatar': True, 'location': path, 'author': user_id,
                                       'time_sent': current_time})
     users_collection.update_one({'_id': user_id}, {"$set": {"avatar": path}}, True)
 
 
-def save_image(sender, room_id, path, is_image):
+def save_image(sender, room_id, path):
     current_time = datetime.now()
     image_id = images_collection.insert_one({'room_id': room_id, 'avatar': False, 'location': path,
-                                'is_image': is_image, 'author': sender, 'time_sent': current_time}).inserted_id
+                                             'author': sender, 'time_sent': current_time}).inserted_id
     return image_id
 
 

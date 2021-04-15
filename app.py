@@ -175,7 +175,7 @@ def get_image(image_id):
     app.logger.info("{} attempted to view file {}".format(current_user.username, image_id))
     if target_image:
         file_path = target_image['location']
-        return file_path
+        return send_file(file_path)
     return 'File not found', 404
 
 
@@ -317,7 +317,7 @@ def emit_image(image_id):
     app.logger.info('Emit message by {} at {}'.format(image['author'], image_file_path))
 
     # save this message/image to the database
-    save_message(image['room_id'], '<img src={} />'.format(image_file_path), image['author'], is_image=True)
+    save_message(image['room_id'], '/uploads/{}'.format(image_id), image['author'], is_image=True)
 
     # emit this message to open sockets
     data = {'image_file_path': image_file_path, 'author': image['author'], 'time': time}
