@@ -52,8 +52,9 @@ def upload_file(room_id):
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
-        save_image(current_user.username, room_id, filepath)
-    return view_room(room_id)
+        image_id = save_image(current_user.username, room_id, filepath)
+        emit_image(image_id)
+    return redirect('/rooms/{}'.format(room_id))
 
 
 @app.route('/avatar/<user_id>', methods=['POST'])
@@ -174,7 +175,7 @@ def get_image(image_id):
     app.logger.info("{} attempted to view file {}".format(current_user.username, image_id))
     if target_image:
         file_path = target_image['location']
-        return send_file(file_path)
+        return file_path
     return 'File not found', 404
 
 
@@ -295,7 +296,7 @@ def handle_send_message_event(data):
     app.logger.info("handle_send_message_event: {} has sent message to the room {}: {}"
                     .format(data['username'], data['room'], data['message']))
     data['time_sent'] = datetime.now().strftime('%b %d, %H:%M')
-    save_message(data['room'], data['message'], data['username'])
+    save_message(data['room'], data['message'], data['username'], is_image=False)
     socketio.emit('receive_message', data, room=data['room'])
 
 
@@ -312,6 +313,13 @@ def emit_image(image_id):
     image_file_path = image['location']
     time = datetime.now().strftime("%b %d, %H:%M")
 
+    # record this event in the log
+    app.logger.info('Emit message by {} at {}'.format(image['author'], image_file_path))
+
+    # save this message/image to the database
+    save_message(image['room_id'], '<img src={} />'.format(image_file_path), image['author'], is_image=True)
+
+    # emit this message to open sockets
     data = {'image_file_path': image_file_path, 'author': image['author'], 'time': time}
     socketio.emit('receive_image', data)
 

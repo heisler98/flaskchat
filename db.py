@@ -170,10 +170,11 @@ def save_avatar(user_id, path):
     users_collection.update_one({'_id': user_id}, {"$set": {"avatar": path}}, True)
 
 
-def save_image(sender, room_id, path):
+def save_image(sender, room_id, path, is_image):
     current_time = datetime.now()
-    images_collection.insert_one({'room_id': room_id, 'avatar': False, 'location': path,
-                                  'author': sender, 'time_sent': current_time})
+    image_id = images_collection.insert_one({'room_id': room_id, 'avatar': False, 'location': path,
+                                'is_image': is_image, 'author': sender, 'time_sent': current_time}).inserted_id
+    return image_id
 
 
 def locate_image(image_id):
