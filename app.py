@@ -19,7 +19,7 @@ app.secret_key = "my secret key"
 login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins='https://squid.chat')
 
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
