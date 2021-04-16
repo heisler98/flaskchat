@@ -24,7 +24,6 @@ socketio = SocketIO(app)
 
 ### JWT
 
-
 def authenticate(username, password):
     username_table = {u.username: u for u in get_all_users()}
     user = username_table.get(username, None)
