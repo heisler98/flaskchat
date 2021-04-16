@@ -69,8 +69,9 @@ def get_all_users():
 
 
 def get_user(username):
-    user_data = users_collection.find_one({'username': username})
-    return User(user_data['username'], user_data['email'], user_data['password']) if user_data else None
+    print('Attempting to fetch', username)
+    user_data = users_collection.find_one({'_id': username})
+    return User(user_data['_id'], user_data['email'], user_data['password']) if user_data else None
 
 
 def save_room(room_name, created_by):
