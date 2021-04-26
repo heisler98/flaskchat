@@ -130,11 +130,11 @@ def get_rooms():
     for item in room_list:
         id_list.append(item['_id']['room_id']['$oid'])
 
-    return create_json({'Rooms': id_list})
+    return create_json({'rooms': id_list})
 
 
 @app.route('/rooms/<room_id>')
-@jwt_required() # needs to return top level dict
+@jwt_required()
 def single_room(room_id):
     json_input = request.get_json()
     username = get_jwt_identity()
@@ -148,19 +148,25 @@ def single_room(room_id):
     if not is_room_member(room_id, username):
         return create_json({'Error': 'You are not a member of this room.'})
     else:
-        room_members_bson = get_room_members(room_id)
-        room_members = []
-        for item in room_members_bson:
-            room_members.append(parse_json(item))
-        print(room_members)
+        room_name = room['name']
         message_bson = get_messages(room_id)
         messages = []
         for item in message_bson:
-            messages.append(parse_json(item))
-        print(messages)
-        response_json = Response(200, 'Fetched a room.')
-        response_json.set_child({'messages': messages, 'members': room_members, 'is_dm': is_dm})
-        return response_json.get_json()
+            try:
+                id = get_user_id(item['sender'])['_id']
+            except:
+                continue
+            messages.append({
+                'time_sent': item['time_sent'],
+                'text': item['text'],
+                'author_username': item['sender'],
+                'author_id': id
+            })
+        return create_json({
+            'name': room_name,
+            'is_dm': is_dm,
+            'messages': messages
+        })
 
     return create_json({'Error': ''})
 
