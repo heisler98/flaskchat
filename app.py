@@ -136,7 +136,7 @@ def single_room(room_id):
 
     current_user = get_user(username)
     if not is_room_member(room_id, username):
-        return Response(0, 'You are not a member of this room.').get_json()
+        return create_json({'Error': 'You are not a member of this room.'})
     else:
         room_members_bson = get_room_members(room_id)
         room_members = []
@@ -152,7 +152,23 @@ def single_room(room_id):
         response_json.set_child({'messages': messages, 'members': room_members, 'is_dm': is_dm})
         return response_json.get_json()
 
-    return Response(500, 'Server error').get_json()
+    return create_json({'Error': ''})
+
+
+@app.route('/rooms/<room_id>/messages')
+@jwt_required()
+def get_room_messages(room_id):
+    room = get_room(room_id)
+    username = get_jwt_identity()
+
+    if room and is_room_member(room_id, username):
+        page = int(request.args.get('page', 0))
+        messages = get_messages(room_id, page)
+        return dumps(messages)
+    else:
+        return create_json({'Error': 'Room not found'})
+
+    return create_json({'Error': ''})
 
 
 @app.route('/rooms/<room_id>/members')
