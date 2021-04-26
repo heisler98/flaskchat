@@ -82,6 +82,13 @@ def login():
     return create_json({'Error': ''})
 
 
+@app.route('/whoami')
+@jwt_required()
+def who():
+    username = get_jwt_identity()
+    return create_json({'user': username})
+
+
 @app.route('/signup')
 def create_account():
     json_input = request.get_json()
