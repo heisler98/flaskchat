@@ -16,48 +16,19 @@ users_collection = chat_db.get_collection('users')
 rooms_collection = chat_db.get_collection('rooms')
 room_members_collection = chat_db.get_collection('room_members')
 messages_collection = chat_db.get_collection('messages')
-direct_message_collection = chat_db.get_collection('dm_rooms')
+reactions_collection = chat_db.get_collection('reactions')
+emoji_collection = chat_db.get_collection('emoji')
+logging_collection = chat_db.get_collection('logs')
 
 
-def get_dm(user_one, user_two):
-    room_title = ''
-    if len(user_one) > 0 and len(user_two) > 0:
-        if user_one[0] > user_two[0]:
-            room_title = user_two.username + user_one.username
-        else:
-            room_title = user_one.username + user_two.username
-    return direct_message_collection.find({'_id': room_title})
+# USERS
 
-
-def create_dm_pair(user_one, user_two):
-    room_title = ''
-    if len(user_one) > 0 and len(user_two) > 0:
-        if user_one[0] > user_two[0]:
-            room_title = user_two.username + user_one.username
-        else:
-            room_title = user_one.username + user_two.username
-    direct_message_collection.insert_one({'_id': room_title})
-    print('creating direct message pair between', user_one, user_two)
-
-
-def save_user(username, email, password):
+def save_user(username, email, password, fullname):
     password_hash = generate_password_hash(password)
-    current_user = users_collection.values.count({"username": username})
-    user_data = users_collection.find_one({'username': username})
-
-    print(type(user_data))
-    print(user_data)
-
-    if user_data:
-        raise DuplicateKeyError('User already exists.')
-
+    now = datetime.now()
     identifier = hash(username)
-    users_collection.insert_one({'_id': identifier,
-                                 'name_first': '',
-                                 'name_last': '',
-                                 'username': username,
-                                 'email': email,
-                                 'password': password_hash})
+    users_collection.insert_one({'_id': identifier, 'username': username, 'email': email, 'password': password_hash,
+                                 'realname': fullname, 'date_joined': now})
 
 
 def get_all_users():
@@ -69,14 +40,44 @@ def get_all_users():
 
 
 def get_user(username):
+    print('Attempting to fetch', username)
     user_data = users_collection.find_one({'username': username})
-    return User(user_data['username'], user_data['email'], user_data['password']) if user_data else None
+    some_path = ''
+    return User(user_data['username'], user_data['email'], user_data['password'],
+                some_path, user_data['realname'], user_data['_id']) if user_data else None
+
+
+def get_messages_by_user(username):
+    messages = messages_collection.find({'author': username})
+    return messages
+
+
+# Returns a list of room IDs for a given user
+def get_rooms_for_user(username):
+    return list(room_members_collection.find({'_id.username': username}, {'_id': 1}))
+
+# ROOMS
+
+
+def is_room_member(room_id, username):
+    output = room_members_collection.count_documents({'_id': {'room_id': ObjectId(room_id), 'username': username}})
+    print('is_room_member', output)
+    return output
+
+
+def get_room(room_id):
+    return rooms_collection.find_one({'_id': ObjectId(room_id)})
 
 
 def save_room(room_name, created_by):
     room_id = rooms_collection.insert_one(
         {'name': room_name, 'created_by': created_by, 'created_at': datetime.now()}).inserted_id
     return room_id
+
+
+def update_room(room_id, room_name):
+    rooms_collection.update_one({'_id': ObjectId(room_id)}, {'$set': {'name': room_name}})
+    room_members_collection.update_many({'_id.room_id': ObjectId(room_id)}, {'$set': {'name': room_name}})
 
 
 def add_room_member(room_id, room_name, username, added_by, is_admin=False):
@@ -95,32 +96,8 @@ def add_room_members(room_id, room_name, usernames, added_by):
                                           'is_room_admin': False} for username in usernames])
 
 
-def get_room(room_id):
-    return rooms_collection.find_one({'_id': ObjectId(room_id)})
-
-
-def update_room(room_id, room_name):
-    rooms_collection.update_one({'_id': ObjectId(room_id)}, {'$set': {'name': room_name}})
-    room_members_collection.update_many({'_id.room_id': ObjectId(room_id)}, {'$set': {'name': room_name}})
-
-
 def get_room_members(room_id):
     return list(room_members_collection.find({'_id.room_id': ObjectId(room_id)}))
-
-
-def remove_room_members(room_id, usernames):
-    room_members_collection.delete_many(
-        {'_id': {'$in': [{'room_id': room_id, 'username': username} for username in usernames]}})
-
-
-def get_rooms_for_user(username):
-    return list(room_members_collection.find({'_id.username': username}))
-
-
-def is_room_member(room_id, username):
-    output = room_members_collection.count_documents({'_id': {'room_id': ObjectId(room_id), 'username': username}})
-    print('is_room_member', output)
-    return output
 
 
 def is_room_admin(room_id, username):
@@ -128,15 +105,33 @@ def is_room_admin(room_id, username):
         {'_id': {'room_id': ObjectId(room_id), 'username': username}, 'is_room_admin': True})
 
 
+def remove_room_members(room_id, usernames):
+    room_members_collection.delete_many(
+        {'_id': {'$in': [{'room_id': room_id, 'username': username} for username in usernames]}})
+
+# LOG
+
+
+def add_log_event(event_message):
+    logging_collection.insert_one({'content': event_message, 'time': datetime.now()})
+
+# MISC
+
+
+def add_reaction(message, reaction, username):
+    emoji_id = '' # = get ID from emoji collection
+    reactions_collection.insert_one({'author': username, 'parent_message': message, 'reaction': emoji_id})
+
+# MESSAGES
+
+
 def save_message(room_id, text, sender):
     current_time = datetime.now()
     messages_collection.insert_one({'room_id': room_id, 'text': text, 'sender': sender, 'time_sent': current_time})
 
 
-MESSAGE_FETCH_LIMIT = 50
-
-
 def get_messages(room_id, page=0):
+    MESSAGE_FETCH_LIMIT = 50
     offset = page * MESSAGE_FETCH_LIMIT
     messages = list(
         messages_collection.find({'room_id': room_id}).sort('_id', DESCENDING).limit(MESSAGE_FETCH_LIMIT).skip(offset))

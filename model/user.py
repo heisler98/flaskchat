@@ -1,14 +1,15 @@
 # github.com/colingoodman
-
 from werkzeug.security import check_password_hash
-import json
 
 
 class User:
-    def __init__(self, username, email, password):
+    def __init__(self, username, email, password, avatar, realname, identifier):
         self.username = username
         self.email = email
-        self.password = password  # hash of user password
+        self.password = password
+        self.avatar = avatar
+        self.realname = realname
+        self.identifier = identifier
 
     @staticmethod
     def is_authenticated(self):
@@ -22,19 +23,15 @@ class User:
     def is_anonymous(self):
         return False
 
+    def get_username(self):
+        return self.username
+
+    def get_identifier(self):
+        return self.identifier
+
+    # flask-login
     def get_id(self):
-        try:
-            return self.username
-        except AttributeError:
-            raise NotImplementedError('No `id` attribute - override `get_id`')
+        return self.username
 
     def check_password(self, password_input):
         return check_password_hash(self.password, password_input)
-
-    def get_json(self):
-        output = {'username': self.username, 'password': self.password, 'email': self.email}
-
-        json_dump = json.dumps(output)
-        json_object = json.loads(json_dump)
-
-        return json_object
