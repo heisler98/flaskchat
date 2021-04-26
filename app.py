@@ -3,7 +3,7 @@
 # Base Imports
 import json
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from bson import json_util
 from bson.json_util import dumps
 
@@ -173,13 +173,31 @@ def get_room_messages(room_id):
 
 @app.route('/rooms/<room_id>/members')
 @jwt_required()
-def single_room(room_id):
+def single_room_members(room_id):
     json_input = request.get_json()
     username = get_jwt_identity()
     room = get_room(room_id)
 
-    members = room['members']
-    return None # return just usernames
+    app.logger.info('{} requested members for {}'.format(username, room_id))
+
+    members_raw = get_room_members(room_id)
+    members = []
+
+    for member in members_raw:
+        this_user = get_user(member['_id']['username'])
+        if not this_user:
+            app.logger.info('Encountered unknown user {} in {}'.format(member['_id']['username'], room_id))
+            continue
+        new_member = {
+            'username': this_user.username,
+            'ID': this_user.identifier,
+            'added_at': member['added_at'].timestamp(),
+            'added_by': member['added_by'],
+            'is_room_admin': member['is_room_admin']
+        }
+        members.append(parse_json(new_member))
+
+    return create_json({'members': members})
 
 
 @app.route('/users/<user_id>', methods=['GET'])
