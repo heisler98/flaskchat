@@ -123,7 +123,7 @@ def get_rooms():
 
 
 @app.route('/rooms/<room_id>')
-@jwt_required()
+@jwt_required() # needs to return top level dict
 def single_room(room_id):
     json_input = request.get_json()
     username = get_jwt_identity()
@@ -153,6 +153,17 @@ def single_room(room_id):
         return response_json.get_json()
 
     return Response(500, 'Server error').get_json()
+
+
+@app.route('/rooms/<room_id>/members')
+@jwt_required()
+def single_room(room_id):
+    json_input = request.get_json()
+    username = get_jwt_identity()
+    room = get_room(room_id)
+
+    members = room['members']
+    return None # return just usernames
 
 
 @app.route('/users/<user_id>', methods=['GET'])
