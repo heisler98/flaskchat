@@ -21,7 +21,7 @@ from flask_jwt_extended import JWTManager
 
 # Local Imports
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
-    is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users
+    is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, get_user_id
 from model.user import User
 from model.response import Response
 
@@ -61,7 +61,11 @@ def login():
         return create_json({'Error': 'Invalid request: Must be a json/dict.'})
 
     if request.method == 'POST':
-        user = get_user(username)
+        try:
+            user_id = get_user_id(username)['_id']
+            user = get_user(user_id)
+        except Exception as e:
+            return create_json({'Error': ''})
 
         if user and user.check_password(password):
             access_token = create_access_token(identity=username)
@@ -134,7 +138,6 @@ def single_room(room_id):
     except KeyError as e:
         is_dm = False
 
-    current_user = get_user(username)
     if not is_room_member(room_id, username):
         return create_json({'Error': 'You are not a member of this room.'})
     else:
@@ -184,7 +187,10 @@ def single_room_members(room_id):
     members = []
 
     for member in members_raw:
-        this_user = get_user(member['_id']['username'])
+        try:
+            this_user = get_user(get_user_id(member['_id']['username'])['_id'])
+        except Exception as e:
+            continue
         if not this_user:
             app.logger.info('Encountered unknown user {} in {}'.format(member['_id']['username'], room_id))
             continue
@@ -206,13 +212,25 @@ def view_user(user_id):
     json_input = request.get_json()
     username = get_jwt_identity()
 
+    try:
+        int(user_id)
+    except ValueError as e:
+        return create_json({'Error': 'Bad request; are you using the user ID?'})
+    except TypeError as e:
+        return create_json({'Error': 'Bad request; are you using the user ID?'})
+
     app.logger.info('{} viewing profile of {} (GET)'.format(username, user_id))
-    user = get_user(user_id).get_json()
+    user_raw = get_user(int(user_id))
+    user = {
+        'username': user_raw.username,
+        'email': user_raw.email,
+        'phone_number': None,
+        'realname': user_raw.realname,
+        'avatar': user_raw.avatar,
+        'ID': user_raw.identifier
+    }
 
-    response_json = Response(200, 'Fetched a user.')
-    response_json.set_child({'user': user})
-
-    return response_json.get_json()
+    return create_json(user)
 
 
 if __name__ == '__main__':

@@ -39,9 +39,9 @@ def get_all_users():
     return list_of_users
 
 
-def get_user(username):
-    print('Attempting to fetch', username)
-    user_data = users_collection.find_one({'username': username})
+def get_user(user_id):
+    print('Attempting to fetch', user_id)
+    user_data = users_collection.find_one({'_id': user_id})
     some_path = ''
     return User(user_data['username'], user_data['email'], user_data['password'],
                 some_path, user_data['realname'], user_data['_id']) if user_data else None
@@ -55,6 +55,11 @@ def get_messages_by_user(username):
 # Returns a list of room IDs for a given user
 def get_rooms_for_user(username):
     return list(room_members_collection.find({'_id.username': username}, {'_id': 1}))
+
+
+def get_user_id(username):
+    some_user_id = users_collection.find_one({'username': username}, {'_id': 1})
+    return some_user_id
 
 # ROOMS
 
