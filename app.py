@@ -114,6 +114,8 @@ def create_account():
 
     return create_json({'Error': ''})
 
+# ROOMS
+
 
 @app.route('/rooms/list')
 @jwt_required()
@@ -179,8 +181,22 @@ def get_room_messages(room_id):
 
     if room and is_room_member(room_id, username):
         page = int(request.args.get('page', 0))
-        messages = get_messages(room_id, page)
-        return dumps(messages)
+
+        message_bson = get_messages(room_id, page)
+        messages = []
+        for item in message_bson:
+            try:
+                id = get_user_id(item['sender'])['_id']
+            except Exception as e:
+                continue
+            messages.append({
+                'time_sent': item['time_sent'],
+                'text': item['text'],
+                'author_username': item['sender'],
+                'author_id': id
+            })
+
+        return create_json({'messages': messages})
     else:
         return create_json({'Error': 'Room not found'})
 
@@ -218,6 +234,8 @@ def single_room_members(room_id):
 
     return create_json({'members': members})
 
+# USERS --
+
 
 @app.route('/users/<user_id>', methods=['GET'])
 @jwt_required()
@@ -234,16 +252,46 @@ def view_user(user_id):
 
     app.logger.info('{} viewing profile of {} (GET)'.format(username, user_id))
     user_raw = get_user(int(user_id))
+    try:
+        avatar = user_raw.avatar
+    except Exception as e:
+        avatar = None
     user = {
         'username': user_raw.username,
         'email': user_raw.email,
         'phone_number': None,
         'realname': user_raw.realname,
-        'avatar': user_raw.avatar,
+        'avatar': avatar,
         'ID': user_raw.identifier
     }
 
     return create_json(user)
+
+
+@app.route('/users/list')
+@jwt_required()
+def list_users():
+    username = get_jwt_identity()
+    users_raw = get_all_users()
+    users = []
+
+    for user in users_raw:
+        try:
+            avatar = user['avatar']
+        except Exception as e:
+            avatar = None
+        new_user = {
+            'username': user['username'],
+            'email': user['email'],
+            'phone_number': None,
+            'realname': user['realname'],
+            'avatar': avatar,
+            'date_joined': user['date_joined'].timestamp(),
+            'ID': user['_id']
+        }
+        users.append(new_user)
+
+    return create_json({'users': users})
 
 
 if __name__ == '__main__':
