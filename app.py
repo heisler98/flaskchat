@@ -223,12 +223,19 @@ def single_room_members(room_id):
         if not this_user:
             app.logger.info('Encountered unknown user {} in {}'.format(member['_id']['username'], room_id))
             continue
+
+        try:
+            avatar = this_user.avatar
+        except Exception as e:
+            avatar = None
+
         new_member = {
             'username': this_user.username,
             'ID': this_user.identifier,
             'added_at': member['added_at'].timestamp(),
             'added_by': member['added_by'],
-            'is_room_admin': member['is_room_admin']
+            'is_room_admin': member['is_room_admin'],
+            'avatar': avatar
         }
         members.append(parse_json(new_member))
 
