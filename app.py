@@ -47,6 +47,9 @@ def create_json(some_dictionary):
 
 # --- API ---
 
+# LOGIN
+
+
 @app.route('/login', methods=['POST'])
 def login():
     app.logger.info('{} hit /login'.format(request.remote_addr))
@@ -299,6 +302,37 @@ def list_users():
         users.append(new_user)
 
     return create_json({'users': users})
+
+# IMAGES
+
+
+@app.route('/uploads/create')
+@jwt_required()
+def upload_image():
+    return None
+
+
+@app.route('/uploads/<upload_id>')
+@jwt_required()
+def get_image():
+    return None
+
+# SOCKETS
+
+
+@socketio.on('new_session')
+def handle_join_room_event(data):
+    app.logger.info("{} has joined the room {}".format(data['username'], data['room']))
+    join_room(data['room'])
+
+
+@socketio.on('send_message')
+def handle_send_message_event(data):
+    app.logger.info("{} has sent message to the room {}: {}"
+                    .format(data['username'], data['room'], data['message']))
+    data['time_sent'] = datetime.now().strftime('%b %d, %H:%M')
+    save_message(data['room'], data['message'], data['username'], is_image=False)
+    socketio.emit('receive_message', data, room=data['room'])
 
 
 if __name__ == '__main__':
