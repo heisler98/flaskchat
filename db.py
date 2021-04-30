@@ -32,6 +32,12 @@ def save_user(username, email, password, fullname):
                                  'realname': fullname, 'date_joined': now})
 
 
+def change_user_password(username, new_password):
+    password_hash = generate_password_hash(new_password)
+    now = datetime.now()
+    users_collection.update_one({'username': username}, {'password': password_hash})
+
+
 def get_all_users():
     users = users_collection.find({})
     list_of_users = []

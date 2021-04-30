@@ -25,7 +25,7 @@ from werkzeug.utils import secure_filename
 
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
     is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, get_user_id, \
-    save_image, locate_image
+    save_image, locate_image, change_user_password
 from model.user import User
 from model.response import Response
 
@@ -306,6 +306,33 @@ def list_users():
         users.append(new_user)
 
     return create_json({'users': users})
+
+
+@app.route('/users/<user_id>/password')
+@jwt_required()
+def change_password(user_id):
+    username = get_jwt_identity()
+    json_input = request.get_json()
+
+    if request.method == 'POST':
+        app.logger.info('NOTE: {} changing their password'.format(username, user_id))
+        new_password = json_input['new_password']
+        old_password = json_input['old_password']
+        try:
+            user_id = get_user_id(username)['_id']
+            user = get_user(user_id)
+        except Exception as e:
+            return create_json({'Error': ''})
+
+        if user and user.check_password(old_password):
+            change_user_password(username, new_password)
+            return create_json({'Success': 'Password changed'})
+        else:
+            return create_json({'Error': 'Incorrect password'})
+
+    return create_json({'Error': ''})
+
+
 
 # IMAGES
 
