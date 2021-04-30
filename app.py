@@ -2,6 +2,7 @@
 
 # Base Imports
 import json
+import os
 import re
 from datetime import datetime, timedelta, timezone
 from bson import json_util
@@ -20,8 +21,11 @@ from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
 
 # Local Imports
+from werkzeug.utils import secure_filename
+
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
-    is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, get_user_id
+    is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, get_user_id, \
+    save_image
 from model.user import User
 from model.response import Response
 
@@ -306,10 +310,21 @@ def list_users():
 # IMAGES
 
 
-@app.route('/uploads/create')
+@app.route('/uploads/create', methods=['POST'])
 @jwt_required()
 def upload_image():
-    return None
+    username = get_jwt_identity()
+    json_input = request.get_json()
+
+    if request.method == 'POST':
+        room_id = json_input['room_id']
+
+        file = request.files['file']
+        filename = secure_filename(file.filename)
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        image_id = save_image(username, room_id, filepath)
+        return image_id
 
 
 @app.route('/uploads/<upload_id>')

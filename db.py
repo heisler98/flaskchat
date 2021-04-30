@@ -19,6 +19,7 @@ messages_collection = chat_db.get_collection('messages')
 reactions_collection = chat_db.get_collection('reactions')
 emoji_collection = chat_db.get_collection('emoji')
 logging_collection = chat_db.get_collection('logs')
+images_collection = chat_db.get_collection('images')
 
 
 # USERS
@@ -143,3 +144,13 @@ def get_messages(room_id, page=0):
     for message in messages:
         message['time_sent'] = message['time_sent'].strftime("%H:%M")
     return messages[::-1]
+
+# IMAGES and UPLOADS
+
+
+def save_image(sender, room_id, path):
+    current_time = datetime.now()
+    image_id = images_collection.insert_one({'room_id': room_id, 'avatar': False, 'location': path,
+                                             'author': sender, 'time_sent': current_time}).inserted_id
+    return image_id
+
