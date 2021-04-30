@@ -13,7 +13,7 @@ from werkzeug.security import safe_str_cmp
 from pymongo.errors import DuplicateKeyError
 
 # Flask Imports
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request, redirect, url_for, send_file
 from flask_socketio import SocketIO, join_room
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
@@ -25,7 +25,7 @@ from werkzeug.utils import secure_filename
 
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
     is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, get_user_id, \
-    save_image
+    save_image, locate_image
 from model.user import User
 from model.response import Response
 
@@ -324,13 +324,27 @@ def upload_image():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
         image_id = save_image(username, room_id, filepath)
-        return image_id
+
+        return create_json({'image_id': image_id})
 
 
 @app.route('/uploads/<upload_id>')
 @jwt_required()
-def get_image():
-    return None
+def get_image(upload_id):
+    username = get_jwt_identity()
+    json_input = request.get_json()
+    target_image = locate_image(upload_id)
+    app.logger.info("{} attempted to view file {}".format(username, upload_id))
+
+    if target_image:
+        image_room = target_image['room_id']
+
+        file_path = target_image['location']
+        if os.path.exists(file_path):
+            return send_file(file_path)
+        else:
+            return create_json({'File not found': upload_id})
+    return create_json({'File not found': upload_id})
 
 # SOCKETS
 

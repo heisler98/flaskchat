@@ -154,3 +154,7 @@ def save_image(sender, room_id, path):
                                              'author': sender, 'time_sent': current_time}).inserted_id
     return image_id
 
+
+def locate_image(image_id):
+    return images_collection.find_one({'_id': ObjectId(image_id)})
+
