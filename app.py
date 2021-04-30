@@ -11,6 +11,7 @@ from bson.json_util import dumps
 # Library Imports
 from werkzeug.security import safe_str_cmp
 from pymongo.errors import DuplicateKeyError
+from werkzeug.utils import secure_filename
 
 # Flask Imports
 from flask import Flask, render_template, request, redirect, url_for, send_file
@@ -21,8 +22,6 @@ from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
 
 # Local Imports
-from werkzeug.utils import secure_filename
-
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
     is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, get_user_id, \
     save_image, locate_image, change_user_password
