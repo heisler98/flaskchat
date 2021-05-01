@@ -32,6 +32,11 @@ def save_user(username, email, password, fullname):
                                  'realname': fullname, 'date_joined': now})
 
 
+def add_twitter_handle(username, handle):
+    now = datetime.now()
+    users_collection.update_one({'username': username}, {'twitter': handle})
+
+
 def change_user_password(username, new_password):
     password_hash = generate_password_hash(new_password)
     now = datetime.now()
