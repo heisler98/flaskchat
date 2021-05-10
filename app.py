@@ -31,7 +31,7 @@ from model.response import Response
 # App Setup
 app = Flask(__name__)
 app.secret_key = "1"
-socketio = SocketIO(app)
+socketio = SocketIO(app, cors_allowed_origins='*')
 
 # JWT Configuration
 jwt = JWTManager(app)
