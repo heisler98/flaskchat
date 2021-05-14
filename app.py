@@ -141,6 +141,21 @@ def get_rooms():
     return create_json({'rooms': id_list})
 
 
+@app.route('/rooms/create')
+@jwt_required()
+def create_room():
+    username = get_jwt_identity()
+    json_input = request.get_json(force=True)
+
+    try:
+        name = json_input['name']
+    except Exception as e:
+        return create_json({'Error': 'Issue parsing JSON.'})
+
+    room_id = save_room(name, username)
+    return create_json({'Success': '{}'.format(room_id)})
+
+
 @app.route('/rooms/<room_id>')
 @jwt_required()
 def single_room(room_id):
