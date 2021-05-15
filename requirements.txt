@@ -6,3 +6,4 @@ werkzeug
 flask-login
 flask_jwt_extended
 Flask-JWT
+pytest

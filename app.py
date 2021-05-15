@@ -16,12 +16,11 @@ from werkzeug.utils import secure_filename
 
 # Flask Imports
 from flask import Flask, render_template, request, redirect, url_for, send_file
-from flask_socketio import SocketIO, join_room
+from flask_socketio import SocketIO, join_room, rooms
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
-from flask_jwt import _jwt
 
 # Local Imports
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
@@ -34,13 +33,12 @@ from model.response import Response
 app = Flask(__name__)
 app.secret_key = "1"
 socketio = SocketIO(app, cors_allowed_origins='*')
+connected_sockets = {}
 
 # JWT Configuration
 jwt = JWTManager(app)
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 app.config["JWT_HEADER_NAME"] = 'tasty_token'
-
-assert True == True
 
 
 # --- Helper Functions ---
@@ -97,6 +95,11 @@ def login():
 def who():
     username = get_jwt_identity()
     return create_json({'user': username})
+
+
+@app.route('/')
+def hello():
+    return create_json({'Hello': 'World'})
 
 
 @app.route('/signup')
@@ -396,17 +399,33 @@ def get_image(upload_id):
 @socketio.on('new_session')
 @jwt_required()
 def on_connect(data):
-    # jwt_token = data['token']
-    app.logger.info("{} has joined the room {}".format(data['username'], data['room']))
+    user_identity = get_jwt_identity()
+
+    join_room('server')
+    current_socket_id = request.sid
+
+    connected_sockets[user_identity] = current_socket_id
+    app.logger.info("{} has connected, {}".format(user_identity, current_socket_id))
 
 
-@socketio.on('send_message') # NOT IMPLEMENTED YET
+@socketio.on('send_message')
+@jwt_required()
 def handle_send_message_event(data):
-    app.logger.info("{} has sent message to the room {}: {}"
-                    .format(data['username'], data['room'], data['message']))
-    data['time_sent'] = datetime.now().strftime('%b %d, %H:%M')
-    save_message(data['room'], data['message'], data['username'], is_image=False)
-    socketio.emit('receive_message', data, room=data['room'])
+    username = data['username']
+    room = data['room']  # client must pass room id here
+    message = data['message']
+    time_sent = datetime.now().strftime('%b %d, %H:%M')
+    data['time_sent'] = time_sent
+
+    app.logger.info("{} has sent message to the room {} at {}".format(username, room, time_sent))
+
+    save_message(room, message, username, is_image=False)  # to db
+
+    room_members = get_room_members(room)  # determine who should receive this message
+    if username in room_members:  # if the author/sender is in the room they are trying to send to
+        for member in room_members:
+            target_socket_id = connected_sockets[member]
+            socketio.emit('receive_message', data, room=target_socket_id)  # emit to specific user
 
 
 if __name__ == '__main__':
