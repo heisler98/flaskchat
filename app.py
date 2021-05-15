@@ -6,6 +6,7 @@ import os
 import re
 from datetime import datetime, timedelta, timezone
 from bson import json_util
+import unittest
 from bson.json_util import dumps
 
 # Library Imports
@@ -38,6 +39,8 @@ socketio = SocketIO(app, cors_allowed_origins='*')
 jwt = JWTManager(app)
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 app.config["JWT_HEADER_NAME"] = 'tasty_token'
+
+assert True == True
 
 
 # --- Helper Functions ---
