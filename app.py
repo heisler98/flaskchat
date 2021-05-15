@@ -351,7 +351,6 @@ def change_password(user_id):
     return create_json({'Error': ''})
 
 
-
 # IMAGES
 
 
@@ -394,19 +393,14 @@ def get_image(upload_id):
 # SOCKETS
 
 
-@socketio.on('new_session')  # https://github.com/miguelgrinberg/Flask-SocketIO/issues/568
-def on_connect(self):
-    token = _jwt.request_callback()
-    app.logger.info("new_session socketio request")
-    if token is None:
-        return False
-    try:
-        payload = _jwt.jwt_decode_callback(token)
-    except jwt.InvalidTokenError as e:
-        return False
+@socketio.on('new_session')
+@jwt_required()
+def on_connect(data):
+    # jwt_token = data['token']
+    app.logger.info("{} has joined the room {}".format(data['username'], data['room']))
 
 
-@socketio.on('send_message')
+@socketio.on('send_message') # NOT IMPLEMENTED YET
 def handle_send_message_event(data):
     app.logger.info("{} has sent message to the room {}: {}"
                     .format(data['username'], data['room'], data['message']))
