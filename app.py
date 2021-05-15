@@ -20,6 +20,7 @@ from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
+from flask_jwt import _jwt
 
 # Local Imports
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
@@ -390,10 +391,16 @@ def get_image(upload_id):
 # SOCKETS
 
 
-@socketio.on('new_session')
-def handle_join_room_event(data):
-    app.logger.info("{} has joined the room {}".format(data['username'], data['room']))
-    join_room(data['room'])
+@socketio.on('new_session')  # https://github.com/miguelgrinberg/Flask-SocketIO/issues/568
+def on_connect(self):
+    token = _jwt.request_callback()
+    app.logger.info("new_session socketio request")
+    if token is None:
+        return False
+    try:
+        payload = _jwt.jwt_decode_callback(token)
+    except jwt.InvalidTokenError as e:
+        return False
 
 
 @socketio.on('send_message')
