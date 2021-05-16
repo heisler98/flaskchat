@@ -24,7 +24,7 @@ from flask_jwt_extended import JWTManager
 # Local Imports
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
     is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, get_user_id, \
-    save_image, locate_image, change_user_password, change_user_realname
+    save_image, locate_image, change_user_password, change_user_realname, find_dm, create_dm
 from model.user import User
 from model.response import Response
 
@@ -161,6 +161,23 @@ def create_room():
 
     room_id = save_room(name, username)
     return create_json({'Success': '{}'.format(room_id)})
+
+
+@app.route('/rooms/dm/<user_id>')
+@jwt_required()
+def view_dm(user_id):
+    json_input = request.get_json()
+    username = get_jwt_identity()
+
+    user_one = get_user(get_user_id(username))
+    user_two = get_user(user_id)
+
+    target_room = find_dm(user_one, user_two)
+    if target_room:
+        return create_json({'room_id': target_room})
+    else:
+        new_dm = create_dm(user_one, user_two)
+        return create_json({'room_id': new_dm})
 
 
 @app.route('/rooms/<room_id>')
@@ -356,7 +373,7 @@ def change_password(user_id):
 
 @app.route('/users/<user_id>/edit')
 @jwt_required()
-def edit_user(user_id): # NOT FINISHED YET
+def edit_user(user_id):  # NOT FINISHED YET
     username = get_jwt_identity()
     json_input = request.get_json()
 
@@ -435,6 +452,16 @@ def on_connect(data):
     app.logger.info("{} has connected, {}".format(user_identity, current_socket_id))
 
 
+@socketio.on('close_session')
+@jwt_required()
+def on_disconnect(data):
+    user_identity = get_jwt_identity()  # user_identity is username, NOT id
+    current_socket_id = connected_sockets[user_identity]
+    app.logger.info("{} is disconnecting, {}".format(user_identity, current_socket_id))
+
+    connected_sockets.pop(user_identity)
+
+
 @socketio.on('send_message')
 @jwt_required()
 def handle_send_message_event(data):
@@ -458,6 +485,7 @@ def handle_send_message_event(data):
         for member in room_member_usernames:
             if member in connected_sockets:
                 target_socket_id = connected_sockets[member]
+                app.logger.info("emit message to {} in {} at {}".format(username, room, time_sent))
                 socketio.emit('receive_message', data, room=target_socket_id)  # emit to specific user
 
 

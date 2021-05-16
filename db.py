@@ -91,9 +91,42 @@ def get_room(room_id):
     return rooms_collection.find_one({'_id': ObjectId(room_id)})
 
 
+def find_dm(user_one, user_two):
+    room_title = ''
+    if user_one and user_two:
+        if user_one.username > user_two.username:
+            room_title = user_two.username + user_one.username
+        else:
+            room_title = user_one.username + user_two.username
+
+    room = rooms_collection.find_one({'name': room_title})
+
+    if room:
+        return room['_id']
+    else:
+        return None
+
+
+def create_dm(user_one, user_two):
+    room_title = ''
+    if user_one and user_two:
+        if user_one.username > user_two.username:
+            room_title = user_two.username + user_one.username
+        else:
+            room_title = user_one.username + user_two.username
+
+    room_id = rooms_collection.insert_one(
+        {'name': room_title, 'is_dm': True, 'created_by': None, 'created_at': datetime.now()}).inserted_id
+
+    add_room_member(room_id, room_title, user_one.username, None, is_dm=True, is_admin=False)
+    add_room_member(room_id, room_title, user_two.username, None, is_dm=True, is_admin=False)
+
+    return room_id
+
+
 def save_room(room_name, created_by):
     room_id = rooms_collection.insert_one(
-        {'name': room_name, 'created_by': created_by, 'created_at': datetime.now()}).inserted_id
+        {'name': room_name, 'is_dm': False, 'created_by': created_by, 'created_at': datetime.now()}).inserted_id
     return room_id
 
 
