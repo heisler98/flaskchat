@@ -91,7 +91,7 @@ def login():
 
 
 @app.route('/whoami')
-@jwt_required()
+@jwt_required
 def who():
     username = get_jwt_identity()
     return create_json({'user': username})
@@ -131,7 +131,7 @@ def create_account():
 
 
 @app.route('/rooms/list')
-@jwt_required()
+@jwt_required
 def get_rooms():
     username = get_jwt_identity()
     room_list_raw = get_rooms_for_user(username)
@@ -149,7 +149,7 @@ def get_rooms():
 
 
 @app.route('/rooms/create')
-@jwt_required()
+@jwt_required
 def create_room():
     username = get_jwt_identity()
     json_input = request.get_json(force=True)
@@ -164,7 +164,7 @@ def create_room():
 
 
 @app.route('/rooms/<room_id>')
-@jwt_required()
+@jwt_required
 def single_room(room_id):
     json_input = request.get_json()
     username = get_jwt_identity()
@@ -202,7 +202,7 @@ def single_room(room_id):
 
 
 @app.route('/rooms/<room_id>/messages')
-@jwt_required()
+@jwt_required
 def get_room_messages(room_id):
     room = get_room(room_id)
     username = get_jwt_identity()
@@ -232,7 +232,7 @@ def get_room_messages(room_id):
 
 
 @app.route('/rooms/<room_id>/members')
-@jwt_required()
+@jwt_required
 def single_room_members(room_id):
     json_input = request.get_json()
     username = get_jwt_identity()
@@ -273,7 +273,7 @@ def single_room_members(room_id):
 
 
 @app.route('/users/<user_id>', methods=['GET'])
-@jwt_required()
+@jwt_required
 def view_user(user_id):
     json_input = request.get_json()
     username = get_jwt_identity()
@@ -304,7 +304,7 @@ def view_user(user_id):
 
 
 @app.route('/users/list')
-@jwt_required()
+@jwt_required
 def list_users():
     username = get_jwt_identity()
     users_raw = get_all_users()
@@ -330,7 +330,7 @@ def list_users():
 
 
 @app.route('/users/<user_id>/password')
-@jwt_required()
+@jwt_required
 def change_password(user_id):
     username = get_jwt_identity()
     json_input = request.get_json()
@@ -358,7 +358,7 @@ def change_password(user_id):
 
 
 @app.route('/uploads/create', methods=['POST'])
-@jwt_required()
+@jwt_required
 def upload_image():
     username = get_jwt_identity()
     json_input = request.get_json()
@@ -376,7 +376,7 @@ def upload_image():
 
 
 @app.route('/uploads/<upload_id>')
-@jwt_required()
+@jwt_required
 def get_image(upload_id):
     username = get_jwt_identity()
     json_input = request.get_json()
@@ -397,7 +397,7 @@ def get_image(upload_id):
 
 
 @socketio.on('new_session')
-@jwt_required()
+@jwt_required
 def on_connect(data):
     user_identity = get_jwt_identity()
 
@@ -409,7 +409,7 @@ def on_connect(data):
 
 
 @socketio.on('send_message')
-@jwt_required()
+@jwt_required
 def handle_send_message_event(data):
     username = data['username']
     room = data['room']  # client must pass room id here
