@@ -446,7 +446,7 @@ def handle_send_message_event(data):
 
     app.logger.info("{} has sent message to the room {} at {}".format(username, room, time_sent))
 
-    save_message(room, message, username, is_image=False)  # to db
+    save_message(room, message, username)  # to db
 
     room_members = get_room_members(room)  # determine who should receive this message
     if username in room_members:  # if the author/sender is in the room they are trying to send to
