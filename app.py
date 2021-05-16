@@ -456,8 +456,9 @@ def handle_send_message_event(data):
 
     if username in room_member_usernames:  # if the author/sender is in the room they are trying to send to
         for member in room_member_usernames:
-            target_socket_id = connected_sockets[member]
-            socketio.emit('receive_message', data, room=target_socket_id)  # emit to specific user
+            if member in connected_sockets:
+                target_socket_id = connected_sockets[member]
+                socketio.emit('receive_message', data, room=target_socket_id)  # emit to specific user
 
 
 if __name__ == '__main__':
