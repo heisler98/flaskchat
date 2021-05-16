@@ -27,11 +27,3 @@ def login(client, username, password):
         password=password
     ), follow_redirects=True)
 
-
-def test_login(app, client):
-    username = 'testuser'
-    password = 'password'
-
-    rv = login(client, username, password)
-    assert rv.status_code == 200
-

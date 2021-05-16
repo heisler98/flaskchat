@@ -43,6 +43,11 @@ def change_user_password(username, new_password):
     users_collection.update_one({'username': username}, {'password': password_hash})
 
 
+def change_user_realname(username, realname):
+    now = datetime.now()
+    users_collection.update_one({'username': username}, {'realname': realname})
+
+
 def get_all_users():
     users = users_collection.find({})
     list_of_users = []
