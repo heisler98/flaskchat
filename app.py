@@ -426,7 +426,7 @@ def message_count():
 @socketio.on('new_session')
 @jwt_required()
 def on_connect(data):
-    user_identity = get_jwt_identity()
+    user_identity = get_jwt_identity()  # user_identity is username, NOT id
 
     join_room('server')
     current_socket_id = request.sid
@@ -448,9 +448,14 @@ def handle_send_message_event(data):
 
     save_message(room, message, username)  # to db
 
-    room_members = get_room_members(room)  # determine who should receive this message
-    if username in room_members:  # if the author/sender is in the room they are trying to send to
-        for member in room_members:
+    room_member_objects = get_room_members(room)  # determine who should receive this message
+    room_member_usernames = []
+
+    for db_item in room_member_objects:
+        room_member_usernames.append(db_item['_id']['username'])
+
+    if username in room_member_usernames:  # if the author/sender is in the room they are trying to send to
+        for member in room_member_usernames:
             target_socket_id = connected_sockets[member]
             socketio.emit('receive_message', data, room=target_socket_id)  # emit to specific user
 
