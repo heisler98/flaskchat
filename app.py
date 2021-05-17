@@ -90,7 +90,7 @@ def login():
 
 
 @app.route('/whoami')
-@jwt_required
+@jwt_required()
 def who():
     username = get_jwt_identity()
     return create_json({'user': username})
