@@ -398,14 +398,16 @@ def edit_user(user_id):  # NOT FINISHED YET
 def upload_image():
     username = get_jwt_identity()
     json_input = request.get_json()
+    app.logger.info("{} attempted to upload a file".format(username))
 
     if request.method == 'POST':
         room_id = json_input['room_id']
-
         file = request.files['file']
+
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
+
         image_id = save_image(username, room_id, filepath)
 
         return create_json({'image_id': image_id})
@@ -421,6 +423,8 @@ def get_image(upload_id):
 
     if target_image:
         image_room = target_image['room_id']
+        if not is_room_member(image_room, username):
+            return create_json({'Error': 'Not authorized'})
 
         file_path = target_image['location']
         if os.path.exists(file_path):
@@ -468,12 +472,17 @@ def handle_send_message_event(data):
     username = data['username']
     room = data['room']  # client must pass room id here
     message = data['message']
+    is_image = data['include_image']
+    try:
+        image_id = data['image_id']
+    except Exception as e:
+        image_id = None
     time_sent = datetime.now().strftime('%b %d, %H:%M')
     data['time_sent'] = time_sent
 
     app.logger.info("{} has sent message to the room {} at {}".format(username, room, time_sent))
 
-    save_message(room, message, username)  # to db
+    save_message(room, message, username, is_image, image_id)  # to db
 
     room_member_objects = get_room_members(room)  # determine who should receive this message
     room_member_usernames = []
