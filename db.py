@@ -48,6 +48,11 @@ def change_user_realname(username, realname):
     users_collection.update_one({'username': username}, {'realname': realname})
 
 
+def change_user_avatar(username, file_id):
+    now = datetime.now()
+    users_collection.update_one({'username': username}, {'avatar': file_id})
+
+
 def get_all_users():
     users = users_collection.find({})
     list_of_users = []
@@ -198,9 +203,9 @@ def get_messages(room_id, page=0):
 # IMAGES and UPLOADS
 
 
-def save_image(sender, room_id, path):
+def save_image(sender, room_id, path, is_avatar):
     current_time = datetime.now()
-    image_id = images_collection.insert_one({'room_id': room_id, 'avatar': False, 'location': path,
+    image_id = images_collection.insert_one({'room_id': room_id, 'avatar': is_avatar, 'location': path,
                                              'author': sender, 'time_sent': current_time}).inserted_id
     return image_id
 

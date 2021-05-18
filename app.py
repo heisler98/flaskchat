@@ -24,7 +24,7 @@ from flask_jwt_extended import JWTManager
 # Local Imports
 from db import get_user, save_room, add_room_members, get_rooms_for_user, get_room, is_room_member, get_room_members, \
     is_room_admin, update_room, remove_room_members, save_message, get_messages, save_user, get_all_users, get_user_id, \
-    save_image, locate_image, change_user_password, change_user_realname, find_dm, create_dm
+    save_image, locate_image, change_user_password, change_user_realname, find_dm, create_dm, change_user_avatar
 from model.user import User
 from model.response import Response
 
@@ -39,6 +39,10 @@ jwt = JWTManager(app)
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
 app.config["JWT_HEADER_NAME"] = 'tasty_token'
 
+# Uploads
+ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+UPLOAD_FOLDER = 'uploads'
+
 
 # --- Helper Functions ---
 def parse_json(data):
@@ -47,6 +51,11 @@ def parse_json(data):
 
 def create_json(some_dictionary):
     return json.loads(json.dumps(some_dictionary))
+
+
+def allowed_file(filename):
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
 # --- API ---
@@ -413,17 +422,16 @@ def upload_image():
         return create_json({'image_id': image_id})
 
 
-@app.route('/uploads/<upload_id>')
+@app.route('/uploads/<upload_id>', methods=['GET'])
 @jwt_required()
 def get_image(upload_id):
     username = get_jwt_identity()
-    json_input = request.get_json()
     target_image = locate_image(upload_id)
     app.logger.info("{} attempted to view file {}".format(username, upload_id))
 
     if target_image:
         image_room = target_image['room_id']
-        if not is_room_member(image_room, username):
+        if not is_room_member(image_room, username) and not target_image['avatar']:  # avatars can be accessed anywhere
             return create_json({'Error': 'Not authorized'})
 
         file_path = target_image['location']
@@ -432,6 +440,59 @@ def get_image(upload_id):
         else:
             return create_json({'File not found': upload_id})
     return create_json({'File not found': upload_id})
+
+
+@app.route('/avatar/<user_id>', methods=['GET'])
+@jwt_required()
+def get_avatar(user_id):
+    target_user = get_user(user_id)
+
+    if not target_user:
+        return create_json({'Error': 'User not found'})
+
+    if request.method == 'GET':
+        target_image_id = target_user.avatar
+        if not target_image_id:
+            return create_json({'Error': 'No associated avatar with this user'})
+        image_location = locate_image(upload_id=target_image_id)['location']
+
+        if os.path.exists(image_location):
+            return send_file(image_location)
+        else:
+            return create_json({'File not found': image_location})
+
+
+@app.route('/avatar/<user_id>/create', methods=['POST'])
+@jwt_required()
+def new_avatar(user_id):
+    username = get_jwt_identity()
+    target_user = get_user(user_id)
+
+    if not target_user:
+        return create_json({'Error': 'User not found'})
+
+    if target_user.username != username:
+        app.logger.info('!!! {} tried to change another users avatar: {}'.format(username, target_user.username))
+        return create_json({'Error': 'Not authorized'})
+
+    if request.method == 'POST':
+        file = request.files['file']
+        filename = secure_filename(file.filename)
+
+        if filename == '':
+            return create_json({'Error': 'Bad filename'})
+        if not file:
+            return create_json({'Error': 'Bad file'})
+        if not allowed_file(file):
+            return create_json({'Error': 'Bad file type'})
+
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        image_id = save_image(None, None, filepath, is_avatar=True)
+        change_user_avatar(target_user.username, image_id)
+
+        app.logger.info('{} {} changed their avatar'.format(user_id, username))
+        return create_json({'Success': 'Avatar changed, GET user for ID'})
+
 
 # STATISTICS
 
