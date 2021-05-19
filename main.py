@@ -1,6 +1,5 @@
 # github.com/colingoodman
 
-# Blueprints
 from api.auth import auth_blueprint
 from api.rooms import rooms_blueprint
 from api.sockets import sockets_blueprint
