@@ -4,7 +4,6 @@ import re
 from flask import Blueprint, request, jsonify, current_app
 from flask_cors import cross_origin
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
-from flask_restful import Api, Resource
 from pymongo.errors import DuplicateKeyError
 
 from db import get_user_id, get_user, save_user
