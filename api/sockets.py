@@ -37,6 +37,8 @@ def on_disconnect(data):
 @socketio.on('send_message')
 @jwt_required(fresh=True)
 def handle_send_message_event(data):
+    current_app.logger.info('Connected sockets: {}'.format(connected_sockets))
+
     username = data['username']
     room = data['room']  # client must pass room id here
     message = data['message']
@@ -48,20 +50,21 @@ def handle_send_message_event(data):
     time_sent = datetime.now().strftime('%b %d, %H:%M')
     data['time_sent'] = time_sent
 
-    current_app.logger.info("{} has sent message to the room {} at {}".format(username, room, time_sent))
-
-    save_message(room, message, username, is_image, image_id)  # to db
-
-    room_member_objects = get_room_members(room)  # determine who should receive this message
     room_member_usernames = []
-
+    room_member_objects = get_room_members(room)  # determine who should receive this message
     for db_item in room_member_objects:
         room_member_usernames.append(db_item['_id']['username'])
 
     if username in room_member_usernames:  # if the author/sender is in the room they are trying to send to
+        current_app.logger.info("{} has sent message to the room {} at {}".format(username, room, time_sent))
+        save_message(room, message, username, is_image, image_id)  # to db
+
         for member in room_member_usernames:
+            current_app.logger.info("emit to {}, members {}".format(room, room_member_usernames))
             if member in connected_sockets:
                 target_socket_id = connected_sockets[member]
                 current_app.logger.info("emit message to {} in {} at {}".format(username, room, time_sent))
                 socketio.emit('receive_message', data, room=target_socket_id)  # emit to specific user
+    else:
+        current_app.logger.info("{} not authorized to send to {}".format(username, room))
 
