@@ -12,6 +12,7 @@ from bson.json_util import dumps
 from werkzeug.security import safe_str_cmp
 from pymongo.errors import DuplicateKeyError
 from werkzeug.utils import secure_filename
+from flask_cors import CORS, cross_origin
 
 # Flask Imports
 from flask import Flask, render_template, request, redirect, url_for, send_file
@@ -30,6 +31,8 @@ from model.response import Response
 
 # App Setup
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 app.secret_key = "1"
 socketio = SocketIO(app, cors_allowed_origins='*')
 connected_sockets = {}
@@ -64,6 +67,7 @@ def allowed_file(filename):
 
 
 @app.route('/login', methods=['POST'])
+@cross_origin()
 def login():
     app.logger.info('{} hit /login'.format(request.remote_addr))
     json_input = request.get_json(force=True)
@@ -111,6 +115,7 @@ def hello():
 
 
 @app.route('/signup')
+@cross_origin()
 def create_account():
     json_input = request.get_json()
     user_object = json_input['child']
