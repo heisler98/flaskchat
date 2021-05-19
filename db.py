@@ -62,6 +62,9 @@ def get_all_users():
 
 
 def get_user(user_id):
+    if not user_id:
+        raise TypeError
+
     user_id = int(user_id)
     print('DB: Attempting to fetch', user_id)
 
@@ -89,7 +92,10 @@ def get_rooms_for_user(username):
 
 def get_user_id(username):
     some_user_id = users_collection.find_one({'username': username}, {'_id': 1})
-    return some_user_id['_id']
+    if some_user_id:
+        return some_user_id['_id']
+    else:
+        return None
 
 # ROOMS
 
