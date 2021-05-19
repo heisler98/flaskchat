@@ -82,11 +82,8 @@ def login():
         return create_json({'Error': 'Invalid request: Must be a json/dict.'})
 
     if request.method == 'POST':
-        try:
-            user_id = get_user_id(username)['_id']
-            user = get_user(user_id)
-        except Exception as e:
-            return create_json({'Error': ''})
+        user_id = get_user_id(username)
+        user = get_user(user_id)
 
         if user and user.check_password(password):
             access_token = create_access_token(identity=username)
@@ -99,7 +96,7 @@ def login():
             app.logger.info('%s failed to log in', username)
             return create_json({'Error': 'Wrong password.'})
     else:
-        return create_json({'Error': ''})
+        return create_json({'Error': 'Request must be POST'})
 
     return create_json({'Error': ''})
 
@@ -143,6 +140,8 @@ def create_account():
         return create_json({'Error': 'Invalid request: Must be a json/dict.'})
 
     if re.match("^[A-Za-z_]*$", username):
+        if len(password) < 6:
+            return create_json({'Error': 'Password must be 6+ characters.'})
         try:
             save_user(username, email, password, full_name)
             app.logger.info('{} created a new account, {}'.format(request.remote_addr, username))

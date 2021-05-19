@@ -89,7 +89,7 @@ def get_rooms_for_user(username):
 
 def get_user_id(username):
     some_user_id = users_collection.find_one({'username': username}, {'_id': 1})
-    return some_user_id
+    return some_user_id['_id']
 
 # ROOMS
 
