@@ -44,7 +44,7 @@ app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_HEADER_NAME"] = 'tasty_token'
 
 # Uploads
-ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 UPLOAD_FOLDER = 'uploads'
 
 
@@ -114,7 +114,7 @@ def refresh():
 
 
 @app.route('/whoami', methods=['GET'])
-@jwt_required()
+@jwt_required(fresh=True)
 def who():
     username = get_jwt_identity()
     return create_json({'user': username})
@@ -174,7 +174,7 @@ def get_rooms():
 
 
 @app.route('/rooms/create', methods=['POST'])
-@jwt_required()
+@jwt_required(fresh=True)
 def create_room():
     username = get_jwt_identity()
     json_input = request.get_json(force=True)
@@ -189,7 +189,7 @@ def create_room():
 
 
 @app.route('/rooms/dm/<user_id>', methods=['GET'])
-@jwt_required()
+@jwt_required(fresh=True)
 def view_dm(user_id):
     username = get_jwt_identity()
 
@@ -205,7 +205,7 @@ def view_dm(user_id):
 
 
 @app.route('/rooms/<room_id>', methods=['GET'])
-@jwt_required()
+@jwt_required(fresh=True)
 def single_room(room_id):
     json_input = request.get_json()
     username = get_jwt_identity()
@@ -243,7 +243,7 @@ def single_room(room_id):
 
 
 @app.route('/rooms/<room_id>/messages', methods=['GET'])
-@jwt_required()
+@jwt_required(fresh=True)
 def get_room_messages(room_id):
     room = get_room(room_id)
     username = get_jwt_identity()
@@ -368,7 +368,7 @@ def list_users():
 
 
 @app.route('/users/<user_id>/password', methods=['POST'])
-@jwt_required()
+@jwt_required(fresh=True)
 def change_password(user_id):
     username = get_jwt_identity()
     json_input = request.get_json()
@@ -393,7 +393,7 @@ def change_password(user_id):
 
 
 @app.route('/users/<user_id>/edit', methods=['POST'])
-@jwt_required()
+@jwt_required(fresh=True)
 def edit_user(user_id):  # NOT FINISHED YET
     username = get_jwt_identity()
     json_input = request.get_json()
@@ -415,7 +415,7 @@ def edit_user(user_id):  # NOT FINISHED YET
 
 
 @app.route('/uploads/create', methods=['POST'])
-@jwt_required()
+@jwt_required(fresh=True)
 def upload_image():
     username = get_jwt_identity()
     json_input = request.get_json()
@@ -475,7 +475,7 @@ def get_avatar(user_id):
 
 
 @app.route('/avatar/<user_id>/create', methods=['POST'])
-@jwt_required()
+@jwt_required(fresh=True)
 def new_avatar(user_id):
     username = get_jwt_identity()
     target_user = get_user(user_id)
@@ -540,7 +540,7 @@ def on_disconnect(data):
 
 
 @socketio.on('send_message')
-@jwt_required()
+@jwt_required(fresh=True)
 def handle_send_message_event(data):
     username = data['username']
     room = data['room']  # client must pass room id here
