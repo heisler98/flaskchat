@@ -56,7 +56,7 @@ def handle_send_message_event(data):
     room_member_usernames = []
 
     for db_item in room_member_objects:
-        room_member_usernames.current_append(db_item['_id']['username'])
+        room_member_usernames.append(db_item['_id']['username'])
 
     if username in room_member_usernames:  # if the author/sender is in the room they are trying to send to
         for member in room_member_usernames:
