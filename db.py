@@ -68,9 +68,9 @@ def get_user(user_id):
     user_data = users_collection.find_one({'_id': user_id})
     if user_data:
         print('DB: Fetched', user_id, '({})'.format(user_data['username']))
-    if user_data['avatar']:
+    try:
         some_avatar = user_data['avatar']
-    else:
+    except KeyError as e:
         some_avatar = None
 
     return User(user_data['username'], user_data['email'], user_data['password'],
