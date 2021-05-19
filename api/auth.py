@@ -75,7 +75,7 @@ def create_account():
     return jsonify({'Error': ''})
 
 
-@auth_blueprint.route("/refresh", methods=["POST"])
+@auth_blueprint.route("/refresh")
 @jwt_required(refresh=True)
 def refresh():
     identity = get_jwt_identity()
