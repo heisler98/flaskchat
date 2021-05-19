@@ -34,23 +34,23 @@ def save_user(username, email, password, fullname):
 
 def add_twitter_handle(username, handle):
     now = datetime.now()
-    users_collection.update_one({'username': username}, {'twitter': handle})
+    users_collection.update_one({'username': username}, {'$set': {'twitter': handle}})  # {'$set': {'name': room_name}}
 
 
 def change_user_password(username, new_password):
     password_hash = generate_password_hash(new_password)
     now = datetime.now()
-    users_collection.update_one({'username': username}, {'password': password_hash})
+    users_collection.update_one({'username': username}, {'$set': {'password': password_hash}})
 
 
 def change_user_realname(username, realname):
     now = datetime.now()
-    users_collection.update_one({'username': username}, {'realname': realname})
+    users_collection.update_one({'username': username}, {'$set': {'realname': realname}})
 
 
 def change_user_avatar(username, file_id):
     now = datetime.now()
-    users_collection.update_one({'username': username}, {'avatar': file_id})
+    users_collection.update_one({'username': username}, {'$set': {'avatar': file_id}})
 
 
 def get_all_users():
@@ -62,11 +62,19 @@ def get_all_users():
 
 
 def get_user(user_id):
-    print('Attempting to fetch', user_id)
+    user_id = int(user_id)
+    print('DB: Attempting to fetch', user_id)
+
     user_data = users_collection.find_one({'_id': user_id})
-    some_path = ''
+    if user_data:
+        print('DB: Fetched', user_id, '({})'.format(user_data['username']))
+    if user_data['avatar']:
+        some_avatar = user_data['avatar']
+    else:
+        some_avatar = None
+
     return User(user_data['username'], user_data['email'], user_data['password'],
-                some_path, user_data['realname'], user_data['_id']) if user_data else None
+                some_avatar, user_data['realname'], user_data['_id']) if user_data else None
 
 
 def get_messages_by_user(username):

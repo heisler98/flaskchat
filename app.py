@@ -17,7 +17,7 @@ from flask_cors import CORS, cross_origin
 # Flask Imports
 from flask import Flask, render_template, request, redirect, url_for, send_file
 from flask_socketio import SocketIO, join_room, rooms
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, create_refresh_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
@@ -33,13 +33,14 @@ from model.response import Response
 app = Flask(__name__)
 cors = CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
-app.secret_key = "1"
+app.secret_key = "dev"
 socketio = SocketIO(app, cors_allowed_origins='*')
 connected_sockets = {}
 
 # JWT Configuration
 jwt = JWTManager(app)
 app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(hours=1)
+app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
 app.config["JWT_HEADER_NAME"] = 'tasty_token'
 
 # Uploads
@@ -89,8 +90,9 @@ def login():
 
         if user and user.check_password(password):
             access_token = create_access_token(identity=username)
+            refresh_token = create_refresh_token(identity=username)
             app.logger.info('%s logged in successfully', user.username)
-            return create_json({'Token': access_token})
+            return create_json({'Token': access_token, 'Refresh': refresh_token})
         elif not user:
             return create_json({'Error': 'User not found.'})
         else:
@@ -102,19 +104,28 @@ def login():
     return create_json({'Error': ''})
 
 
-@app.route('/whoami')
+@app.route("/refresh", methods=["POST"])
+@jwt_required(refresh=True)
+def refresh():
+    identity = get_jwt_identity()
+    access_token = create_access_token(identity=identity)
+
+    return create_json({'Token': access_token})
+
+
+@app.route('/whoami', methods=['GET'])
 @jwt_required()
 def who():
     username = get_jwt_identity()
     return create_json({'user': username})
 
 
-@app.route('/')
+@app.route('/', methods=['GET'])
 def hello():
     return create_json({'Hello': 'World'})
 
 
-@app.route('/signup')
+@app.route('/signup', methods=['POST'])
 @cross_origin()
 def create_account():
     json_input = request.get_json()
@@ -144,7 +155,7 @@ def create_account():
 # ROOMS
 
 
-@app.route('/rooms/list')
+@app.route('/rooms/list', methods=['GET'])
 @jwt_required()
 def get_rooms():
     username = get_jwt_identity()
@@ -162,7 +173,7 @@ def get_rooms():
     return create_json({'rooms': id_list})
 
 
-@app.route('/rooms/create')
+@app.route('/rooms/create', methods=['POST'])
 @jwt_required()
 def create_room():
     username = get_jwt_identity()
@@ -177,10 +188,9 @@ def create_room():
     return create_json({'Success': '{}'.format(room_id)})
 
 
-@app.route('/rooms/dm/<user_id>')
+@app.route('/rooms/dm/<user_id>', methods=['GET'])
 @jwt_required()
 def view_dm(user_id):
-    json_input = request.get_json()
     username = get_jwt_identity()
 
     user_one = get_user(get_user_id(username))
@@ -194,7 +204,7 @@ def view_dm(user_id):
         return create_json({'room_id': new_dm})
 
 
-@app.route('/rooms/<room_id>')
+@app.route('/rooms/<room_id>', methods=['GET'])
 @jwt_required()
 def single_room(room_id):
     json_input = request.get_json()
@@ -232,7 +242,7 @@ def single_room(room_id):
     return create_json({'Error': ''})
 
 
-@app.route('/rooms/<room_id>/messages')
+@app.route('/rooms/<room_id>/messages', methods=['GET'])
 @jwt_required()
 def get_room_messages(room_id):
     room = get_room(room_id)
@@ -262,12 +272,10 @@ def get_room_messages(room_id):
     return create_json({'Error': ''})
 
 
-@app.route('/rooms/<room_id>/members')
+@app.route('/rooms/<room_id>/members', methods=['GET'])
 @jwt_required()
 def single_room_members(room_id):
-    json_input = request.get_json()
     username = get_jwt_identity()
-    room = get_room(room_id)
 
     app.logger.info('{} requested members for {}'.format(username, room_id))
 
@@ -277,7 +285,7 @@ def single_room_members(room_id):
     for member in members_raw:
         try:
             this_user = get_user(get_user_id(member['_id']['username'])['_id'])
-        except Exception as e:
+        except KeyError as e:
             continue
         if not this_user:
             app.logger.info('Encountered unknown user {} in {}'.format(member['_id']['username'], room_id))
@@ -306,35 +314,34 @@ def single_room_members(room_id):
 @app.route('/users/<user_id>', methods=['GET'])
 @jwt_required()
 def view_user(user_id):
-    json_input = request.get_json()
     username = get_jwt_identity()
-
-    try:
-        int(user_id)
-    except ValueError as e:
-        return create_json({'Error': 'Bad request; are you using the user ID?'})
-    except TypeError as e:
-        return create_json({'Error': 'Bad request; are you using the user ID?'})
 
     app.logger.info('{} viewing profile of {} (GET)'.format(username, user_id))
     user_raw = get_user(int(user_id))
+
     try:
-        avatar = user_raw.avatar
-    except Exception as e:
-        avatar = None
+        some_avatar = user_raw.avatar
+    except AttributeError as e:
+        some_avatar = None
+
+    try:
+        some_username = user_raw.username
+    except AttributeError as e:
+        return create_json({'Error': 'Bad request; are you using the user ID?'})
+
     user = {
-        'username': user_raw.username,
+        'username': some_username,
         'email': user_raw.email,
         'phone_number': None,
         'realname': user_raw.realname,
-        'avatar': avatar,
+        'avatar': some_avatar,
         'ID': user_raw.identifier
     }
 
     return create_json(user)
 
 
-@app.route('/users/list')
+@app.route('/users/list', methods=['GET'])
 @jwt_required()
 def list_users():
     username = get_jwt_identity()
@@ -360,7 +367,7 @@ def list_users():
     return create_json({'users': users})
 
 
-@app.route('/users/<user_id>/password')
+@app.route('/users/<user_id>/password', methods=['POST'])
 @jwt_required()
 def change_password(user_id):
     username = get_jwt_identity()
@@ -385,7 +392,7 @@ def change_password(user_id):
     return create_json({'Error': ''})
 
 
-@app.route('/users/<user_id>/edit')
+@app.route('/users/<user_id>/edit', methods=['POST'])
 @jwt_required()
 def edit_user(user_id):  # NOT FINISHED YET
     username = get_jwt_identity()
@@ -502,7 +509,7 @@ def new_avatar(user_id):
 # STATISTICS
 
 
-@app.route('/stats/message_count')
+@app.route('/stats/message_count', methods=['GET'])
 @jwt_required()
 def message_count():
     return None
