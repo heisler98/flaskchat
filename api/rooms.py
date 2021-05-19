@@ -78,7 +78,7 @@ def single_room(room_id):
         messages = []
         for item in message_bson:
             try:
-                id = get_user_id(item['sender'])['_id']
+                id = get_user_id(item['sender'])
             except:
                 continue
             messages.append({
@@ -109,7 +109,7 @@ def get_room_messages(room_id):
         messages = []
         for item in message_bson:
             try:
-                id = get_user_id(item['sender'])['_id']
+                id = get_user_id(item['sender'])
             except Exception as e:
                 continue
             messages.append({
@@ -137,10 +137,6 @@ def single_room_members(room_id):
     members = []
 
     for member in members_raw:
-        print('#######################')
-        print(member)
-        print(member['_id']['username'])
-        print(get_user_id(member['_id']['username']))
         try:
             this_user = get_user(get_user_id(member['_id']['username']))
         except KeyError as e:

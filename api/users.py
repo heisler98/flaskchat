@@ -74,7 +74,7 @@ def change_password(user_id):
         new_password = json_input['new_password']
         old_password = json_input['old_password']
         try:
-            user_id = get_user_id(username)['_id']
+            user_id = get_user_id(username)
             user = get_user(user_id)
         except Exception as e:
             return jsonify({'Error': ''})
