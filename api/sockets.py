@@ -20,7 +20,13 @@ def on_connect(data):
     join_room('server')
     current_socket_id = request.sid
 
-    connected_sockets[user_identity] = current_socket_id
+    if user_identity in connected_sockets:
+        this_user = connected_sockets[user_identity]
+        connected_sockets[user_identity] = this_user.append(current_socket_id)
+    else:
+        this_user = [current_socket_id]
+        connected_sockets[user_identity] = this_user
+
     current_app.logger.info("{} has connected, {}".format(user_identity, current_socket_id))
 
 
@@ -62,9 +68,10 @@ def handle_send_message_event(data):
         for member in room_member_usernames:
             current_app.logger.info("emit to {}, members {}".format(room, room_member_usernames))
             if member in connected_sockets:
-                target_socket_id = connected_sockets[member]
+                target_socket_ids = connected_sockets[member]
                 current_app.logger.info("emit message to {} in {} at {}".format(username, room, time_sent))
-                socketio.emit('receive_message', data, room=target_socket_id)  # emit to specific user
+                for socket in target_socket_ids:
+                    socketio.emit('receive_message', data, room=socket)  # emit to specific user
     else:
         current_app.logger.info("{} not authorized to send to {}".format(username, room))
 

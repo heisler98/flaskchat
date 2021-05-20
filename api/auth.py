@@ -79,7 +79,7 @@ def create_account():
 @jwt_required(refresh=True)
 def refresh():
     identity = get_jwt_identity()
-    access_token = create_access_token(identity=identity)
+    access_token = create_access_token(identity=identity, fresh=True)
 
     return jsonify({'Token': access_token})
 
