@@ -186,8 +186,8 @@ def remove_room_members(room_id, usernames):
 # LOG
 
 
-def add_log_event(event_message):
-    logging_collection.insert_one({'content': event_message, 'time': datetime.now()})
+def add_log_event(event_message, username):
+    logging_collection.insert_one({'content': event_message, 'time': datetime.now(), 'user': username})
 
 # MISC
 

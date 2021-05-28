@@ -21,8 +21,12 @@ def on_connect(data):
     current_socket_id = request.sid
 
     if user_identity in connected_sockets:
-        this_user = connected_sockets[user_identity]
-        connected_sockets[user_identity] = this_user.append(current_socket_id)
+        if connected_sockets[user_identity]:
+            this_user = connected_sockets[user_identity]
+            connected_sockets[user_identity] = this_user.append(current_socket_id)
+        else:  # None in the dict, need to debug
+            this_user = [current_socket_id]
+            connected_sockets[user_identity] = this_user
     else:
         this_user = [current_socket_id]
         connected_sockets[user_identity] = this_user
@@ -34,10 +38,19 @@ def on_connect(data):
 @jwt_required()
 def on_disconnect(data):
     user_identity = get_jwt_identity()  # user_identity is username, NOT id
-    current_socket_id = connected_sockets[user_identity]
-    current_app.logger.info("{} is disconnecting, {}".format(user_identity, current_socket_id))
+    current_socket_ids = connected_sockets[user_identity]
 
-    connected_sockets.pop(user_identity)
+    socket_id_close = data['socket_id']  # client must pass their socket id
+    new_socket_ids_list = current_socket_ids.pop(socket_id_close)
+
+    if len(new_socket_ids_list) == 0:
+        removing_entry = connected_sockets.pop(user_identity, None)
+        if not removing_entry:
+            raise Exception
+    else:
+        connected_sockets[user_identity] = new_socket_ids_list
+
+    current_app.logger.info("{} is disconnecting, {}".format(user_identity, socket_id_close))
 
 
 @socketio.on('send_message')
@@ -74,4 +87,19 @@ def handle_send_message_event(data):
                     socketio.emit('receive_message', data, room=socket)  # emit to specific user
     else:
         current_app.logger.info("{} not authorized to send to {}".format(username, room))
+
+
+@socketio.on('im_typing')
+@jwt_required()
+def is_typing(data):
+    username = data['username']
+    room = data['room']
+    socketio.emit('is_typing', data)
+
+
+@socketio.on('im_not_typing')
+@jwt_required()
+def not_typing(data):
+    username = data['username']
+    socketio.emit('not_typing', data)
 

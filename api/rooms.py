@@ -61,7 +61,7 @@ def view_dm(user_id):
 @rooms_blueprint.route('/rooms/<room_id>', methods=['GET'])
 @jwt_required(fresh=True)
 def single_room(room_id):
-    json_input = request.get_json()
+    # json_input = request.get_json()
     username = get_jwt_identity()
     room = get_room(room_id)
 
@@ -79,7 +79,7 @@ def single_room(room_id):
         for item in message_bson:
             try:
                 id = get_user_id(item['sender'])
-            except:
+            except Exception as e:
                 continue
             messages.append({
                 'time_sent': item['time_sent'],
