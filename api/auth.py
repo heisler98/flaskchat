@@ -1,14 +1,19 @@
 # github.com/colingoodman
 import re
+from datetime import timedelta
 
 from flask import Blueprint, request, jsonify, current_app
 from flask_cors import cross_origin
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 from pymongo.errors import DuplicateKeyError
 
 from db import get_user_id, get_user, save_user
 
 auth_blueprint = Blueprint('auth_blueprint', __name__)
+
+
+def check_if_token_revoked(jwt_header, jwt_payload):
+    pass
 
 
 @auth_blueprint.route('/login', methods=['POST'])
@@ -82,6 +87,14 @@ def refresh():
     access_token = create_access_token(identity=identity, fresh=True)
 
     return jsonify({'Token': access_token})
+
+
+@auth_blueprint.route('/logout', methods=["DELETE"])
+@jwt_required()
+def logout():
+    jti = get_jwt()['jti']
+    # jwt_redis_blocklist.set(jti, '', ex=timedelta(hours=1))
+    return jsonify({'Error': ''})
 
 
 @auth_blueprint.route('/whoami', methods=['GET'])
