@@ -34,9 +34,16 @@ def on_connect(data):
     current_app.logger.info("{} has connected, {}".format(user_identity, current_socket_id))
 
 
-@socketio.on('disconnect')  # need to remove socket id from dict
+@socketio.on('disconnect')
 def client_disconnect():
     disconnected_id = request.namespace.socket.sessid
+    current_app.logger.info('{} disconnected, searching for associated user...'.format(disconnected_id))
+
+    for key in connected_sockets:
+        user_sockets = connected_sockets[key]
+        if disconnected_id in user_sockets:
+            current_app.logger.info('{} belonged to {}, removing now.'.format(disconnected_id, key))
+            user_sockets.remove(disconnected_id)
 
 
 @socketio.on('close_session')  # to be replaced with broken connection handling
