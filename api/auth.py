@@ -64,13 +64,13 @@ def login():
 @cross_origin()
 def create_account():
     json_input = request.get_json()
-    user_object = json_input['child']
+    # user_object = json_input['child']
 
     try:
-        username = user_object['username']
-        password = user_object['password']
-        email = user_object['email']
-        full_name = user_object['name']
+        username = json_input['username']
+        password = json_input['password']
+        email = json_input['email']
+        full_name = json_input['name']
         current_app.logger.info('{} trying to create a new account, {}'.format(request.remote_addr, username))
     except KeyError as e:
         return jsonify({'Error': 'Invalid request: Missing required field.'})

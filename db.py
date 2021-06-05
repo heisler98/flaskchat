@@ -225,5 +225,5 @@ def save_image(sender, room_id, path, is_avatar):
 
 
 def locate_image(image_id):
-    return images_collection.find_one({'_id': ObjectId(image_id)})
+    return images_collection.find_one({'_id': image_id})
 
