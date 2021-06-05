@@ -54,12 +54,13 @@ def list_users():
             'email': user['email'],
             'phone_number': None,
             'realname': user['realname'],
-            'avatar': avatar,
+            'avatar': str(avatar),
             'date_joined': user['date_joined'].timestamp(),
             'ID': user['_id']
         }
         users.append(new_user)
 
+    print(users)
     return jsonify({'users': users}), 200
 
 
