@@ -79,7 +79,7 @@ def handle_send_message_event(data):
     except Exception as e:
         image_id = None
     time_sent = datetime.now()  # .strftime('%b %d, %H:%M')
-    data['time_sent'] = time_sent
+    data['time_sent'] = str(time_sent)
     data['user_id'] = str(get_user_id(username))
 
     room_member_usernames = []
