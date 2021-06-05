@@ -89,10 +89,13 @@ def new_avatar(user_id):
         filename = secure_filename(file.filename)
 
         if filename == '':
+            current_app.logger.info('{} posted a file with no name!'.format(username))
             return jsonify({'Error': 'Bad filename'})
         if not file:
+            current_app.logger.info('{} posted file {} and had some issue.'.format(username, filename))
             return jsonify({'Error': 'Bad file'})
         if not allowed_file(file):
+            current_app.logger.info('{} posted a bad file type, {}'.format(username, filename))
             return jsonify({'Error': 'Bad file type'})
 
         filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
