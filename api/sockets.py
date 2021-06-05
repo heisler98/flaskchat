@@ -88,7 +88,6 @@ def handle_send_message_event(data):
 
     if username in room_member_usernames:  # if the author/sender is in the room they are trying to send to
         current_app.logger.info("{} has sent message to the room {} at {}".format(username, room, time_sent))
-        save_message(room, message, username, is_image, image_id)  # to db
 
         for member in room_member_usernames:
             current_app.logger.info("emit to {}, members {}".format(room, room_member_usernames))
@@ -97,6 +96,8 @@ def handle_send_message_event(data):
                 current_app.logger.info("emit message to {} in {} at {}".format(username, room, time_sent))
                 for socket in target_socket_ids:
                     socketio.emit('receive_message', data, room=socket)  # emit to specific user
+
+        save_message(room, message, username, is_image, image_id)  # to db
     else:
         current_app.logger.info("{} not authorized to send to {}".format(username, room))
 

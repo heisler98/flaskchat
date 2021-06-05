@@ -6,3 +6,5 @@ werkzeug == 1.0.1
 flask_jwt_extended == 4.1.0
 pytest == 6.2.4
 flask_cors == 3.0.10
+sumy
+spotipy
