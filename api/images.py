@@ -96,7 +96,8 @@ def new_avatar(user_id):
             return jsonify({'Error': 'Bad file'})
         if not allowed_file(file):
             current_app.logger.info('{} posted a bad file type, {}'.format(username, filename))
-            return jsonify({'Error': 'Bad file type'})
+            pass
+            # return jsonify({'Error': 'Bad file type'})
 
         filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
         image_id = save_image(None, None, filepath, is_avatar=True)
