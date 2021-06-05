@@ -6,7 +6,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_socketio import join_room, SocketIO, join_room, rooms
 from .app import socketio
 
-from db import save_message, get_room_members
+from db import save_message, get_room_members, get_user_id
 
 sockets_blueprint = Blueprint('sockets_blueprint', __name__)
 connected_sockets = {}
@@ -78,8 +78,9 @@ def handle_send_message_event(data):
         image_id = data['image_id']
     except Exception as e:
         image_id = None
-    time_sent = datetime.now().strftime('%b %d, %H:%M')
+    time_sent = datetime.now()  # .strftime('%b %d, %H:%M')
     data['time_sent'] = time_sent
+    data['user_id'] = get_user_id(username)
 
     room_member_usernames = []
     room_member_objects = get_room_members(room)  # determine who should receive this message

@@ -135,8 +135,8 @@ def get_room_messages(room_id):
             messages.append({
                 'time_sent': item['time_sent'],
                 'text': item['text'],
-                'author_username': item['sender'],
-                'author_id': id
+                'username': item['sender'],
+                'user_id': id
             })
 
         return jsonify({'messages': messages})
