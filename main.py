@@ -11,11 +11,11 @@ from api.app import create_app, socketio
 app = create_app(debug=True)
 
 # API Blueprints
-app.register_blueprint(auth_blueprint)
-app.register_blueprint(rooms_blueprint)
-app.register_blueprint(users_blueprint)
-app.register_blueprint(images_blueprint)
-app.register_blueprint(sockets_blueprint)
+app.register_blueprint(auth_blueprint, url_prefix='/api')
+app.register_blueprint(rooms_blueprint, url_prefix='/api')
+app.register_blueprint(users_blueprint, url_prefix='/api')
+app.register_blueprint(images_blueprint, url_prefix='/api')
+app.register_blueprint(sockets_blueprint, url_prefix='/api')
 
 
 if __name__ == '__main__':
