@@ -30,9 +30,19 @@ def login():
     except TypeError as e:
         return jsonify({'Error': 'Invalid request: Must be a json/dict.'})
 
+    if len(username) == 0:
+        return jsonify({'Error': 'Please provide a username.'})
+    if len(password) == 0:
+        return jsonify({'Error': 'Please provide a password'})
+
     if request.method == 'POST':
-        user_id = get_user_id(username)
-        user = get_user(user_id)
+        try:
+            user_id = get_user_id(username)
+            if not user_id:
+                return jsonify({'Error': 'User not found.'})
+            user = get_user(user_id)
+        except TypeError as e:
+            return jsonify({'Error': 'Bad username.'})
 
         if user and user.check_password(password):
             access_token = create_access_token(identity=username, fresh=True)
