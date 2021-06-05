@@ -26,23 +26,23 @@ def login():
         username = json_input['username']
         password = json_input['password']
     except KeyError as e:
-        return jsonify({'Error': 'Invalid request: Missing required field.'})
+        return jsonify({'Error': 'Invalid request: Missing required field.'}), 400
     except TypeError as e:
-        return jsonify({'Error': 'Invalid request: Must be a json/dict.'})
+        return jsonify({'Error': 'Invalid request: Must be a json/dict.'}), 400
 
     if len(username) == 0:
-        return jsonify({'Error': 'Please provide a username.'})
+        return jsonify({'Error': 'Please provide a username.'}), 400
     if len(password) == 0:
-        return jsonify({'Error': 'Please provide a password'})
+        return jsonify({'Error': 'Please provide a password'}), 400
 
     if request.method == 'POST':
         try:
             user_id = get_user_id(username)
             if not user_id:
-                return jsonify({'Error': 'User not found.'})
+                return jsonify({'Error': 'User not found.'}), 400
             user = get_user(user_id)
         except TypeError as e:
-            return jsonify({'Error': 'Bad username.'})
+            return jsonify({'Error': 'Bad username.'}), 400
 
         if user and user.check_password(password):
             access_token = create_access_token(identity=username, fresh=True)
@@ -50,14 +50,14 @@ def login():
             current_app.logger.info('%s logged in successfully', user.username)
             return jsonify({'Token': access_token, 'Refresh': refresh_token})
         elif not user:
-            return jsonify({'Error': 'User not found.'})
+            return jsonify({'Error': 'User not found.'}), 400
         else:
             current_app.logger.info('%s failed to log in', username)
-            return jsonify({'Error': 'Wrong password.'})
+            return jsonify({'Error': 'Wrong password.'}), 400
     else:
-        return jsonify({'Error': 'Request must be POST'})
+        return jsonify({'Error': 'Request must be POST'}), 405
 
-    return jsonify({'Error': ''})
+    return jsonify({'Error': ''}), 500
 
 
 @auth_blueprint.route('/signup', methods=['POST'])
@@ -73,21 +73,21 @@ def create_account():
         full_name = json_input['name']
         current_app.logger.info('{} trying to create a new account, {}'.format(request.remote_addr, username))
     except KeyError as e:
-        return jsonify({'Error': 'Invalid request: Missing required field.'})
+        return jsonify({'Error': 'Invalid request: Missing required field.'}), 400
     except TypeError as e:
-        return jsonify({'Error': 'Invalid request: Must be a json/dict.'})
+        return jsonify({'Error': 'Invalid request: Must be a json/dict.'}), 400
 
     if re.match("^[A-Za-z_]*$", username):
         if len(password) < 6:
-            return jsonify({'Error': 'Password must be 6+ characters.'})
+            return jsonify({'Error': 'Password must be 6+ characters.'}), 400
         try:
             save_user(username, email, password, full_name)
             current_app.logger.info('{} created a new account, {}'.format(request.remote_addr, username))
-            return jsonify({'200': 'User created.'})
+            return jsonify({'200': 'User created.'}), 200
         except DuplicateKeyError:
-            return jsonify({'Error': 'User already exists.'})
+            return jsonify({'Error': 'User already exists.'}), 400
 
-    return jsonify({'Error': ''})
+    return jsonify({'Error': ''}), 500
 
 
 @auth_blueprint.route("/refresh")
@@ -104,19 +104,19 @@ def refresh():
 def logout():
     jti = get_jwt()['jti']
     # jwt_redis_blocklist.set(jti, '', ex=timedelta(hours=1))
-    return jsonify({'Error': ''})
+    return jsonify({'Error': ''}), 500
 
 
 @auth_blueprint.route('/whoami', methods=['GET'])
 @jwt_required(fresh=True)
 def who():
     username = get_jwt_identity()
-    return jsonify({'user': username})
+    return jsonify({'user': username}), 200
 
 
 @auth_blueprint.route('/', methods=['GET'])
 def hello():
-    return jsonify({'Hello': 'World'})
+    return jsonify({'Hello': 'World'}), 200
 
 
 

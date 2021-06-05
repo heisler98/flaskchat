@@ -23,7 +23,7 @@ def view_user(user_id):
     try:
         some_username = user_raw.username
     except AttributeError as e:
-        return jsonify({'Error': 'Bad request; are you using the user ID?'})
+        return jsonify({'Error': 'Bad request; are you using the user ID?'}), 403
 
     user = {
         'username': some_username,
@@ -34,7 +34,7 @@ def view_user(user_id):
         'ID': user_raw.identifier
     }
 
-    return jsonify(user)
+    return jsonify(user), 200
 
 
 @users_blueprint.route('/users/list', methods=['GET'])
@@ -60,7 +60,7 @@ def list_users():
         }
         users.append(new_user)
 
-    return jsonify({'users': users})
+    return jsonify({'users': users}), 200
 
 
 @users_blueprint.route('/users/<user_id>/password', methods=['POST'])
@@ -81,11 +81,11 @@ def change_password(user_id):
 
         if user and user.check_password(old_password):
             change_user_password(username, new_password)
-            return jsonify({'Success': 'Password changed'})
+            return jsonify({'Success': 'Password changed'}), 200
         else:
-            return jsonify({'Error': 'Incorrect password'})
+            return jsonify({'Error': 'Incorrect password'}), 403
 
-    return jsonify({'Error': ''})
+    return jsonify({'Error': ''}), 500
 
 
 @users_blueprint.route('/users/<user_id>/edit', methods=['POST'])
@@ -98,10 +98,10 @@ def edit_user(user_id):  # NOT FINISHED YET
 
     target_user = get_user(user_id)
     if target_user.username != username:
-        return jsonify({'Error': 'Not authorized'})
+        return jsonify({'Error': 'Not authorized'}), 403
 
     if len(var_changes) == 0:
-        return jsonify({'Error': 'Empty json input'})
+        return jsonify({'Error': 'Empty json input'}), 400
 
     for key in var_changes:
         if key == 'realname':

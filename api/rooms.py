@@ -24,7 +24,7 @@ def get_rooms():
     for item in room_list:
         id_list.append(item['_id']['room_id']['$oid'])
 
-    return jsonify({'rooms': id_list})
+    return jsonify({'rooms': id_list}), 200
 
 
 @rooms_blueprint.route('/rooms/create', methods=['POST'])
@@ -36,10 +36,10 @@ def create_room():
     try:
         name = json_input['name']
     except Exception as e:
-        return jsonify({'Error': 'Issue parsing JSON.'})
+        return jsonify({'Error': 'Issue parsing JSON.'}), 400
 
     room_id = save_room(name, username)
-    return jsonify({'Success': '{}'.format(room_id)})
+    return jsonify({'Success': '{}'.format(room_id)}), 200
 
 
 @rooms_blueprint.route('/rooms/dm/<user_id>', methods=['GET'])
@@ -52,10 +52,10 @@ def view_dm(user_id):
 
     target_room = find_dm(user_one, user_two)
     if target_room:
-        return jsonify({'room_id': target_room})
+        return jsonify({'room_id': target_room}), 200
     else:
         new_dm = create_dm(user_one, user_two)
-        return jsonify({'room_id': new_dm})
+        return jsonify({'room_id': new_dm}), 200
 
 
 @rooms_blueprint.route('/rooms/<room_id>', methods=['GET'])
@@ -71,7 +71,7 @@ def single_room(room_id):
         is_dm = False
 
     if not is_room_member(room_id, username):
-        return jsonify({'Error': 'You are not a member of this room.'})
+        return jsonify({'Error': 'You are not a member of this room.'}), 403
     else:
         room_name = room['name']
         message_bson = get_messages(room_id)
@@ -91,9 +91,9 @@ def single_room(room_id):
             'name': room_name,
             'is_dm': is_dm,
             'messages': messages
-        })
+        }), 200
 
-    return jsonify({'Error': ''})
+    return jsonify({'Error': ''}), 500
 
 
 @rooms_blueprint.route('/rooms/<room_id>/messages', methods=['GET'])
@@ -121,9 +121,9 @@ def get_room_messages(room_id):
 
         return jsonify({'messages': messages})
     else:
-        return jsonify({'Error': 'Room not found'})
+        return jsonify({'Error': 'Room not found'}), 400
 
-    return jsonify({'Error': ''})
+    return jsonify({'Error': ''}), 500
 
 
 @rooms_blueprint.route('/rooms/<room_id>/members', methods=['GET'])
@@ -162,4 +162,4 @@ def single_room_members(room_id):
         }
         members.append(parse_json(new_member))
 
-    return jsonify({'members': members})
+    return jsonify({'members': members}), 200
