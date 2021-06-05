@@ -21,5 +21,7 @@ def create_app(debug=True):
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
     app.config["JWT_HEADER_NAME"] = 'tasty_token'
 
+    app.config['UPLOAD_FOLDER'] = 'uploads'
+
     socketio.init_app(app)
     return app
