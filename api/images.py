@@ -103,6 +103,8 @@ def new_avatar(user_id):
         image_id = save_image(None, None, filepath, is_avatar=True)
         change_user_avatar(target_user.username, image_id)
 
+        file.save(filepath)  # store image locally on disk
+
         current_app.logger.info('{} {} changed their avatar'.format(user_id, username))
         return jsonify({'Success': 'Avatar changed, GET user for ID'})
 
