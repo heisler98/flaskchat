@@ -63,7 +63,7 @@ def get_avatar(user_id):
         target_image_id = target_user.avatar
         if not target_image_id:
             return jsonify({'Error': 'No associated avatar with this user'})
-        image_location = locate_image(upload_id=target_image_id)['location']
+        image_location = locate_image(image_id=target_image_id)['location']
 
         if os.path.exists(image_location):
             return send_file(image_location)
