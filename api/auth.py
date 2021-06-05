@@ -7,7 +7,7 @@ from flask_cors import cross_origin
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 from pymongo.errors import DuplicateKeyError
 
-from db import get_user_id, get_user, save_user
+from db import get_user_id, get_user, save_user, add_log_event
 
 auth_blueprint = Blueprint('auth_blueprint', __name__)
 
@@ -47,13 +47,16 @@ def login():
         if user and user.check_password(password):
             access_token = create_access_token(identity=username, fresh=True)
             refresh_token = create_refresh_token(identity=username)
+
             current_app.logger.info('%s logged in successfully', user.username)
-            return jsonify({'Token': access_token, 'Refresh': refresh_token})
+            add_log_event(200, username, 'Login', ip_address=request.remote_addr)
+
+            return jsonify({'Token': access_token, 'Refresh': refresh_token}), 200
         elif not user:
             return jsonify({'Error': 'User not found.'}), 400
         else:
             current_app.logger.info('%s failed to log in', username)
-            return jsonify({'Error': 'Wrong password.'}), 400
+            return jsonify({'Error': 'Wrong password.'}), 403
     else:
         return jsonify({'Error': 'Request must be POST'}), 405
 
@@ -64,7 +67,6 @@ def login():
 @cross_origin()
 def create_account():
     json_input = request.get_json()
-    # user_object = json_input['child']
 
     try:
         username = json_input['username']
@@ -83,6 +85,8 @@ def create_account():
         try:
             save_user(username, email, password, full_name)
             current_app.logger.info('{} created a new account, {}'.format(request.remote_addr, username))
+
+            add_log_event(200, username, 'Signup', ip_address=request.remote_addr)
             return jsonify({'200': 'User created.'}), 200
         except DuplicateKeyError:
             return jsonify({'Error': 'User already exists.'}), 400
@@ -96,6 +100,7 @@ def refresh():
     identity = get_jwt_identity()
     access_token = create_access_token(identity=identity, fresh=True)
 
+    add_log_event(200, identity, 'Refresh', ip_address=request.remote_addr)
     return jsonify({'Token': access_token})
 
 
