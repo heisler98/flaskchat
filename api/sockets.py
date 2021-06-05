@@ -94,8 +94,11 @@ def handle_send_message_event(data):
             if member in connected_sockets:
                 target_socket_ids = connected_sockets[member]
                 current_app.logger.info("emit message to {} in {} at {}".format(username, room, time_sent))
-                for socket in target_socket_ids:
-                    socketio.emit('receive_message', data, room=socket)  # emit to specific user
+                try:
+                    for socket in target_socket_ids:
+                        socketio.emit('receive_message', data, room=socket)  # emit to specific user
+                except TypeError as e:
+                    current_app.logger.info('Failed to emit message to {}, connected on {}'.format(member, connected_sockets[member]))
 
         save_message(room, message, username, is_image, image_id)  # to db
     else:
