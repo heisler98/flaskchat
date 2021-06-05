@@ -75,6 +75,9 @@ def get_user(user_id):
         some_avatar = user_data['avatar']
     except KeyError as e:
         some_avatar = None
+    except TypeError as e:
+        print('ERROR: Failed to fetch avatar for {}'. format(user_id), e)
+        some_avatar = None
 
     return User(user_data['username'], user_data['email'], user_data['password'],
                 some_avatar, user_data['realname'], user_data['_id']) if user_data else None
