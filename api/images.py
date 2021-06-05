@@ -48,6 +48,7 @@ def get_image(upload_id):
             return send_file(file_path)
         else:
             return jsonify({'File not found': upload_id})
+
     return jsonify({'File not found': upload_id}), 400
 
 

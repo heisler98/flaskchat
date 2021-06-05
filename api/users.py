@@ -44,6 +44,8 @@ def list_users():
     users_raw = get_all_users()
     users = []
 
+    current_app.logger.info('{} requested a list of all users.'.format(username))
+
     for user in users_raw:
         try:
             avatar = user['avatar']
@@ -56,7 +58,7 @@ def list_users():
             'realname': user['realname'],
             'avatar': str(avatar),
             'date_joined': user['date_joined'].timestamp(),
-            'ID': user['_id']
+            'ID': str(user['_id'])
         }
         users.append(new_user)
 

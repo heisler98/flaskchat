@@ -93,7 +93,7 @@ def handle_send_message_event(data):
             current_app.logger.info("emit to {}, members {}".format(room, room_member_usernames))
             if member in connected_sockets:
                 target_socket_ids = connected_sockets[member]
-                current_app.logger.info("emit message to {} in {} at {}".format(username, room, time_sent))
+                current_app.logger.info("might emit message to {} in {} at {}".format(username, room, time_sent))
                 try:
                     for socket in target_socket_ids:
                         socketio.emit('receive_message', data, room=socket)  # emit to specific user
