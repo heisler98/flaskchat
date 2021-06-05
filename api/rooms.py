@@ -1,4 +1,7 @@
 # github.com/colingoodman
+import json
+
+from bson import json_util
 from flask import Blueprint, jsonify, current_app, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
@@ -25,6 +28,23 @@ def get_rooms():
         id_list.append(item['_id']['room_id']['$oid'])
 
     return jsonify({'rooms': id_list}), 200
+
+
+@rooms_blueprint.route('/rooms/all', methods=['GET'])
+@jwt_required()
+def get_all_rooms():
+    username = get_jwt_identity()
+    room_list_raw = get_rooms_for_user(username)
+
+    rooms_list = []
+
+    for room_raw in room_list_raw:
+        room_parsed = parse_json(room_raw)
+        room = get_room(room_parsed['_id']['room_id']['$oid'])
+        room['_id'] = room_parsed['_id']['room_id']['$oid']
+        rooms_list.append(room)
+
+    return json.loads(json_util.dumps({'list': rooms_list})), 200
 
 
 @rooms_blueprint.route('/rooms/create', methods=['POST'])
