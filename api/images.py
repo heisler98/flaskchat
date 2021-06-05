@@ -66,7 +66,8 @@ def get_avatar(user_id):
         image_location = locate_image(image_id=target_image_id)['location']
 
         if os.path.exists(image_location):
-            return send_file(image_location)
+            abs_path = os.path.abspath(os.path.join('..', image_location))
+            return send_file(abs_path)
         else:
             return jsonify({'File not found': image_location})
 
