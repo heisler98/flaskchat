@@ -105,7 +105,7 @@ def single_room(room_id):
                 'time_sent': item['time_sent'],
                 'text': item['text'],
                 'author_username': item['sender'],
-                'author_id': id
+                'author_id': str(id)
             })
         return jsonify({
             'name': room_name,
@@ -136,7 +136,7 @@ def get_room_messages(room_id):
                 'time_sent': item['time_sent'],
                 'text': item['text'],
                 'username': item['sender'],
-                'user_id': id
+                'user_id': str(id)
             })
 
         return jsonify({'messages': messages})

@@ -72,7 +72,7 @@ def handle_send_message_event(data):
 
     username = data['username']
     room = data['room']  # client must pass room id here
-    message = data['message']
+    message = data['text']
     is_image = data['include_image']
     try:
         image_id = data['image_id']
@@ -80,7 +80,7 @@ def handle_send_message_event(data):
         image_id = None
     time_sent = datetime.now()  # .strftime('%b %d, %H:%M')
     data['time_sent'] = time_sent
-    data['user_id'] = get_user_id(username)
+    data['user_id'] = str(get_user_id(username))
 
     room_member_usernames = []
     room_member_objects = get_room_members(room)  # determine who should receive this message
