@@ -34,7 +34,12 @@ def on_connect(data):
     current_app.logger.info("{} has connected, {}".format(user_identity, current_socket_id))
 
 
-@socketio.on('close_session')
+@socketio.on('disconnect')  # need to remove socket id from dict
+def client_disconnect():
+    disconnected_id = request.namespace.socket.sessid
+
+
+@socketio.on('close_session')  # to be replaced with broken connection handling
 @jwt_required()
 def on_disconnect(data):
     user_identity = get_jwt_identity()  # user_identity is username, NOT id
