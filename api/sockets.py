@@ -36,7 +36,7 @@ def on_connect(data):
 
 @socketio.on('disconnect')
 def client_disconnect():
-    disconnected_id = request.namespace.socket.sessid
+    disconnected_id = request.sid
     current_app.logger.info('{} disconnected, searching for associated user...'.format(disconnected_id))
 
     for key in connected_sockets:
