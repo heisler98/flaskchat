@@ -112,6 +112,33 @@ def new_avatar(user_id):
         return jsonify({'Success': 'Avatar changed, GET user for ID'}), 200
 
 
+@images_blueprint.route('/avatar/<user_id>/switch', methods=['POST'])
+@jwt_required()
+def switch_avatar(user_id):
+    username = get_jwt_identity()
+    target_user = get_user(user_id)
+    target_image = json_input['image_id']
+
+    if not target_user:
+        return jsonify({'Error': 'User not found'}), 400
+
+    if target_user.username != username:
+        current_app.logger.info('!!! {} tried to change another users avatar: {}'.format(username, target_user.username))
+        return jsonify({'Error': 'Not authorized'}), 403
+
+    if len(target_image) == 0:
+        return jsonify({'Error': 'Empty image_id'}), 400
+
+    if not locate_image(target_image):
+        return jsonify({'Error': 'Image not found.'}), 400
+
+    if request.method == 'POST':
+        change_user_avatar(target_user.username, target_image)
+        current_app.logger.info('{} switched their avatar with an existing image, {}'.format(username, image_id))
+        return jsonify({'Success': 'Avatar changed.'}), 200
+
+
+
 @images_blueprint.route('/avatar/<user_id>/previous', methods=['GET'])
 @jwt_required()
 def previous_avatars_list(user_id):

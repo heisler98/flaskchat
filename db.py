@@ -83,7 +83,7 @@ def get_user(user_id):
         print('DB: Fetched', user_id, '({})'.format(user_data['username']))
     try:
         some_avatar = user_data['avatar']
-    except KeyError as e:
+    except KeyError:  # user has no avatar
         some_avatar = None
     except TypeError as e:
         print('ERROR: Failed to fetch avatar for {}'. format(user_id), e)
