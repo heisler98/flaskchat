@@ -111,3 +111,16 @@ def new_avatar(user_id):
         current_app.logger.info('{} {} changed their avatar'.format(user_id, username))
         return jsonify({'Success': 'Avatar changed, GET user for ID'}), 200
 
+
+@images_blueprint.route('/avatar/<user_id>/previous', methods=['GET'])
+@jwt_required()
+def previous_avatars_list(user_id):
+    username = get_jwt_identity()
+    target_user = get_user(user_id)
+
+    if not target_user:
+        return jsonify({'Error': 'User not found'}), 400
+
+    if request.method == 'GET':
+        pass
+

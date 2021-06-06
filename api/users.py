@@ -79,11 +79,13 @@ def change_password(user_id):
         try:
             user_id = get_user_id(username)
             user = get_user(user_id)
-        except Exception as e:
+        except Exception as e:  # need to be more specific
             return jsonify({'Error': ''})
 
         if user and user.check_password(old_password):
             change_user_password(username, new_password)
+            add_log_event(200, username, 'Password', ip_address=request.remote_addr)
+
             return jsonify({'Success': 'Password changed'}), 200
         else:
             return jsonify({'Error': 'Incorrect password'}), 403
