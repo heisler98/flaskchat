@@ -66,8 +66,14 @@ def change_user_avatar(username, file_id):
 def get_all_users():
     users = users_collection.find({})
     list_of_users = []
-    for user in users:
-        list_of_users.append(user)
+    for user in users:  # create a list of user objects
+        if 'avatar' in user:
+            this_avatar = user['avatar']
+        else:
+            this_avatar = None
+
+        new_user = User(user['username'], user['email'], user['password'], this_avatar, user['realname'], user['_id'])
+        list_of_users.append(new_user)
     return list_of_users
 
 

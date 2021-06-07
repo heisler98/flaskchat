@@ -1,4 +1,8 @@
 # github.com/colingoodman
+import json
+
+from bson import json_util
+from flask import jsonify
 from werkzeug.security import check_password_hash
 
 
@@ -7,9 +11,12 @@ class User:
         self.username = username
         self.email = email
         self.password = password
-        self.avatar = avatar
+        if avatar:
+            self.avatar = str(avatar)
+        else:
+            self.avatar = None
         self.realname = realname
-        self.identifier = identifier
+        self.ID = str(identifier)
         self.previous_avatars = prev_avatars
 
     @staticmethod
@@ -36,3 +43,15 @@ class User:
 
     def check_password(self, password_input):
         return check_password_hash(self.password, password_input)
+
+    def create_json(self):
+        # username, email, password, avatar, realname, identifier, prev_avatars=None
+        new_dict = {
+            'username': self.username,
+            'email': self.email,
+            'avatar': self.avatar,
+            'ID': str(self.ID),
+            'realname': self.realname,
+            'previous_avatars': self.previous_avatars
+        }
+        return json.loads(json_util.dumps(new_dict))

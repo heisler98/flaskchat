@@ -11,12 +11,13 @@ from helper_functions import allowed_file
 images_blueprint = Blueprint('images_blueprint', __name__)
 
 
-class EmptyNameError(Error):
+class EmptyNameError(Exception):
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message
 
-class IllegalTypeError(Error):
+
+class IllegalTypeError(Exception):
     def __init__(self, expression, message):
         self.expression = expression
         self.message = message

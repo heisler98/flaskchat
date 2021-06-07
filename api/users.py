@@ -2,7 +2,7 @@
 from flask import Blueprint, current_app, request, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
-from db import change_user_password, get_user, change_user_realname, get_user_id, get_all_users
+from db import change_user_password, get_user, change_user_realname, get_user_id, get_all_users, add_log_event
 
 users_blueprint = Blueprint('users_blueprint', __name__)
 
@@ -15,55 +15,34 @@ def view_user(user_id):
     current_app.logger.info('{} viewing profile of {} (GET)'.format(username, user_id))
     user_raw = get_user(int(user_id))
 
-    try:
-        some_avatar = user_raw.avatar
-    except AttributeError as e:
-        some_avatar = None
+    if not user_raw:
+        return jsonify({'Error': 'User not found.'}), 404
 
-    try:
-        some_username = user_raw.username
-    except AttributeError as e:
-        return jsonify({'Error': 'Bad request; are you using the user ID?'}), 403
-
-    user = {
-        'username': some_username,
-        'email': user_raw.email,
-        'phone_number': None,
-        'realname': user_raw.realname,
-        'avatar': some_avatar,
-        'ID': user_raw.identifier
-    }
-
-    return jsonify(user), 200
+    return jsonify(user_raw.create_json()), 200
 
 
 @users_blueprint.route('/users/list', methods=['GET'])
 @jwt_required()
 def list_users():
     username = get_jwt_identity()
-    users_raw = get_all_users()
+    users_raw = get_all_users()  # returns a list of user objects
     users = []
 
     current_app.logger.info('{} requested a list of all users.'.format(username))
 
-    for user in users_raw:
-        try:
-            avatar = user['avatar']
-        except Exception as e:
-            avatar = None
-        new_user = {
-            'username': user['username'],
-            'email': user['email'],
-            'phone_number': None,
-            'realname': user['realname'],
-            'avatar': str(avatar),
-            'date_joined': user['date_joined'].timestamp(),
-            'ID': str(user['_id'])
-        }
-        users.append(new_user)
+    for user_object in users_raw:
+        users.append(user_object.create_json())
 
-    print(users)
-    return jsonify({'users': users}), 200
+    return jsonify(users), 200
+
+
+@users_blueprint.route('/users/me', methods=['GET'])
+@jwt_required()
+def get_me():
+    username = get_jwt_identity()
+    this_user = get_user(get_user_id(username))
+
+    return jsonify(this_user.create_json())
 
 
 @users_blueprint.route('/users/<user_id>/password', methods=['POST'])
