@@ -11,9 +11,42 @@ from helper_functions import allowed_file
 images_blueprint = Blueprint('images_blueprint', __name__)
 
 
+class EmptyNameError(Error):
+    def __init__(self, expression, message):
+        self.expression = expression
+        self.message = message
+
+class IllegalTypeError(Error):
+    def __init__(self, expression, message):
+        self.expression = expression
+        self.message = message
+
+
+# For upload security, saving to disk, and recording in DB
+def upload_image(file, username, room_id):
+    filename = secure_filename(file.filename)
+
+    if not file:
+        raise TypeError
+
+    if filename == '':
+        raise EmptyNameError('Empty file name.')
+
+    if not allowed_file(filename):
+        raise IllegalTypeError('Invalid file type.')
+
+    filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+    file.seek(0)  # save fails w/o
+    file.save(filepath)  # store image locally on disk
+
+    image_id = save_image(username, room_id, filepath)
+
+    return image_id
+
+
 @images_blueprint.route('/uploads/create', methods=['POST'])
 @jwt_required(fresh=True)
-def upload_image():
+def post_image():
     username = get_jwt_identity()
     json_input = request.get_json()
     current_app.logger.info("{} attempted to upload a file".format(username))
@@ -22,11 +55,10 @@ def upload_image():
         room_id = json_input['room_id']
         file = request.files['file']
 
-        filename = secure_filename(file.filename)
-        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-        file.save(filepath)
-
-        image_id = save_image(username, room_id, filepath)
+        try:
+            image_id = upload_image(file, username, room_id)
+        except Exception as e:
+            jsonify({'Error': 'Failed to upload, {}'.format(e)})
 
         return jsonify({'image_id': image_id}), 200
 
@@ -89,25 +121,13 @@ def new_avatar(user_id):
 
     if request.method == 'POST':
         file = request.files['file']
-        filename = secure_filename(file.filename)
 
-        if filename == '':
-            current_app.logger.info('{} posted a file with no name!'.format(username))
-            return jsonify({'Error': 'Bad filename'}), 400
-        if not file:
-            current_app.logger.info('{} posted file {} and had some issue.'.format(username, filename))
-            return jsonify({'Error': 'Bad file'}), 400
-        if not allowed_file(filename):
-            current_app.logger.info('{} posted a bad file type, {}'.format(username, filename))
-            return jsonify({'Error': 'Bad file type'})
+        try:
+            upload_image(file, username, None)
+        except Exception as e:
+            jsonify({'Error': 'Failed to upload, {}'.format(e)})
 
-        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-        image_id = save_image(None, None, filepath, is_avatar=True)
         change_user_avatar(target_user.username, image_id)
-
-        file.seek(0)
-        file.save(filepath)  # store image locally on disk
-
         current_app.logger.info('{} {} changed their avatar'.format(user_id, username))
         return jsonify({'Success': 'Avatar changed, GET user for ID'}), 200
 
