@@ -166,9 +166,9 @@ def save_room(room_name, created_by):
     return room_id
 
 
-def update_room(room_id, room_name):
-    rooms_collection.update_one({'_id': ObjectId(room_id)}, {'$set': {'name': room_name}})
-    room_members_collection.update_many({'_id.room_id': ObjectId(room_id)}, {'$set': {'name': room_name}})
+def update_room(room_id, attribute_type, value):
+    rooms_collection.update_one({'_id': ObjectId(room_id)}, {'$set': {attribute_type: value}})
+    #room_members_collection.update_many({'_id.room_id': ObjectId(room_id)}, {'$set': {'name': room_name}})
 
 
 def add_room_member(room_id, room_name, username, added_by, is_admin=False):
