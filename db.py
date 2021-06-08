@@ -36,20 +36,14 @@ def crown_user(username, status=True): # used for admin / super user purposes
     users_collection.update_one({'username': username}, {'$set': {'god': status}})
 
 
-def add_twitter_handle(username, handle):
-    now = datetime.now()
-    users_collection.update_one({'username': username}, {'$set': {'twitter': handle}})  # {'$set': {'name': room_name}}
-
-
 def change_user_password(username, new_password):
     password_hash = generate_password_hash(new_password)
     now = datetime.now()
     users_collection.update_one({'username': username}, {'$set': {'password': password_hash}})
 
 
-def change_user_realname(username, realname):
-    now = datetime.now()
-    users_collection.update_one({'username': username}, {'$set': {'realname': realname}})
+def change_user_attribute(username, attribute_type, value):
+    users_collection.update_one({'username': username}, {'$set': {attribute_type: value}})
 
 
 def change_user_avatar(username, file_id):
