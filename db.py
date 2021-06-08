@@ -32,6 +32,10 @@ def save_user(username, email, password, fullname):
                                  'realname': fullname, 'date_joined': now})
 
 
+def crown_user(username, status=True): # used for admin / super user purposes
+    users_collection.update_one({'username': username}, {'$set': {'god': status}})
+
+
 def add_twitter_handle(username, handle):
     now = datetime.now()
     users_collection.update_one({'username': username}, {'$set': {'twitter': handle}})  # {'$set': {'name': room_name}}
