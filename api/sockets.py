@@ -82,6 +82,9 @@ def handle_send_message_event(data):
     data['time_sent'] = str(time_sent)
     data['user_id'] = str(get_user_id(username))
 
+    if username not in connected_sockets:
+        current_app.logger.info('!!: {} tried to send a message without being connected to a room.'.format(username))
+
     room_member_usernames = []
     room_member_objects = get_room_members(room)  # determine who should receive this message
     for db_item in room_member_objects:
