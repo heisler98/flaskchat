@@ -232,6 +232,24 @@ def get_messages(room_id, page=0):
         message['time_sent'] = message['time_sent'].strftime("%H:%M")
     return messages[::-1]
 
+
+def add_reaction(message_id, user_id, reaction_id):
+    now = datetime.now()
+    reaction_array = messages_collection.find_one({'_id': ObjectId(message_id)}, {'reactions': 1})
+    reaction_object_id = reactions_collection.insert_one({
+        'user_id': user_id,
+        'reaction_id': reaction_id,
+        'time_inserted': now,
+        'message_id': message_id}).inserted_id
+    username = get_user(user_id)['username']
+    reaction_array.append({
+        'reaction_object_id': reaction_object_id,
+        'user_id': user_id,
+        'username': username
+    })
+    messages_collection.update_one({'_id': ObjectId(message_id)}, {'$set': {'reactions': reaction_array}})
+
+
 # IMAGES and UPLOADS
 
 

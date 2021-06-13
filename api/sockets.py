@@ -110,6 +110,22 @@ def handle_send_message_event(data):
         current_app.logger.info("{} not authorized to send to {}".format(username, room))
 
 
+@socketio.on('send_react')
+@jwt_required()
+def attach_reaction():
+    user_id = data['user_id']
+    target_message_id = data['message_id']
+    room_id = data['room']  # client must pass room id here
+    reaction = data['reaction']
+    time_sent = datetime.now()
+
+    current_app.logger.info('{} reacted to {} with {} at {}'.format(user_id, target_message_id, reaction, time_sent))
+
+    add_reaction(target_message_id, user_id, reaction)
+
+    socketio.emit('receive_react', data, room=socket)
+
+
 @socketio.on('im_typing')
 @jwt_required()
 def is_typing(data):
