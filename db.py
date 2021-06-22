@@ -32,9 +32,8 @@ def save_user(username, email, password, fullname):
                                  'realname': fullname, 'date_joined': now})
 
 
-def add_twitter_handle(username, handle):
-    now = datetime.now()
-    users_collection.update_one({'username': username}, {'$set': {'twitter': handle}})  # {'$set': {'name': room_name}}
+def crown_user(username, status=True): # used for admin / super user purposes
+    users_collection.update_one({'username': username}, {'$set': {'god': status}})
 
 
 def change_user_password(username, new_password):
@@ -43,9 +42,8 @@ def change_user_password(username, new_password):
     users_collection.update_one({'username': username}, {'$set': {'password': password_hash}})
 
 
-def change_user_realname(username, realname):
-    now = datetime.now()
-    users_collection.update_one({'username': username}, {'$set': {'realname': realname}})
+def change_user_attribute(username, attribute_type, value):
+    users_collection.update_one({'username': username}, {'$set': {attribute_type: value}})
 
 
 def change_user_avatar(username, file_id):
@@ -168,9 +166,9 @@ def save_room(room_name, created_by):
     return room_id
 
 
-def update_room(room_id, room_name):
-    rooms_collection.update_one({'_id': ObjectId(room_id)}, {'$set': {'name': room_name}})
-    room_members_collection.update_many({'_id.room_id': ObjectId(room_id)}, {'$set': {'name': room_name}})
+def update_room(room_id, attribute_type, value):
+    rooms_collection.update_one({'_id': ObjectId(room_id)}, {'$set': {attribute_type: value}})
+    #room_members_collection.update_many({'_id.room_id': ObjectId(room_id)}, {'$set': {'name': room_name}})
 
 
 def add_room_member(room_id, room_name, username, added_by, is_admin=False):
@@ -233,6 +231,24 @@ def get_messages(room_id, page=0):
     for message in messages:
         message['time_sent'] = message['time_sent'].strftime("%H:%M")
     return messages[::-1]
+
+
+def add_reaction(message_id, user_id, reaction_id):
+    now = datetime.now()
+    reaction_array = messages_collection.find_one({'_id': ObjectId(message_id)}, {'reactions': 1})
+    reaction_object_id = reactions_collection.insert_one({
+        'user_id': user_id,
+        'reaction_id': reaction_id,
+        'time_inserted': now,
+        'message_id': message_id}).inserted_id
+    username = get_user(user_id)['username']
+    reaction_array.append({
+        'reaction_object_id': reaction_object_id,
+        'user_id': user_id,
+        'username': username
+    })
+    messages_collection.update_one({'_id': ObjectId(message_id)}, {'$set': {'reactions': reaction_array}})
+
 
 # IMAGES and UPLOADS
 

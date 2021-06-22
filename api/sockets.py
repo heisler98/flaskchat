@@ -87,6 +87,9 @@ def handle_send_message_event(data):
     data['time_sent'] = str(time_sent)
     data['user_id'] = str(get_user_id(username))
 
+    if username not in connected_sockets:
+        current_app.logger.info('!!: {} tried to send a message without being connected to a room.'.format(username))
+
     room_member_usernames = []
     room_member_objects = get_room_members(room)  # determine who should receive this message
     for db_item in room_member_objects:
@@ -110,6 +113,22 @@ def handle_send_message_event(data):
         save_message(room, message, username, is_image, image_id)  # to db
     else:
         current_app.logger.info("{} not authorized to send to {}".format(username, room))
+
+
+@socketio.on('send_react')
+@jwt_required()
+def attach_reaction():
+    user_id = data['user_id']
+    target_message_id = data['message_id']
+    room_id = data['room']  # client must pass room id here
+    reaction = data['reaction']
+    time_sent = datetime.now()
+
+    current_app.logger.info('{} reacted to {} with {} at {}'.format(user_id, target_message_id, reaction, time_sent))
+
+    add_reaction(target_message_id, user_id, reaction)
+
+    socketio.emit('receive_react', data, room=socket)
 
 
 @socketio.on('im_typing')
