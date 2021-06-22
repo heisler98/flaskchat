@@ -4,6 +4,8 @@ import os
 from flask import Flask
 from flask_cors import CORS
 from flask_jwt_extended import JWTManager
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
 from flask_socketio import SocketIO
 
 socketio = SocketIO(cors_allowed_origins='*')
@@ -24,6 +26,12 @@ def create_app(debug=True):
 
     # app.config['UPLOAD_FOLDER'] = os.path.abspath(os.path.join('..', 'uploads'))
     app.config['UPLOAD_FOLDER'] = 'uploads'
+
+    limiter = Limiter(
+        app,
+        key_func=get_remote_address,
+        default_limits=["240 per minute"]
+    )
 
     socketio.init_app(app)
     return app

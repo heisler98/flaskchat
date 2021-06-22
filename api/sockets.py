@@ -34,6 +34,11 @@ def on_connect(data):
     current_app.logger.info("{} has connected, {}".format(user_identity, current_socket_id))
 
 
+@socketio.on('connection')
+def client_connect():
+    print('Connection')
+
+
 @socketio.on('disconnect')
 def client_disconnect():
     disconnected_id = request.sid

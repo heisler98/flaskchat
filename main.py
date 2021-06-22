@@ -19,4 +19,5 @@ app.register_blueprint(sockets_blueprint, url_prefix='/api')
 
 
 if __name__ == '__main__':
+    # engineio logger True for verbose socketio output
     socketio.run(app, debug=True)

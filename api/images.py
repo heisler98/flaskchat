@@ -97,7 +97,10 @@ def get_avatar(user_id):
         target_image_id = target_user.avatar
         if not target_image_id:
             return jsonify({'Error': 'No associated avatar with this user'})
-        image_location = locate_image(image_id=target_image_id)['location']
+        target_image = locate_image(image_id=target_image_id)
+        if not target_image:
+            return jsonify({'File not found': str(user_id + ' avatar')}), 400
+        image_location = target_image['location']
 
         if os.path.exists(image_location):
             # abs_path = os.path.abspath(os.path.join('..', image_location))
