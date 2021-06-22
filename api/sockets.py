@@ -14,7 +14,14 @@ connected_sockets = {}
 
 @socketio.on('new_session')
 @jwt_required()
-def on_connect(data):
+def on_connect():  # deprecated
+    client_connect()
+    pass
+
+
+@socketio.on('connect')
+@jwt_required()
+def client_connect():
     user_identity = get_jwt_identity()  # user_identity is username, NOT id
 
     join_room('server')
@@ -32,11 +39,6 @@ def on_connect(data):
         connected_sockets[user_identity] = this_user
 
     current_app.logger.info("{} has connected, {}".format(user_identity, current_socket_id))
-
-
-@socketio.on('connection')
-def client_connect():
-    print('Connection')
 
 
 @socketio.on('disconnect')

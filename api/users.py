@@ -2,7 +2,8 @@
 from flask import Blueprint, current_app, request, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
-from db import change_user_password, get_user, change_user_realname, get_user_id, get_all_users, add_log_event
+from db import change_user_password, get_user, get_user_id, get_all_users, add_log_event, \
+    change_user_attribute
 
 users_blueprint = Blueprint('users_blueprint', __name__)
 
@@ -89,5 +90,6 @@ def edit_user(user_id):  # NOT FINISHED YET
 
     for key in var_changes:
         if key == 'realname':
-            change_user_realname(user_id, json_input[key])
+            # change_user_attribute ( username, attribute_type, value )
+            change_user_attribute(user_id, 'realname', json_input[key])
 

@@ -85,6 +85,9 @@ def single_room(room_id):
     username = get_jwt_identity()
     room = get_room(room_id)
 
+    if not room:
+        return jsonify({'Error': 'Room not found.'}), 404
+
     try:
         is_dm = room['is_dm']
     except KeyError as e:
