@@ -12,6 +12,41 @@ from helper_functions import parse_json
 rooms_blueprint = Blueprint('rooms_blueprint', __name__)
 
 
+# returns a json object of a room to be returned via the API
+def return_room_object(room_id):
+    this_room = get_room(room_id)
+
+    if not this_room:
+        raise Exception
+
+    # grab messages for this room
+    message_bson = get_messages(room_id)
+    messages = []
+    for item in message_bson:
+        try:
+            user_id = get_user_id(item['sender'])
+        except Exception as e:
+            continue
+        messages.append({
+            'time_sent': item['time_sent'],
+            'text': item['text'],
+            'username': item['sender'],
+            'user_id': str(user_id)
+        })
+
+    # grab this room attributes
+    room_name = this_room['name']
+    is_dm = this_room['is_dm']
+    created_by = this_room['created_by']
+
+    return {
+        'name': room_name,
+        'is_dm': is_dm,
+        'messages': messages,
+        'created_by': created_by
+    }
+
+
 @rooms_blueprint.route('/rooms/list', methods=['GET'])
 @jwt_required()
 def get_rooms():
@@ -40,11 +75,10 @@ def get_all_rooms():
 
     for room_raw in room_list_raw:
         room_parsed = parse_json(room_raw)
-        room = get_room(room_parsed['_id']['room_id']['$oid'])
-        room['_id'] = room_parsed['_id']['room_id']['$oid']
-        rooms_list.append(room)
+        this_room = return_room_object(room_parsed['_id']['room_id']['$oid'])
+        rooms_list.append(this_room)
 
-    return json.loads(json_util.dumps({'list': rooms_list})), 200
+    return jsonify({'rooms': rooms_list})
 
 
 @rooms_blueprint.route('/rooms/create', methods=['POST'])
@@ -88,33 +122,10 @@ def single_room(room_id):
     if not room:
         return jsonify({'Error': 'Room not found.'}), 404
 
-    try:
-        is_dm = room['is_dm']
-    except KeyError as e:
-        is_dm = False
-
     if not is_room_member(room_id, username):
         return jsonify({'Error': 'You are not a member of this room.'}), 403
     else:
-        room_name = room['name']
-        message_bson = get_messages(room_id)
-        messages = []
-        for item in message_bson:
-            try:
-                id = get_user_id(item['sender'])
-            except Exception as e:
-                continue
-            messages.append({
-                'time_sent': item['time_sent'],
-                'text': item['text'],
-                'username': item['sender'],
-                'user_id': str(id)
-            })
-        return jsonify({
-            'name': room_name,
-            'is_dm': is_dm,
-            'messages': messages
-        }), 200
+        return return_room_object(room_id)
 
     return jsonify({'Error': ''}), 500
 
