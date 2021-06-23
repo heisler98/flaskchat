@@ -26,14 +26,17 @@ def client_connect():
 
     join_room('server')
     current_socket_id = request.sid
+    current_app.logger.info('current_socket_id: {}'.format(current_socket_id))
 
     if user_identity in connected_sockets:
+        current_app.logger.info('{} in sockets, {}'.format(user_identity, connected_sockets[user_identity]))
         if connected_sockets[user_identity]:
             this_user = connected_sockets[user_identity]
             connected_sockets[user_identity] = this_user.append(current_socket_id)
         else:  # None in the dict, need to debug
             this_user = [current_socket_id]
             connected_sockets[user_identity] = this_user
+            current_app.logger.info('{} added {}'.format(this_user, current_socket_id))
     else:
         this_user = [current_socket_id]
         connected_sockets[user_identity] = this_user
