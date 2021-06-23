@@ -38,12 +38,14 @@ def return_room_object(room_id):
     room_name = this_room['name']
     is_dm = this_room['is_dm']
     created_by = this_room['created_by']
+    room_id = str(this_room['_id'])
 
     return {
         'name': room_name,
         'is_dm': is_dm,
         'messages': messages,
-        'created_by': created_by
+        'created_by': created_by,
+        'room_id': room_id
     }
 
 
