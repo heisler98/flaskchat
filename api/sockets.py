@@ -9,6 +9,7 @@ from .app import socketio
 from db import save_message, get_room_members, get_user_id
 
 sockets_blueprint = Blueprint('sockets_blueprint', __name__)
+global connected_sockets
 connected_sockets = {}
 
 
