@@ -16,8 +16,9 @@ def create_app(debug=True):
     app.debug = debug
     app.secret_key = "dev"
 
-    cors = CORS(app)
-    app.config['CORS_HEADERS'] = 'Content-Type'
+    # cors = CORS(app, resources={r"/*": {"origins": "*"}})
+    # cors = CORS(app, resources={r"/api/*": {"origins": "*", "allow_headers": "*", "expose_headers": "*"}})
+    # app.config['CORS_HEADERS'] = 'Content-Type'
 
     jwt = JWTManager(app)
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)  # = timedelta(minutes=15) !!!
