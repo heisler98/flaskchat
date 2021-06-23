@@ -7,8 +7,11 @@ from api.users import users_blueprint
 from api.images import images_blueprint
 from api.app import create_app, socketio
 
+from flask_cors import CORS
+
 # App Setup
 app = create_app(debug=True)
+CORS(app)
 
 # API Blueprints
 app.register_blueprint(auth_blueprint, url_prefix='/api')
