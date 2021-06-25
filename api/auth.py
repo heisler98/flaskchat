@@ -19,7 +19,8 @@ def check_if_token_revoked(jwt_header, jwt_payload):
 @auth_blueprint.route('/login', methods=['POST'])
 @cross_origin()
 def login():
-    current_app.logger.info('{} hit /login'.format(request.remote_addr))
+    ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
+    current_app.logger.info('{} hit /login'.format(ip))
     json_input = request.get_json(force=True)
 
     try:
@@ -49,7 +50,7 @@ def login():
             refresh_token = create_refresh_token(identity=username)
 
             current_app.logger.info('%s logged in successfully', user.username)
-            add_log_event(200, username, 'Login', ip_address=request.remote_addr)
+            add_log_event(200, username, 'Login', ip_address=ip)
 
             return jsonify({'Token': access_token, 'Refresh': refresh_token}), 200
         elif not user:
@@ -66,6 +67,7 @@ def login():
 @auth_blueprint.route('/signup', methods=['POST'])
 @cross_origin()
 def create_account():
+    ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
     json_input = request.get_json()
 
     try:
@@ -86,7 +88,7 @@ def create_account():
             save_user(username, email, password, full_name)
             current_app.logger.info('{} created a new account, {}'.format(request.remote_addr, username))
 
-            add_log_event(200, username, 'Signup', ip_address=request.remote_addr)
+            add_log_event(200, username, 'Signup', ip_address=ip)
             return jsonify({'200': 'User created.'}), 200
         except DuplicateKeyError:
             return jsonify({'Error': 'User already exists.'}), 400
@@ -97,10 +99,11 @@ def create_account():
 @auth_blueprint.route("/refresh")
 @jwt_required(refresh=True)
 def refresh():
+    ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
     identity = get_jwt_identity()
     access_token = create_access_token(identity=identity, fresh=True)
 
-    add_log_event(200, identity, 'Refresh', ip_address=request.remote_addr)
+    add_log_event(200, identity, 'Refresh', ip_address=ip)
     return jsonify({'Token': access_token})
 
 
