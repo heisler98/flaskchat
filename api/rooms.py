@@ -106,7 +106,7 @@ def view_dm(user_id):
     user_one = get_user(get_user_id(username))
     user_two = get_user(user_id)
 
-    target_room = find_dm(user_one, user_two)
+    target_room = find_dm(user_one, user_two)  # find_dm orders params properly to prevent duplicate DMs
     if target_room:
         return jsonify({'room_id': target_room}), 200
     else:

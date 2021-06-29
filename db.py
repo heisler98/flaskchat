@@ -138,7 +138,7 @@ def find_dm(user_one, user_two):
     room = rooms_collection.find_one({'name': room_title})
 
     if room:
-        return room['_id']
+        return str(room['_id'])
     else:
         return None
 

@@ -124,7 +124,8 @@ def who():
 
 @auth_blueprint.route('/', methods=['GET'])
 def hello():
-    return jsonify({'Hello': 'World'}), 200
+    ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
+    return jsonify({'Hello World': ip}), 200
 
 
 
