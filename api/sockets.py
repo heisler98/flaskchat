@@ -37,12 +37,12 @@ def client_connect():
         else:  # None in the dict, need to debug
             this_user = [current_socket_id]
             connected_sockets[user_identity] = this_user
-            current_app.logger.info('{} added {}'.format(this_user, current_socket_id))
+            # current_app.logger.info('{} added {}'.format(this_user, current_socket_id))
     else:
         this_user = [current_socket_id]
         connected_sockets[user_identity] = this_user
 
-    current_app.logger.info("{} has connected, {}".format(user_identity, current_socket_id))
+    current_app.logger.info("{} has connected, {}".format(user_identity, connected_sockets[user_identity]))
 
 
 @socketio.on('disconnect')
