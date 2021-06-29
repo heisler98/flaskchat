@@ -31,7 +31,7 @@ def client_connect():
 
     if user_identity in connected_sockets:
         current_app.logger.info('{} in sockets, {}'.format(user_identity, connected_sockets[user_identity]))
-        if connected_sockets[user_identity]:
+        if connected_sockets[user_identity] is None:
             this_user = connected_sockets[user_identity]
             connected_sockets[user_identity] = this_user.append(current_socket_id)
         else:  # None in the dict, need to debug
