@@ -2,6 +2,7 @@
 
 from datetime import datetime
 #from bson import ObjectId
+import bson
 from pymongo import MongoClient, DESCENDING
 from bson.objectid import ObjectId
 from pymongo.errors import DuplicateKeyError
@@ -50,8 +51,7 @@ def change_user_attribute(username, attribute_type, value):
 def change_user_avatar(user_id, file_id):
     print(file_id)
     filter_by = {'_id': user_id}
-    new_values = {'avatar': file_id}
-    return users_collection.find_one(filter_by)
+    new_values = {'avatar': bson.int64.Int64(file_id)}
     users_collection.update_one(filter_by, {'$set': new_values})
     return None ###
     current_avatar = users_collection.find_one({'_id': user_id}, {'avatar': 1})

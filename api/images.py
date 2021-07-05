@@ -139,7 +139,6 @@ def new_avatar(user_id):
         return jsonify({'Error': 'Not authorized'}), 403
 
     if request.method == 'POST':
-        current_app.logger.info('Shit! Holy fuck!!')
         file = request.files['file']
         image_id = ''
 
