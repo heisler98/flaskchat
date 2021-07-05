@@ -2,6 +2,7 @@
 import os
 import sys
 
+from bson.objectid import ObjectId
 from flask import Blueprint, current_app, request, jsonify, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
@@ -152,7 +153,6 @@ def new_avatar(user_id):
 
         if image_id == '':
             return jsonify({'Error': 'No idea'}), 500
-
 
         current_app.logger.info('{} {} changed their avatar'.format(user_id, username))
         return jsonify({'Success': 'Avatar changed, GET user for ID'}), 200

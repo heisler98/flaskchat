@@ -1,8 +1,9 @@
 # github.com/colingoodman
 
 from datetime import datetime
-from bson import ObjectId
+#from bson import ObjectId
 from pymongo import MongoClient, DESCENDING
+from bson.objectid import ObjectId
 from pymongo.errors import DuplicateKeyError
 from werkzeug.security import generate_password_hash
 
