@@ -25,13 +25,15 @@ def return_room_object(room_id):
     for item in message_bson:
         try:
             user_id = get_user_id(item['sender'])
+            sender = get_user(user_id)
         except Exception as e:
             continue
         messages.append({
             'time_sent': item['time_sent'],
             'text': item['text'],
             'username': item['sender'],
-            'user_id': str(user_id)
+            'user_id': str(user_id),
+            'avatar': sender.avatar
         })
 
     # grab this room attributes
@@ -146,13 +148,15 @@ def get_room_messages(room_id):
         for item in message_bson:
             try:
                 id = get_user_id(item['sender'])
+                sender = get_user(id)
             except Exception as e:
                 continue
             messages.append({
                 'time_sent': item['time_sent'],
                 'text': item['text'],
                 'username': item['sender'],
-                'user_id': str(id)
+                'user_id': str(id),
+                'avatar': sender.avatar
             })
 
         return jsonify({'messages': messages})
