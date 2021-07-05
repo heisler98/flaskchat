@@ -25,7 +25,9 @@ class IllegalTypeError(Exception):
 
 # For upload security, saving to disk, and recording in DB
 def upload_image(file, user_id, room_id, is_avatar=False):
+    # os.chdir(r'C:\path\to\your\file')
     current_app.logger.info('Attempting to upload a file from {}'.format(user_id))
+    current_app.logger.info('working dir {}'.format(os.getcwd()))
     filename = secure_filename(file.filename)
 
     if not file:
