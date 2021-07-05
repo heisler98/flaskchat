@@ -1,5 +1,6 @@
 # github.com/colingoodman
 import os
+import sys
 
 from flask import Blueprint, current_app, request, jsonify, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -25,7 +26,7 @@ class IllegalTypeError(Exception):
 
 # For upload security, saving to disk, and recording in DB
 def upload_image(file, user_id, room_id, is_avatar=False):
-    # os.chdir(r'C:\path\to\your\file')
+    os.chdir(os.path.dirname(sys.argv[0]))
     current_app.logger.info('Attempting to upload a file from {}'.format(user_id))
     current_app.logger.info('working dir {}'.format(os.getcwd()))
     filename = secure_filename(file.filename)
@@ -121,6 +122,7 @@ def get_avatar(user_id):
 @images_blueprint.route('/avatar/<user_id>/create', methods=['POST'])
 @jwt_required(fresh=True)
 def new_avatar(user_id):
+    os.chdir(os.path.dirname(sys.argv[0]))
     username = get_jwt_identity()
     target_user = get_user(user_id)
 
@@ -154,6 +156,7 @@ def new_avatar(user_id):
 @images_blueprint.route('/avatar/<user_id>/switch', methods=['POST'])
 @jwt_required()
 def switch_avatar(user_id):
+    os.chdir(os.path.dirname(sys.argv[0]))
     username = get_jwt_identity()
     target_user = get_user(user_id)
     json_input = request.get_json()
@@ -182,6 +185,7 @@ def switch_avatar(user_id):
 @images_blueprint.route('/avatar/<user_id>/previous', methods=['GET'])
 @jwt_required()
 def previous_avatars_list(user_id):
+    os.chdir(os.path.dirname(sys.argv[0]))
     username = get_jwt_identity()
     target_user = get_user(user_id)
 

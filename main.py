@@ -1,4 +1,6 @@
 # github.com/colingoodman
+import os
+import sys
 
 from api.auth import auth_blueprint
 from api.rooms import rooms_blueprint
@@ -22,5 +24,6 @@ app.register_blueprint(sockets_blueprint, url_prefix='/api')
 
 
 if __name__ == '__main__':
+    os.chdir(os.path.dirname(sys.argv[0]))
     # engineio logger True for verbose socketio output
     socketio.run(app, debug=True)
