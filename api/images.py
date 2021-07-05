@@ -127,7 +127,7 @@ def new_avatar(user_id):
         file = request.files['file']
 
         try:
-            upload_image(file, username, None)
+            image_id = save_image(file, username, None)
         except Exception as e:
             jsonify({'Error': 'Failed to upload, {}'.format(e)})
 
@@ -141,6 +141,7 @@ def new_avatar(user_id):
 def switch_avatar(user_id):
     username = get_jwt_identity()
     target_user = get_user(user_id)
+    json_input = request.get_json()
     target_image = json_input['image_id']
 
     if not target_user:
