@@ -50,8 +50,8 @@ def change_user_attribute(username, attribute_type, value):
 
 def change_user_avatar(user_id, file_id):
     print(file_id)
-    filter_by = {'_id': user_id}
-    new_values = {'avatar': bson.int64.Int64(file_id)}
+    filter_by = {'_id': bson.int64.Int64(user_id)}
+    new_values = {'avatar':file_id}
     users_collection.update_one(filter_by, {'$set': new_values})
     return None ###
     current_avatar = users_collection.find_one({'_id': user_id}, {'avatar': 1})
