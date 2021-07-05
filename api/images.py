@@ -49,7 +49,11 @@ def upload_image(file, user_id, room_id, is_avatar=False):
     except Exception as e:
         current_app.logger.info(e)
 
-    image_id = save_image(user_id, room_id, filepath, is_avatar)
+    try:
+        image_id = save_image(user_id, room_id, filepath, is_avatar)
+    except Exception as e:
+        current_app.logger.info(e)
+        return None
 
     return image_id
 
