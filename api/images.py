@@ -56,7 +56,7 @@ def upload_image(file, user_id, room_id, is_avatar=False):
         current_app.logger.info(e)
         return None
 
-    return image_id
+    return str(image_id)
 
 
 @images_blueprint.route('/uploads/create', methods=['POST'])

@@ -48,12 +48,8 @@ def change_user_attribute(username, attribute_type, value):
     users_collection.update_one({'username': username}, {'$set': {attribute_type: value}})
 
 
-def change_user_avatar(user_id, file_id):
-    print(file_id)
-    filter_by = {'_id': bson.int64.Int64(user_id)}
-    new_values = {'avatar':file_id}
-    users_collection.update_one(filter_by, {'$set': new_values})
-    return None ###
+def change_user_avatar(input_user_id, file_id):
+    user_id = bson.int64.Int64(input_user_id)
     current_avatar = users_collection.find_one({'_id': user_id}, {'avatar': 1})
     previous_avatars = users_collection.find_one({'_id': user_id}, {'previous_avatars': 1})
     if previous_avatars:  # if this attr exists
@@ -268,5 +264,5 @@ def save_image(sender, room_id, path, is_avatar):
 
 
 def locate_image(image_id):
-    return images_collection.find_one({'_id': image_id})
+    return images_collection.find_one({'_id': ObjectId(image_id)})
 
