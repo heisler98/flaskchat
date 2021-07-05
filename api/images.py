@@ -32,9 +32,11 @@ def upload_image(file, user_id, room_id, is_avatar=False):
         raise TypeError
 
     if filename == '':
+        current_app.logger.info('Bad file name')
         raise EmptyNameError('Empty file name.')
 
     if not allowed_file(filename):
+        current_app.logger.info('Bad file type')
         raise IllegalTypeError('Invalid file type.')
 
     filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
