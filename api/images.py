@@ -144,7 +144,7 @@ def new_avatar(user_id):
 
         try:
             image_id = upload_image(file, user_id, None, True)
-            change_user_avatar(user_id, image_id)
+            #change_user_avatar(user_id, image_id)
         except Exception as e:
             current_app.logger.info('Broke {}'.format(e))
             return jsonify({'Error': 'Failed to upload, {}'.format(e)})
@@ -152,7 +152,7 @@ def new_avatar(user_id):
         if image_id == '':
             return jsonify({'Error': 'No idea'}), 500
 
-        change_user_avatar(target_user.username, image_id)
+        change_user_avatar(user_id, image_id)
         current_app.logger.info('{} {} changed their avatar'.format(user_id, username))
         return jsonify({'Success': 'Avatar changed, GET user for ID'}), 200
 
