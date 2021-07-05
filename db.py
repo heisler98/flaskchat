@@ -48,7 +48,7 @@ def change_user_attribute(username, attribute_type, value):
 
 def change_user_avatar(user_id, file_id):
     print(file_id)
-    users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'avatar': file_id}})
+    users_collection.update_one({'_id': ObjectId(str(user_id))}, {'$set': {'avatar': file_id}})
     return None ###
     current_avatar = users_collection.find_one({'_id': user_id}, {'avatar': 1})
     previous_avatars = users_collection.find_one({'_id': user_id}, {'previous_avatars': 1})
