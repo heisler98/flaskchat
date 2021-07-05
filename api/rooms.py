@@ -108,10 +108,10 @@ def view_dm(user_id):
 
     target_room = find_dm(user_one, user_two)  # find_dm orders params properly to prevent duplicate DMs
     if target_room:
-        return jsonify({'room_id': target_room}), 200
+        return jsonify(return_room_object(target_room)), 200
     else:
         new_dm = create_dm(user_one, user_two)
-        return jsonify({'room_id': new_dm}), 200
+        return jsonify(return_room_object(new_dm)), 200
 
 
 @rooms_blueprint.route('/rooms/<room_id>', methods=['GET'])
