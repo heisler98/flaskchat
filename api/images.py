@@ -24,7 +24,8 @@ class IllegalTypeError(Exception):
 
 
 # For upload security, saving to disk, and recording in DB
-def upload_image(file, username, room_id):
+def upload_image(file, user_id, room_id, is_avatar=False):
+    current_app.logger.info('Attempting to upload a file from {}'.format(user_id))
     filename = secure_filename(file.filename)
 
     if not file:
@@ -40,7 +41,7 @@ def upload_image(file, username, room_id):
     file.seek(0)  # save fails w/o
     file.save(filepath)  # store image locally on disk
 
-    image_id = save_image(username, room_id, filepath)
+    image_id = save_image(user_id, room_id, filepath, is_avatar)
 
     return image_id
 
@@ -129,7 +130,7 @@ def new_avatar(user_id):
         image_id = ''
 
         try:
-            image_id = upload_image(file, user_id, None)
+            image_id = upload_image(file, user_id, None, True)
             change_user_avatar(user_id, image_id)
         except Exception as e:
             current_app.logger.info('Broke', e)
