@@ -130,8 +130,9 @@ def new_avatar(user_id):
 
         try:
             image_id = save_image(file, username, None)
-            current_app.logger.info(image_id, username)
+            current_app.logger.info('Hey!', image_id, username)
         except Exception as e:
+            current_app.logger.info('Broke')
             jsonify({'Error': 'Failed to upload, {}'.format(e)})
 
         if image_id == '':
