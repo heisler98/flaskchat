@@ -39,9 +39,12 @@ def upload_image(file, user_id, room_id, is_avatar=False):
         current_app.logger.info('Bad file type')
         raise IllegalTypeError('Invalid file type.')
 
-    filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
-    file.seek(0)  # save fails w/o
-    file.save(filepath)  # store image locally on disk
+    try:
+        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        file.seek(0)  # save fails w/o
+        file.save(filepath)  # store image locally on disk
+    except Exception as e:
+        current_app.logger.info(e)
 
     image_id = save_image(user_id, room_id, filepath, is_avatar)
 
@@ -135,7 +138,7 @@ def new_avatar(user_id):
             image_id = upload_image(file, user_id, None, True)
             change_user_avatar(user_id, image_id)
         except Exception as e:
-            current_app.logger.info('Broke', e)
+            current_app.logger.info('Broke {}'.format(e))
             return jsonify({'Error': 'Failed to upload, {}'.format(e)})
 
         if image_id == '':
