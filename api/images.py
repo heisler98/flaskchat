@@ -125,11 +125,15 @@ def new_avatar(user_id):
 
     if request.method == 'POST':
         file = request.files['file']
+        image_id = ''
 
         try:
             image_id = save_image(file, username, None)
         except Exception as e:
             jsonify({'Error': 'Failed to upload, {}'.format(e)})
+
+        if image_id == '':
+            return jsonify({'Error': 'No idea'}), 500
 
         change_user_avatar(target_user.username, image_id)
         current_app.logger.info('{} {} changed their avatar'.format(user_id, username))
