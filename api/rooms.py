@@ -178,6 +178,7 @@ def single_room_members(room_id):
 
     for member in members_raw:
         try:
+            # this is really messy, can this be improved?
             this_user = get_user(get_user_id(member['_id']['username']))
         except KeyError as e:
             continue

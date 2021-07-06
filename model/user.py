@@ -7,7 +7,7 @@ from werkzeug.security import check_password_hash
 
 
 class User:
-    def __init__(self, username, email, password, avatar, realname, identifier, prev_avatars=None):
+    def __init__(self, username, email, password, avatar, real_name, identifier, prev_avatars=None):
         self.username = username
         self.email = email
         self.password = password
@@ -15,8 +15,8 @@ class User:
             self.avatar = str(avatar)
         else:
             self.avatar = None
-        self.realname = realname
-        self.ID = str(identifier)
+        self.real_name = real_name
+        self.ID = str(identifier)  # ObjectId in DB
         self.previous_avatars = prev_avatars
 
     @staticmethod

@@ -274,7 +274,7 @@ def add_reaction(message_id, user_id, reaction_id):
 def save_image(sender, room_id, path, is_avatar):
     current_time = datetime.now()
     image_id = images_collection.insert_one({'room_id': room_id, 'avatar': is_avatar, 'location': path,
-                                             'author': sender, 'time_sent': current_time}).inserted_id
+                                             'author': ObjectId(sender), 'time_sent': current_time}).inserted_id
     return image_id
 
 

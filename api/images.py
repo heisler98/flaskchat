@@ -145,7 +145,6 @@ def new_avatar(user_id):
         try:
             image_id = upload_image(file, user_id, None, True)
             current_app.logger.info('user: {}, image: {}'.format(user_id, image_id))
-            current_app.logger.info(change_user_avatar(user_id, image_id))
         except Exception as e:
             current_app.logger.info('Broke {}'.format(e))
             return jsonify({'Error': 'Failed to upload, {}'.format(e)})
