@@ -85,13 +85,13 @@ def create_account():
         if len(password) < 6:
             return jsonify({'Error': 'Password must be 6+ characters.'}), 400
         try:
-            save_user(username, email, password, full_name)
+            user_id = save_user(username, email, password, full_name)
             current_app.logger.info('{} created a new account, {}'.format(request.remote_addr, username))
 
-            add_log_event(200, username, 'Signup', ip_address=ip)
-            return jsonify({'200': 'User created.'}), 200
+            add_log_event(200, user_id, 'Signup', ip_address=ip)
+            return jsonify({'200': 'User created, {}.'.format(user_id)}), 200
         except DuplicateKeyError:
-            return jsonify({'Error': 'User already exists.'}), 400
+            return jsonify({'Error': 'User {} already exists.'.format(username)}), 400
 
     return jsonify({'Error': ''}), 500
 

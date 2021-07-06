@@ -20,6 +20,7 @@ def on_connect():  # deprecated
     pass
 
 
+# this event is automatic, triggered by a new socket connection
 @socketio.on('connect')
 @jwt_required()
 def client_connect():
@@ -45,6 +46,7 @@ def client_connect():
     current_app.logger.info("{} has connected, {}".format(user_identity, connected_sockets[user_identity]))
 
 
+# this event is automatic, triggered by a broken socket connection
 @socketio.on('disconnect')
 def client_disconnect():
     disconnected_id = request.sid
@@ -56,10 +58,14 @@ def client_disconnect():
             current_app.logger.info('{} belonged to {}, removing now.'.format(disconnected_id, key))
             user_sockets.remove(disconnected_id)
 
+            if len(user_sockets) == 0:
+                update_checkout(key)
+
 
 # update user object in DB to note when they were last online
 def update_checkout(username):
-    pass
+    user_id = get_user_id(username)
+    update_checkout(user_id)
 
 
 @socketio.on('close_session')  # to be replaced with broken connection handling
