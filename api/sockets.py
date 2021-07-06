@@ -57,6 +57,11 @@ def client_disconnect():
             user_sockets.remove(disconnected_id)
 
 
+# update user object in DB to note when they were last online
+def update_checkout(username):
+    pass
+
+
 @socketio.on('close_session')  # to be replaced with broken connection handling
 @jwt_required()
 def on_disconnect(data):
