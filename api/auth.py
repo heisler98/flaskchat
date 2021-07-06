@@ -39,6 +39,7 @@ def login():
     if request.method == 'POST':
         try:
             user_id = get_user_id(username)
+            print(user_id)
             if not user_id:
                 return jsonify({'Error': 'User not found.'}), 400
             user = get_user(user_id)
@@ -68,7 +69,7 @@ def login():
 @cross_origin()
 def create_account():
     ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-    json_input = request.get_json()
+    json_input = request.get_json(force=True)
 
     try:
         username = json_input['username']
@@ -77,9 +78,9 @@ def create_account():
         full_name = json_input['name']
         current_app.logger.info('{} trying to create a new account, {}'.format(request.remote_addr, username))
     except KeyError as e:
-        return jsonify({'Error': 'Invalid request: Missing required field.'}), 400
+        return jsonify({'Error': 'Invalid request: Missing required field. {}'.format(e)}), 400
     except TypeError as e:
-        return jsonify({'Error': 'Invalid request: Must be a json/dict.'}), 400
+        return jsonify({'Error': 'Invalid request: Must be a json/dict. {}'.format(e)}), 400
 
     if re.match("^[A-Za-z_]*$", username):
         if len(password) < 6:
@@ -92,6 +93,8 @@ def create_account():
             return jsonify({'200': 'User created, {}.'.format(user_id)}), 200
         except DuplicateKeyError:
             return jsonify({'Error': 'User {} already exists.'.format(username)}), 400
+    else:
+        return jsonify({'Error': 'Bad username.'}), 400
 
     return jsonify({'Error': ''}), 500
 

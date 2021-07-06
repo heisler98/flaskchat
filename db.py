@@ -30,7 +30,7 @@ images_collection = chat_db.get_collection('images')
 def save_user(username, email, password, fullname):
     existing_username = users_collection.find_one({'username': username}, {'username': 1})
     if existing_username:
-        raise DuplicateKeyError
+        raise DuplicateKeyError('Username already exists.')
 
     now = datetime.now()
     password_hash = generate_password_hash(password)
@@ -42,7 +42,7 @@ def save_user(username, email, password, fullname):
 
 def update_checkout(user_id):
     now = datetime.now()
-    sers_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'last_online': now}})
+    users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'last_online': now}})
 
 
 # used for admin / super user purposes
@@ -60,10 +60,9 @@ def change_user_attribute(username, attribute_type, value):
     users_collection.update_one({'username': username}, {'$set': {attribute_type: value}})
 
 
-def change_user_avatar(input_user_id, file_id):
-    user_id = bson.int64.Int64(input_user_id)
-    current_avatar = users_collection.find_one({'_id': user_id}, {'avatar': 1})
-    previous_avatars = users_collection.find_one({'_id': user_id}, {'previous_avatars': 1})
+def change_user_avatar(user_id, file_id):
+    current_avatar = users_collection.find_one({'_id': ObjectId(user_id)}, {'avatar': 1})
+    previous_avatars = users_collection.find_one({'_id': ObjectId(user_id)}, {'previous_avatars': 1})
     if previous_avatars:  # if this attr exists
         previous_avatars.append(current_avatar)
         # users_collection.update_one({'username': username}, {'$set': {'previous_avatars': previous_avatars}})
@@ -72,8 +71,8 @@ def change_user_avatar(input_user_id, file_id):
         # users_collection.update_one({'username': username}, {'$set': {'previous_avatars': previous_avatars}})
     else:  # there are no previous or current avatars
         previous_avatars = []
-    users_collection.update_one({'_id': user_id}, {'$set': {'previous_avatars': previous_avatars}})
-    users_collection.update_one({'_id': user_id}, {'$set': {'avatar': file_id}})
+    users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'previous_avatars': previous_avatars}})
+    users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'avatar': file_id}})
 
 
 def get_all_users():
@@ -85,7 +84,7 @@ def get_all_users():
         else:
             this_avatar = None
 
-        new_user = User(user['username'], user['email'], user['password'], this_avatar, user['realname'], user['_id'])
+        new_user = User(user['username'], user['email'], user['password'], this_avatar, user['real_name'], user['_id'])
         list_of_users.append(new_user)
     return list_of_users
 
@@ -94,10 +93,10 @@ def get_user(user_id):
     if not user_id:
         raise TypeError
 
-    user_id = int(user_id)
+    user_id = str(user_id)
     print('DB: Attempting to fetch', user_id)
 
-    user_data = users_collection.find_one({'_id': user_id})
+    user_data = users_collection.find_one({'_id': ObjectId(user_id)})
     if user_data:
         print('DB: Fetched', user_id, '({})'.format(user_data['username']))
     try:
@@ -109,7 +108,7 @@ def get_user(user_id):
         some_avatar = None
 
     return User(user_data['username'], user_data['email'], user_data['password'],
-                some_avatar, user_data['realname'], user_data['_id']) if user_data else None
+                some_avatar, user_data['real_name'], user_data['_id']) if user_data else None
 
 
 def get_messages_by_user(username):
@@ -125,7 +124,7 @@ def get_rooms_for_user(username):
 def get_user_id(username):
     some_user_id = users_collection.find_one({'username': username}, {'_id': 1})
     if some_user_id:
-        return some_user_id['_id']
+        return str(some_user_id['_id'])
     else:
         return None
 
@@ -256,14 +255,14 @@ def add_reaction(message_id, user_id, reaction_id):
     now = datetime.now()
     reaction_array = messages_collection.find_one({'_id': ObjectId(message_id)}, {'reactions': 1})
     reaction_object_id = reactions_collection.insert_one({
-        'user_id': user_id,
+        'user_id': ObjectId(user_id),
         'reaction_id': reaction_id,
         'time_inserted': now,
         'message_id': message_id}).inserted_id
     username = get_user(user_id)['username']
     reaction_array.append({
         'reaction_object_id': reaction_object_id,
-        'user_id': user_id,
+        'user_id': ObjectId(user_id),
         'username': username
     })
     messages_collection.update_one({'_id': ObjectId(message_id)}, {'$set': {'reactions': reaction_array}})
