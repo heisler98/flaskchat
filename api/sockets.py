@@ -59,11 +59,11 @@ def client_disconnect():
             user_sockets.remove(disconnected_id)
 
             if len(user_sockets) == 0:
-                update_checkout(key)
+                update_last_seen(key)
 
 
 # update user object in DB to note when they were last online
-def update_checkout(username):
+def update_last_seen(username):
     user_id = get_user_id(username)
     update_checkout(user_id)
 
