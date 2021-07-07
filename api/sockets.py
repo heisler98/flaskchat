@@ -119,7 +119,7 @@ def handle_send_message_event(data):
         current_app.logger.info("{} has sent message to the room {} at {}".format(user_id, room, time_sent))
 
         for member in room_member_ids:
-            current_app.logger.info("emit to {}, members {}".format(room, room_member_ids))
+            current_app.logger.info("emit to {}".format(member))
             if member in connected_sockets:
                 target_socket_ids = connected_sockets[member]
                 try:
@@ -129,6 +129,8 @@ def handle_send_message_event(data):
                 except TypeError as e:
                     current_app.logger.info('Failed to emit message to {}, connected on {}. They may not have an open '
                                             'connection. {}'.format(member, connected_sockets[member], e))
+            else:
+                current_app.logger.info('{} does not have an open socket connection.'.format(member))
 
         save_message(room, message, user_id, is_image, image_id)  # to db
     else:
