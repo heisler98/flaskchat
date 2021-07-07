@@ -68,7 +68,8 @@ def get_rooms():
 @jwt_required()
 def get_all_rooms():
     username = get_jwt_identity()
-    room_list_raw = get_rooms_for_user(username)
+    user_id = get_user_id(username)
+    room_list_raw = get_rooms_for_user(user_id)
 
     rooms_list = []
 
