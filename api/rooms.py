@@ -155,8 +155,9 @@ def single_room(room_id):
 def get_room_messages(room_id):
     room = get_room(room_id)
     username = get_jwt_identity()
+    user_id = get_user_id(username)
 
-    if room and is_room_member(room_id, username):
+    if room and is_room_member(room_id, user_id):
         page = int(request.args.get('page', 0))
 
         message_bson = get_messages(room_id, page)
@@ -170,7 +171,7 @@ def get_room_messages(room_id):
             messages.append({
                 'time_sent': item['time_sent'],
                 'text': item['text'],
-                'username': item['sender'],
+                'username': str(item['sender']),
                 'user_id': str(id),
                 'avatar': sender.avatar
             })

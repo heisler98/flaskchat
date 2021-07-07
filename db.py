@@ -176,8 +176,9 @@ def create_dm(user_one, user_two):
     room_id = rooms_collection.insert_one(
         {'name': room_title, 'is_dm': True, 'created_by': None, 'created_at': datetime.now()}).inserted_id
 
-    add_room_member(room_id, room_title, user_one.username, None, is_dm=True, is_admin=False)
-    add_room_member(room_id, room_title, user_two.username, None, is_dm=True, is_admin=False)
+    # room_id, room_name, user_id, added_by, is_admin=False, is_owner=False
+    add_room_member(room_id, room_title, user_one.ID, None, is_dm=True)
+    add_room_member(room_id, room_title, user_two.ID, None, is_dm=True)
 
     return room_id
 
@@ -194,10 +195,11 @@ def update_room(room_id, attribute_type, value):
     # room_members_collection.update_many({'_id.room_id': ObjectId(room_id)}, {'$set': {'name': room_name}})
 
 
-def add_room_member(room_id, room_name, user_id, added_by, is_admin=False, is_owner=False):
+def add_room_member(room_id, room_name, user_id, added_by, is_admin=False, is_owner=False, is_dm=False):
     room_members_collection.insert_one({'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)},
                                         'name': room_name,
                                         'added_by': ObjectId(added_by),
+                                        'is_dm': is_dm,
                                         'added_at': datetime.now(),
                                         'is_admin': is_admin,
                                         'is_owner': is_owner})
@@ -208,6 +210,7 @@ def add_room_members(room_id, room_name, user_ids, added_by):
                                           'name': room_name,
                                           'added_by': added_by,
                                           'added_at': datetime.now(),
+                                          'is_dm': False,
                                           'is_admin': False,
                                           'is_owner': False} for user_id in user_ids])
 

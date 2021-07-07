@@ -26,10 +26,11 @@ def view_user(user_id):
 @jwt_required()
 def list_users():
     username = get_jwt_identity()
+    user_id = get_user_id(username)
     users_raw = get_all_users()  # returns a list of user objects
     users = []
 
-    current_app.logger.info('{} requested a list of all users.'.format(username))
+    current_app.logger.info('{} requested a list of all users.'.format(user_id))
 
     for user_object in users_raw:
         users.append(user_object.create_json())

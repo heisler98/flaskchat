@@ -109,19 +109,19 @@ def handle_send_message_event(data):
 
     user_id = get_user_id(username)
 
-    room_member_usernames = []
+    room_member_ids = []
     room_member_objects = get_room_members(room)  # determine who should receive this message
     for db_item in room_member_objects:
-        room_member_usernames.append(db_item['_id']['username'])
+        room_member_ids.append(db_item['_id']['user_id'])
 
-    if username in room_member_usernames:  # if the author/sender is in the room they are trying to send to
-        current_app.logger.info("{} has sent message to the room {} at {}".format(username, room, time_sent))
+    if some_user_id in room_member_ids:  # if the author/sender is in the room they are trying to send to
+        current_app.logger.info("{} has sent message to the room {} at {}".format(some_user_id, room, time_sent))
 
-        for member in room_member_usernames:
-            current_app.logger.info("emit to {}, members {}".format(room, room_member_usernames))
+        for member in room_member_ids:
+            current_app.logger.info("emit to {}, members {}".format(room, room_member_ids))
             if member in connected_sockets:
                 target_socket_ids = connected_sockets[member]
-                current_app.logger.info("might emit message to {} in {} at {}".format(username, room, time_sent))
+                current_app.logger.info("might emit message to {} in {} at {}".format(some_user_id, room, time_sent))
                 try:
                     for socket in target_socket_ids:
                         socketio.emit('receive_message', data, room=socket)  # emit to specific user
