@@ -89,7 +89,7 @@ def edit_user(user_id):  # NOT FINISHED YET
         return jsonify({'Error': 'Empty json input'}), 400
 
     for key in var_changes:
-        if key == 'realname':
+        if key == 'real_name':
             # change_user_attribute ( username, attribute_type, value )
-            change_user_attribute(user_id, 'realname', json_input[key])
+            change_user_attribute(user_id, 'real_name', json_input[key])
 

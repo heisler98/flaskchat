@@ -51,7 +51,7 @@ class User:
             'email': self.email,
             'avatar': self.avatar,
             'ID': str(self.ID),
-            'realname': self.realname,
+            'real_name': self.real_name,
             'previous_avatars': self.previous_avatars
         }
         return json.loads(json_util.dumps(new_dict))
