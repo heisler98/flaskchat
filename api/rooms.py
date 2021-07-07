@@ -6,7 +6,7 @@ from flask import Blueprint, jsonify, current_app, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from db import get_room_members, get_user, get_user_id, get_messages, is_room_member, get_room, create_dm, find_dm, \
-    save_room, get_rooms_for_user
+    save_room, get_rooms_for_user, add_room_member
 from helper_functions import parse_json
 
 rooms_blueprint = Blueprint('rooms_blueprint', __name__)
@@ -36,18 +36,12 @@ def return_room_object(room_id):
             'avatar': sender.avatar
         })
 
-    # grab this room attributes
-    room_name = this_room['name']
-    is_dm = this_room['is_dm']
-    created_by = this_room['created_by']
-    room_id = str(this_room['_id'])
-
     return {
-        'name': room_name,
-        'is_dm': is_dm,
+        'name': this_room['name'],
+        'is_dm': this_room['is_dm'],
         'messages': messages,
-        'created_by': created_by,
-        'room_id': room_id
+        'created_by': str(this_room['created_by']),
+        'room_id': str(this_room['_id'])
     }
 
 
@@ -55,7 +49,8 @@ def return_room_object(room_id):
 @jwt_required()
 def get_rooms():
     username = get_jwt_identity()
-    room_list_raw = get_rooms_for_user(username)
+    user_id = get_user_id(username)
+    room_list_raw = get_rooms_for_user(user_id)
     room_list = []
 
     for item in room_list_raw:
@@ -89,6 +84,7 @@ def get_all_rooms():
 @jwt_required(fresh=True)
 def create_room():
     username = get_jwt_identity()
+    user_id = get_user_id(username)
     json_input = request.get_json(force=True)
 
     try:
@@ -96,7 +92,9 @@ def create_room():
     except Exception as e:
         return jsonify({'Error': 'Issue parsing JSON.'}), 400
 
-    room_id = save_room(name, username)
+    room_id = save_room(name, user_id)
+    add_room_member(room_id, name, user_id, user_id, True, True)
+
     return jsonify({'Success': '{}'.format(room_id)}), 200
 
 
@@ -121,12 +119,13 @@ def view_dm(user_id):
 def single_room(room_id):
     # json_input = request.get_json()
     username = get_jwt_identity()
+    user_id = get_user_id(username)
     room = get_room(room_id)
 
     if not room:
         return jsonify({'Error': 'Room not found.'}), 404
 
-    if not is_room_member(room_id, username):
+    if not is_room_member(room_id, user_id):
         return jsonify({'Error': 'You are not a member of this room.'}), 403
     else:
         return return_room_object(room_id)
@@ -204,3 +203,35 @@ def single_room_members(room_id):
         members.append(parse_json(new_member))
 
     return jsonify({'members': members}), 200
+
+
+@rooms_blueprint.route('/rooms/<room_id>/members/add', methods=['POST'])
+@jwt_required()
+def room_add_members(room_id):
+    username = get_jwt_identity()
+    user_id = get_user_id(username)
+    json_input = request.get_json(force=True)
+
+    current_app.logger.info('{} wants to add members to {}'.format(username, room_id))
+
+    try:
+        new_members = json_input['add_members']
+    except Exception as e:
+        return jsonify({'Error': 'Bad input'}), 400
+
+    try:
+        target_room = get_room(room_id)
+    except Exception as e:
+        return jsonify({'Error': 'Room not found'}), 400
+
+    # room_id, room_name, user_id, added_by, is_admin=False, is_owner=False
+
+    try:
+        print(len(new_members))
+        if len(new_members) == 1:
+            current_app.logger.info('hey')
+            add_room_member(room_id, target_room['name'], new_members[0], user_id)
+    except Exception as e:
+        return jsonify({'Error': 'Failed to add user. {}'.format(e)}), 500
+
+    return jsonify({'Success': 'User added'}), 200

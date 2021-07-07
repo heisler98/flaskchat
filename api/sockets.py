@@ -107,6 +107,8 @@ def handle_send_message_event(data):
     if username not in connected_sockets:
         current_app.logger.info('!!: {} tried to send a message without being connected to a room.'.format(username))
 
+    user_id = get_user_id(username)
+
     room_member_usernames = []
     room_member_objects = get_room_members(room)  # determine who should receive this message
     for db_item in room_member_objects:
@@ -127,7 +129,7 @@ def handle_send_message_event(data):
                     current_app.logger.info('Failed to emit message to {}, connected on {}. They may not have an open '
                                             'connection. {}'.format(member, connected_sockets[member], e))
 
-        save_message(room, message, username, is_image, image_id)  # to db
+        save_message(room, message, user_id, is_image, image_id)  # to db
     else:
         current_app.logger.info("{} not authorized to send to {}".format(username, room))
 

@@ -121,10 +121,12 @@ def get_messages_by_user(username):
 
 
 # Returns a list of room IDs for a given user
-def get_rooms_for_user(username):
-    return list(room_members_collection.find({'_id.username': username}, {'_id': 1}))
+def get_rooms_for_user(user_id):
+    return list(room_members_collection.find({'_id.user_id': ObjectId(user_id)}, {'_id': 1}))
 
 
+# this is often used because JWT tokens are associated with usernames instead of IDs.
+# Changing that would probably yield a decent speedup.
 def get_user_id(username):
     some_user_id = users_collection.find_one({'username': username}, {'_id': 1})
     if some_user_id:
@@ -136,9 +138,8 @@ def get_user_id(username):
 # ROOMS
 
 
-def is_room_member(room_id, username):
-    output = room_members_collection.count_documents({'_id': {'room_id': ObjectId(room_id), 'username': username}})
-    print('is_room_member', output)
+def is_room_member(room_id, user_id):
+    output = room_members_collection.count_documents({'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)}})
     return output
 
 
@@ -181,7 +182,8 @@ def create_dm(user_one, user_two):
 
 def save_room(room_name, created_by):
     room_id = rooms_collection.insert_one(
-        {'name': room_name, 'is_dm': False, 'created_by': created_by, 'created_at': datetime.now()}).inserted_id
+        {'name': room_name, 'is_dm': False, 'created_by': ObjectId(created_by),
+         'created_at': datetime.now()}).inserted_id
     return room_id
 
 
@@ -193,7 +195,7 @@ def update_room(room_id, attribute_type, value):
 def add_room_member(room_id, room_name, user_id, added_by, is_admin=False, is_owner=False):
     room_members_collection.insert_one({'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)},
                                         'name': room_name,
-                                        'added_by': added_by,
+                                        'added_by': ObjectId(added_by),
                                         'added_at': datetime.now(),
                                         'is_admin': is_admin,
                                         'is_owner': is_owner})
@@ -251,8 +253,8 @@ def add_reaction(message, reaction, username):
 
 def save_message(room_id, text, sender, is_image, image_id):
     current_time = datetime.now()
-    messages_collection.insert_one({'room_id': room_id, 'text': text, 'sender': ObjectId(sender), 'time_sent': current_time,
-                                    'is_image': is_image, 'image': image_id})
+    messages_collection.insert_one({'room_id': room_id, 'text': text, 'sender': ObjectId(sender),
+                                    'time_sent': current_time, 'is_image': is_image, 'image': image_id})
 
 
 def get_messages(room_id, page=0):
