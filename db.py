@@ -139,6 +139,8 @@ def get_user_id(username):
 
 
 def is_room_member(room_id, user_id):
+    if not room_id:
+        return False
     output = room_members_collection.count_documents({'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)}})
     return output
 

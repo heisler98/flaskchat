@@ -7,7 +7,7 @@ from flask import Blueprint, current_app, request, jsonify, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 
-from db import save_image, change_user_avatar, get_user, locate_image, is_room_member
+from db import save_image, change_user_avatar, get_user, locate_image, is_room_member, get_user_id
 from helper_functions import allowed_file
 
 images_blueprint = Blueprint('images_blueprint', __name__)
@@ -72,22 +72,22 @@ def post_image():
 
         try:
             image_id = upload_image(file, username, room_id)
+            return jsonify({'image_id': image_id}), 200
         except Exception as e:
             jsonify({'Error': 'Failed to upload, {}'.format(e)})
-
-        return jsonify({'image_id': image_id}), 200
 
 
 @images_blueprint.route('/uploads/<upload_id>', methods=['GET'])
 @jwt_required()
 def get_image(upload_id):
     username = get_jwt_identity()
+    user_id = get_user_id(username)
     target_image = locate_image(upload_id)
     current_app.logger.info("{} attempted to view file {}".format(username, upload_id))
 
     if target_image:
         image_room = target_image['room_id']
-        if not is_room_member(image_room, username) and not target_image['avatar']:  # avatars can be accessed anywhere
+        if not is_room_member(image_room, user_id) and not target_image['avatar']:  # avatars can be accessed anywhere
             return jsonify({'Error': 'Not authorized'}), 403
 
         file_path = os.path.join('/tiny/flaskchat', target_image['location'])
