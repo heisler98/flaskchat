@@ -6,7 +6,7 @@ from flask import Blueprint, jsonify, current_app, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from db import get_room_members, get_user, get_user_id, get_messages, is_room_member, get_room, create_dm, find_dm, \
-    save_room, get_rooms_for_user, add_room_member
+    save_room, get_rooms_for_user, add_room_member, delete_room, is_room_admin, toggle_admin, add_room_members
 from helper_functions import parse_json
 
 rooms_blueprint = Blueprint('rooms_blueprint', __name__)
@@ -98,6 +98,22 @@ def create_room():
     return jsonify({'Success': '{}'.format(room_id)}), 200
 
 
+@rooms_blueprint.route('/rooms/<room_id>/delete', methods=['POST'])
+@jwt_required()
+def delete_some_room(room_id):
+    print('hit')
+    username = get_jwt_identity()
+    user_id = get_user_id(username)
+
+    if is_room_admin(room_id, user_id):
+        print('is admin')
+        delete_room(room_id)
+    else:
+        return jsonify({'Error': 'Not authorized'}), 403
+
+    return jsonify({'Success': '{} has been purged.'.format(room_id)})
+
+
 @rooms_blueprint.route('/rooms/dm/<user_id>', methods=['GET'])
 @jwt_required(fresh=True)
 def view_dm(user_id):
@@ -165,6 +181,16 @@ def get_room_messages(room_id):
     return jsonify({'Error': ''}), 500
 
 
+@rooms_blueprint.route('/rooms/<room_id>/admin', methods=['PUT'])
+@jwt_required()
+def toggle_room_admin(room_id):
+    username = get_jwt_identity()
+    user_id = get_user_id(username)
+    toggle_admin(room_id, user_id)
+
+    return jsonify({'Success': 'Toggled admin'})
+
+
 @rooms_blueprint.route('/rooms/<room_id>/members', methods=['GET'])
 @jwt_required()
 def single_room_members(room_id):
@@ -212,7 +238,7 @@ def room_add_members(room_id):
     user_id = get_user_id(username)
     json_input = request.get_json(force=True)
 
-    current_app.logger.info('{} wants to add members to {}'.format(username, room_id))
+    current_app.logger.info('{} wants to add member(s) to {}'.format(username, room_id))
 
     try:
         new_members = json_input['add_members']
@@ -227,11 +253,15 @@ def room_add_members(room_id):
     # room_id, room_name, user_id, added_by, is_admin=False, is_owner=False
 
     try:
-        print(len(new_members))
         if len(new_members) == 1:
-            current_app.logger.info('hey')
             add_room_member(room_id, target_room['name'], new_members[0], user_id)
+            current_app.logger.info('Added a user to {}'.format(room_id))
+        elif len(new_members) > 1:
+            add_room_members(room_id, target_room['name'], new_members, user_id)
+            current_app.logger.info('Added {} users to {}'.format(len(new_members), room_id))
+        else:
+            return jsonify({'Error': 'Bad input'}), 400
     except Exception as e:
         return jsonify({'Error': 'Failed to add user. {}'.format(e)}), 500
 
-    return jsonify({'Success': 'User added'}), 200
+    return jsonify({'Success': 'User(s) added'}), 200

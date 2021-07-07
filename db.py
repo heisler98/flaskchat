@@ -216,7 +216,7 @@ def get_room_members(room_id):
 
 def is_room_admin(room_id, user_id):
     return room_members_collection.count_documents(
-        {'_id': {'room_id': ObjectId(room_id), 'user_id': user_id}, 'is_admin': True})
+        {'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)}, 'is_admin': True})
 
 
 def remove_room_members(room_id, user_ids):
@@ -226,10 +226,16 @@ def remove_room_members(room_id, user_ids):
 
 def toggle_admin(room_id, user_id):
     is_admin = room_members_collection.find_one({'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)}},
-                                                {'is_admin': 1})
+                                                {'is_admin': 1})['is_admin']
+    # (is_admin)
     room_members_collection.update_one({'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)}},
                                        {'$set': {'is_admin': not is_admin}})
     return not is_admin
+
+
+def delete_room(room_id):
+    rooms_collection.delete_one({'_id': ObjectId(room_id)})
+    room_members_collection.delete_many({'_id.room_id': ObjectId(room_id)})
 
 
 # LOG
