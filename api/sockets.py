@@ -119,18 +119,19 @@ def handle_send_message_event(data):
         current_app.logger.info("{} has sent message to the room {} at {}".format(user_id, room, time_sent))
 
         for member in room_member_ids:
+            member_name = get_user(member).username
             current_app.logger.info("emit to {}".format(member))
-            if member in connected_sockets:
-                target_socket_ids = connected_sockets[member]
+            if member_name in connected_sockets:
+                target_socket_ids = connected_sockets[member_name]
                 try:
                     for socket in target_socket_ids:
                         socketio.emit('receive_message', data, room=socket)  # emit to specific user
                         current_app.logger.info('Sent to {}'.format(socket))
                 except TypeError as e:
                     current_app.logger.info('Failed to emit message to {}, connected on {}. They may not have an open '
-                                            'connection. {}'.format(member, connected_sockets[member], e))
+                                            'connection. {}'.format(member_name, connected_sockets[member_name], e))
             else:
-                current_app.logger.info('{} does not have an open socket connection.'.format(member))
+                current_app.logger.info('{} does not have an open socket connection.'.format(member_name))
 
         save_message(room, message, user_id, is_image, image_id)  # to db
     else:
