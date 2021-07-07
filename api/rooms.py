@@ -98,7 +98,7 @@ def create_room():
     return jsonify({'Success': '{}'.format(room_id)}), 200
 
 
-@rooms_blueprint.route('/rooms/<room_id>/delete', methods=['POST'])
+@rooms_blueprint.route('/rooms/<room_id>', methods=['DELETE'])
 @jwt_required()
 def delete_some_room(room_id):
     print('hit')
@@ -231,7 +231,7 @@ def single_room_members(room_id):
     return jsonify({'members': members}), 200
 
 
-@rooms_blueprint.route('/rooms/<room_id>/members/add', methods=['POST'])
+@rooms_blueprint.route('/rooms/<room_id>/members', methods=['POST'])
 @jwt_required()
 def room_add_members(room_id):
     username = get_jwt_identity()
