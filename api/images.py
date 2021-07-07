@@ -152,6 +152,8 @@ def new_avatar(user_id):
         if image_id == '':
             return jsonify({'Error': 'No idea'}), 500
 
+        change_user_avatar(user_id, image_id)
+
         current_app.logger.info('{} {} changed their avatar'.format(user_id, username))
         return jsonify({'Success': 'Avatar changed, GET user for ID'}), 200
 
