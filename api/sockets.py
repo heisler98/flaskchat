@@ -93,6 +93,8 @@ def handle_send_message_event(data):
     current_app.logger.info('Connected sockets: {}'.format(connected_sockets))
 
     username = data['username']
+    print(type(username))
+    current_app.logger.info(type(username))
     room = data['room']  # client must pass room id here
     message = data['text']
     is_image = data['include_image']
