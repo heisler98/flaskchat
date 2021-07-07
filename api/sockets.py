@@ -43,20 +43,18 @@ def client_connect():
         this_user = [current_socket_id]
         connected_sockets[user_identity] = this_user
 
-    current_app.logger.info("{} has connected, {}".format(user_identity, connected_sockets[user_identity]))
-
 
 # this event is automatic, triggered by a broken socket connection
 @socketio.on('disconnect')
 def client_disconnect():
     disconnected_id = request.sid
-    current_app.logger.info('{} disconnected, searching for associated user...'.format(disconnected_id))
+    current_app.logger.info('A socket with ID {} disconnected...'.format(disconnected_id))
 
     for key in connected_sockets:
         user_sockets = connected_sockets[key]
         if disconnected_id in user_sockets:
-            current_app.logger.info('{} belonged to {}, removing now.'.format(disconnected_id, key))
             user_sockets.remove(disconnected_id)
+            current_app.logger.info('{} belonged to {}. They now have the following sockets open: {}'.format(disconnected_id, key, connected_sockets[key]))
 
             if len(user_sockets) == 0:
                 update_last_seen(key)
