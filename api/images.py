@@ -102,6 +102,7 @@ def get_image(upload_id):
 @images_blueprint.route('/avatar/<user_id>', methods=['GET'])
 @jwt_required()
 def get_avatar(user_id):
+    os.chdir(os.path.dirname(sys.argv[0]))
     target_user = get_user(user_id)
 
     if not target_user:
