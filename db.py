@@ -190,34 +190,44 @@ def update_room(room_id, attribute_type, value):
     # room_members_collection.update_many({'_id.room_id': ObjectId(room_id)}, {'$set': {'name': room_name}})
 
 
-def add_room_member(room_id, room_name, username, added_by, is_admin=False):
-    room_members_collection.insert_one({'_id': {'room_id': ObjectId(room_id), 'username': username},
+def add_room_member(room_id, room_name, user_id, added_by, is_admin=False, is_owner=False):
+    room_members_collection.insert_one({'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)},
                                         'name': room_name,
                                         'added_by': added_by,
                                         'added_at': datetime.now(),
-                                        'is_room_admin': is_admin})
+                                        'is_admin': is_admin,
+                                        'is_owner': is_owner})
 
 
-def add_room_members(room_id, room_name, usernames, added_by):
-    room_members_collection.insert_many([{'_id': {'room_id': ObjectId(room_id), 'username': username},
+def add_room_members(room_id, room_name, user_ids, added_by):
+    room_members_collection.insert_many([{'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)},
                                           'name': room_name,
                                           'added_by': added_by,
                                           'added_at': datetime.now(),
-                                          'is_room_admin': False} for username in usernames])
+                                          'is_admin': False,
+                                          'is_owner': False} for user_id in user_ids])
 
 
 def get_room_members(room_id):
     return list(room_members_collection.find({'_id.room_id': ObjectId(room_id)}))
 
 
-def is_room_admin(room_id, username):
+def is_room_admin(room_id, user_id):
     return room_members_collection.count_documents(
-        {'_id': {'room_id': ObjectId(room_id), 'username': username}, 'is_room_admin': True})
+        {'_id': {'room_id': ObjectId(room_id), 'user_id': user_id}, 'is_admin': True})
 
 
-def remove_room_members(room_id, usernames):
+def remove_room_members(room_id, user_ids):
     room_members_collection.delete_many(
-        {'_id': {'$in': [{'room_id': room_id, 'username': username} for username in usernames]}})
+        {'_id': {'$in': [{'room_id': room_id, 'user_id': user_id} for user_id in user_ids]}})
+
+
+def toggle_admin(room_id, user_id):
+    is_admin = room_members_collection.find_one({'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)}},
+                                                {'is_admin': 1})
+    room_members_collection.update_one({'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)}},
+                                       {'$set': {'is_admin': not is_admin}})
+    return not is_admin
 
 
 # LOG
