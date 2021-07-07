@@ -6,7 +6,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_socketio import join_room, SocketIO, join_room, rooms
 from .app import socketio
 
-from db import save_message, get_room_members, get_user_id
+from db import save_message, get_room_members, get_user_id, update_checkout
 
 sockets_blueprint = Blueprint('sockets_blueprint', __name__)
 global connected_sockets
