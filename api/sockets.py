@@ -114,6 +114,7 @@ def handle_send_message_event(data):
     room_member_objects = get_room_members(room)  # determine who should receive this message
     for db_item in room_member_objects:
         room_member_ids.append(db_item['_id']['user_id'])
+        current_app.logger.info(room_member_ids)
 
     if user_id in room_member_ids:  # if the author/sender is in the room they are trying to send to
         current_app.logger.info("{} has sent message to the room {} at {}".format(user_id, room, time_sent))
