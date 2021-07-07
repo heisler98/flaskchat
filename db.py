@@ -63,16 +63,20 @@ def change_user_attribute(username, attribute_type, value):
 def change_user_avatar(user_id, file_id):
     current_avatar = users_collection.find_one({'_id': ObjectId(user_id)}, {'avatar': 1})
     previous_avatars = users_collection.find_one({'_id': ObjectId(user_id)}, {'previous_avatars': 1})
+
+    #users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'previous_avatars': previous_avatars}})
+    users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'avatar': file_id}})
+
+    return None
+
     if previous_avatars:  # if this attr exists
-        previous_avatars.append(current_avatar)
+        previous_avatars.append(current_avatar) # does not have append
         # users_collection.update_one({'username': username}, {'$set': {'previous_avatars': previous_avatars}})
     elif current_avatar:  # there are no previous avatars but there is a current one
         previous_avatars = [current_avatar]
         # users_collection.update_one({'username': username}, {'$set': {'previous_avatars': previous_avatars}})
     else:  # there are no previous or current avatars
         previous_avatars = []
-    users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'previous_avatars': previous_avatars}})
-    users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'avatar': file_id}})
 
 
 def get_all_users():
