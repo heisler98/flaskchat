@@ -31,7 +31,6 @@ def client_connect():
     current_app.logger.info('A socket for {} with ID {} has been created...'.format(user_identity, current_socket_id))
 
     if user_identity in connected_sockets:
-        current_app.logger.info('{} now has the following sockets open: {}'.format(user_identity, connected_sockets[user_identity]))
         if connected_sockets[user_identity] is None:
             this_user = connected_sockets[user_identity]
             connected_sockets[user_identity] = this_user.append(current_socket_id)
@@ -43,6 +42,8 @@ def client_connect():
         this_user = [current_socket_id]
         connected_sockets[user_identity] = this_user
 
+    current_app.logger.info(
+        '{} now has the following sockets open: {}'.format(user_identity, connected_sockets[user_identity]))
 
 # this event is automatic, triggered by a broken socket connection
 @socketio.on('disconnect')
