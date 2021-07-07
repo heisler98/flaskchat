@@ -81,6 +81,7 @@ def post_image():
 @images_blueprint.route('/uploads/<upload_id>', methods=['GET'])
 @jwt_required()
 def get_image(upload_id):
+    os.chdir(os.path.dirname(sys.argv[0]))
     username = get_jwt_identity()
     target_image = locate_image(upload_id)
     current_app.logger.info("{} attempted to view file {}".format(username, upload_id))
@@ -91,12 +92,13 @@ def get_image(upload_id):
             return jsonify({'Error': 'Not authorized'}), 403
 
         file_path = target_image['location']
+        current_app.logger.info(file_path)
         if os.path.exists(file_path):
             return send_file(file_path)
         else:
-            return jsonify({'File not found': upload_id})
+            return jsonify({'I could not find the requested file': upload_id}), 404
 
-    return jsonify({'File not found': upload_id}), 400
+    return jsonify({'No such image.': upload_id}), 404
 
 
 @images_blueprint.route('/avatar/<user_id>', methods=['GET'])
