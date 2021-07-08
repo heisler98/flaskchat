@@ -21,6 +21,7 @@ def return_room_object(room_id):
 
     # grab messages for this room
     message_bson = get_messages(room_id)
+    current_app.logger.info(message_bson)
     messages = []
     for item in message_bson:
         try:
@@ -35,6 +36,8 @@ def return_room_object(room_id):
             'user_id': str(user_id),
             'avatar': sender.avatar
         })
+
+    current_app.logger.info(messages)
 
     return {
         'name': this_room['name'],
