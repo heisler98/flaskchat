@@ -37,8 +37,6 @@ def return_room_object(room_id):
         except Exception as e:
             current_app.logger.info(e)
 
-    current_app.logger.info(messages)
-
     return {
         'name': this_room['name'],
         'is_dm': this_room['is_dm'],

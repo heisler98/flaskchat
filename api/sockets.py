@@ -120,7 +120,7 @@ def handle_send_message_event(data):
 
         for member in room_member_ids:
             member_name = get_user(member).username
-            current_app.logger.info("emit to {}".format(member))
+            # current_app.logger.info("emit to {}".format(member))
             if member_name in connected_sockets:
                 target_socket_ids = connected_sockets[member_name]
                 try:
@@ -131,7 +131,8 @@ def handle_send_message_event(data):
                     current_app.logger.info('Failed to emit message to {}, connected on {}. They may not have an open '
                                             'connection. {}'.format(member_name, connected_sockets[member_name], e))
             else:
-                current_app.logger.info('{} does not have an open socket connection.'.format(member_name))
+                # current_app.logger.info('{} does not have an open socket connection.'.format(member_name))
+                pass
 
         save_message(room, message, user_id, is_image, image_id)  # to db
     else:
@@ -157,14 +158,13 @@ def attach_reaction():
 @socketio.on('im_typing')
 @jwt_required()
 def is_typing(data):
-    username = data['username']
-    room = data['room']
+    room = data['room_id']
     socketio.emit('is_typing', data)
 
 
 @socketio.on('im_not_typing')
 @jwt_required()
 def not_typing(data):
-    username = data['username']
+    username = data['room_id']
     socketio.emit('not_typing', data)
 
