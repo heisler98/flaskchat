@@ -13,13 +13,6 @@ global connected_sockets
 connected_sockets = {}
 
 
-@socketio.on('new_session')
-@jwt_required()
-def on_connect():  # deprecated
-    client_connect()
-    pass
-
-
 # this event is automatic, triggered by a new socket connection
 @socketio.on('connect')
 @jwt_required()
@@ -44,6 +37,7 @@ def client_connect():
 
     current_app.logger.info(
         '{} now has the following sockets open: {}'.format(user_identity, connected_sockets[user_identity]))
+
 
 # this event is automatic, triggered by a broken socket connection
 @socketio.on('disconnect')
@@ -89,8 +83,6 @@ def on_disconnect(data):
 @socketio.on('send_message')
 @jwt_required(fresh=True)
 def handle_send_message_event(data):
-    current_app.logger.info('Connected sockets: {}'.format(connected_sockets))
-
     username = data['username']
     current_app.logger.info(data)
     room = data['room']  # client must pass room id here
