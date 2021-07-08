@@ -24,19 +24,20 @@ def return_room_object(room_id):
     messages = []
     for item in message_bson:
         try:
-            user_id = get_user_id(item['sender'])
-            sender = get_user(str(user_id))
-        except Exception as e:
-            continue
-        messages.append({
-            'time_sent': item['time_sent'],
-            'text': item['text'],
-            'username': item['sender'],
-            'user_id': str(user_id),
-            'avatar': sender.avatar
-        })
+            user_id = str(item['sender'])
+            sender = get_user(user_id)
 
-    #current_app.logger.info(messages)
+            messages.append({
+                'time_sent': item['time_sent'],
+                'text': item['text'],
+                'username': sender.username,
+                'user_id': sender.ID,
+                'avatar': sender.avatar
+            })
+        except Exception as e:
+            current_app.logger.info(e)
+
+    current_app.logger.info(messages)
 
     return {
         'name': this_room['name'],
