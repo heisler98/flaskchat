@@ -272,9 +272,9 @@ def get_messages(room_id, page=0):
     MESSAGE_FETCH_LIMIT = 50
     offset = page * MESSAGE_FETCH_LIMIT
     messages = list(
-        messages_collection.find({'room_id': room_id}).sort('_id', DESCENDING).limit(MESSAGE_FETCH_LIMIT).skip(offset))
+        messages_collection.find({'room_id': ObjectId(room_id)}).sort('_id', DESCENDING).limit(MESSAGE_FETCH_LIMIT).skip(offset))
     for message in messages:
-        message['time_sent'] = message['time_sent'].strftime("%H:%M")
+        message['time_sent'] = message['time_sent']
     return messages[::-1]
 
 
