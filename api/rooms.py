@@ -21,12 +21,11 @@ def return_room_object(room_id):
 
     # grab messages for this room
     message_bson = get_messages(room_id)
-    current_app.logger.info(message_bson)
     messages = []
     for item in message_bson:
         try:
             user_id = get_user_id(item['sender'])
-            sender = get_user(user_id)
+            sender = get_user(str(user_id))
         except Exception as e:
             continue
         messages.append({
@@ -37,7 +36,7 @@ def return_room_object(room_id):
             'avatar': sender.avatar
         })
 
-    current_app.logger.info(messages)
+    #current_app.logger.info(messages)
 
     return {
         'name': this_room['name'],
