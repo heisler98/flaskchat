@@ -22,17 +22,19 @@ def return_room_object(room_id):
     # grab messages for this room
     message_bson = get_messages(room_id)
     messages = []
+    users = {}
     for item in message_bson:
         try:
             user_id = str(item['sender'])
-            sender = get_user(user_id)
+            if user_id not in users:
+                users[user_id] = get_user(user_id)
 
             messages.append({
                 'time_sent': item['time_sent'],
                 'text': item['text'],
-                'username': sender.username,
-                'user_id': sender.ID,
-                'avatar': sender.avatar
+                'username': users[user_id].username,
+                'user_id': users[user_id].ID,
+                'avatar': users[user_id].avatar
             })
         except Exception as e:
             current_app.logger.info(e)
