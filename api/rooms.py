@@ -12,6 +12,17 @@ from helper_functions import parse_json
 rooms_blueprint = Blueprint('rooms_blueprint', __name__)
 
 
+class Message:
+    def __init__(self, time_sent, text, username, user_id, avatar, include_image, image_id):
+        self.time_sent = time_sent
+        self.text = text
+        self.username = username
+        self.user_id = user_id
+        self.avatar = avatar
+        self.include_image = include_image
+        self.image_id = image_id
+
+
 # returns a json object of a room to be returned via the API
 def return_room_object(room_id):
     this_room = get_room(room_id)
@@ -29,13 +40,9 @@ def return_room_object(room_id):
             if user_id not in users:
                 users[user_id] = get_user(user_id)
 
-            messages.append({
-                'time_sent': item['time_sent'],
-                'text': item['text'],
-                'username': users[user_id].username,
-                'user_id': users[user_id].ID,
-                'avatar': users[user_id].avatar
-            })
+            # self, time_sent, text, username, user_id, avatar, include_image, image_id
+            messages.append(Message(item['time_sent'], item['text'], item['include_image'], item['image_id'],
+                                    users[user_id].username, users[user_id].ID, users[user_id].avatar))
         except Exception as e:
             current_app.logger.info(e)
 
@@ -171,19 +178,14 @@ def get_room_messages(room_id):
                 sender = get_user(id)
             except Exception as e:
                 continue
-            messages.append({
-                'time_sent': item['time_sent'],
-                'text': item['text'],
-                'username': str(item['sender']),
-                'user_id': str(id),
-                'avatar': sender.avatar
-            })
+
+            # self, time_sent, text, username, user_id, avatar, include_image, image_id
+            messages.append(Message(item['time_sent'], item['text'], str(item['sender']), str(id), sender.avatar,
+                                    item['include_image'], item['image_id']))
 
         return jsonify({'messages': messages})
     else:
         return jsonify({'Error': 'Room not found'}), 400
-
-    return jsonify({'Error': ''}), 500
 
 
 @rooms_blueprint.route('/rooms/<room_id>/admin', methods=['PUT'])

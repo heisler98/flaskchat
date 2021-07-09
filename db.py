@@ -262,10 +262,11 @@ def add_reaction(message, reaction, username):
 # MESSAGES
 
 
-def save_message(room_id, text, sender, is_image, image_id):
+def save_message(room_id, text, sender, include_image, image_id):
     current_time = datetime.now()
     messages_collection.insert_one({'room_id': ObjectId(room_id), 'text': text, 'sender': ObjectId(sender),
-                                    'time_sent': current_time, 'is_image': is_image, 'image': image_id})
+                                    'time_sent': current_time, 'include_image': include_image,
+                                    'image_id': ObjectId(image_id)})
 
 
 def get_messages(room_id, page=0):

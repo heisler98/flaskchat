@@ -87,9 +87,10 @@ def handle_send_message_event(data):
     current_app.logger.info(data)
     room = data['room']  # client must pass room id here
     message = data['text']
-    is_image = data['include_image']
+    include_image = False
     try:
         image_id = data['image_id']
+        include_image = True
     except Exception as e:
         image_id = None
     time_sent = datetime.now()  # .strftime('%b %d, %H:%M')
@@ -129,7 +130,7 @@ def handle_send_message_event(data):
                 # current_app.logger.info('{} does not have an open socket connection.'.format(member_name))
                 pass
 
-        save_message(room, message, user_id, is_image, image_id)  # to db
+        save_message(room, message, user_id, include_image, image_id)  # to db
     else:
         current_app.logger.info("{} not authorized to send to {}".format(username, room))
 
