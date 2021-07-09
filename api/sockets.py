@@ -20,19 +20,18 @@ connected_sockets = {}
 def client_connect():
     user_identity = get_jwt_identity()  # user_identity is username, NOT id
 
-    join_room('server')
-    current_socket_id = request.sid
-    current_app.logger.info('A socket for {} with ID {} has been created...'.format(user_identity, current_socket_id))
+    new_socket_id = request.sid
+    current_app.logger.info('A socket for {} with ID {} has been created...'.format(user_identity, new_socket_id))
+
+    join_room('server')  # add this new socket to room "server"
 
     if user_identity in connected_sockets:
-        if connected_sockets[user_identity] is None:
-            this_user = connected_sockets[user_identity]
-            connected_sockets[user_identity] = this_user.append(current_socket_id)
-        else:  # None in the dict, need to debug
-            this_user = [current_socket_id]
-            connected_sockets[user_identity] = this_user
-            # current_app.logger.info('{} added {}'.format(this_user, current_socket_id))
+        # if user already has an open socket
+        open_sockets_for_user = connected_sockets[user_identity]
+        open_sockets_for_user.append(new_socket_id)
+        connected_sockets[user_identity] = open_sockets_for_user
     else:
+        # user does not have an open socket atm
         this_user = [current_socket_id]
         connected_sockets[user_identity] = this_user
 
