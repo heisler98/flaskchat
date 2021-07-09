@@ -264,9 +264,14 @@ def add_reaction(message, reaction, username):
 
 def save_message(room_id, text, sender, include_image, image_id):
     current_time = datetime.now()
-    messages_collection.insert_one({'room_id': ObjectId(room_id), 'text': text, 'sender': ObjectId(sender),
-                                    'time_sent': current_time, 'include_image': include_image,
-                                    'image_id': ObjectId(image_id)})
+    if include_image and image_id:
+        messages_collection.insert_one({'room_id': ObjectId(room_id), 'text': text, 'sender': ObjectId(sender),
+                                        'time_sent': current_time, 'include_image': True,
+                                        'image_id': ObjectId(image_id)})
+    else:
+        messages_collection.insert_one({'room_id': ObjectId(room_id), 'text': text, 'sender': ObjectId(sender),
+                                        'time_sent': current_time, 'include_image': False,
+                                        'image_id': None})
 
 
 def get_messages(room_id, page=0):

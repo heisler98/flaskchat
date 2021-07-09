@@ -130,6 +130,7 @@ def handle_send_message_event(data):
                 # current_app.logger.info('{} does not have an open socket connection.'.format(member_name))
                 pass
 
+        # room_id, text, sender, include_image, image_id
         save_message(room, message, user_id, include_image, image_id)  # to db
     else:
         current_app.logger.info("{} not authorized to send to {}".format(username, room))
