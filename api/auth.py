@@ -39,7 +39,6 @@ def login():
     if request.method == 'POST':
         try:
             user_id = get_user_id(username)
-            print(user_id)
             if not user_id:
                 return jsonify({'Error': 'User not found.'}), 400
             user = get_user(user_id)
@@ -61,8 +60,6 @@ def login():
             return jsonify({'Error': 'Wrong password.'}), 403
     else:
         return jsonify({'Error': 'Request must be POST'}), 405
-
-    return jsonify({'Error': ''}), 500
 
 
 @auth_blueprint.route('/signup', methods=['POST'])
@@ -114,8 +111,8 @@ def refresh():
 @jwt_required()
 def logout():
     jti = get_jwt()['jti']
-    # jwt_redis_blocklist.set(jti, '', ex=timedelta(hours=1))
-    return jsonify({'Error': ''}), 500
+    jwt_redis_blocklist.set(jti, '', ex=timedelta(hours=1))
+    return jsonify({'Success': 'You have logged out.'}), 200
 
 
 @auth_blueprint.route('/whoami', methods=['GET'])

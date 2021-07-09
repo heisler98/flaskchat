@@ -5,6 +5,7 @@ from flask import Blueprint, current_app, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_socketio import join_room, SocketIO, join_room, rooms
 from .app import socketio
+import redis
 
 from db import save_message, get_room_members, get_user_id, update_checkout, get_user
 
@@ -94,7 +95,10 @@ def handle_send_message_event(data):
         image_id = None
     time_sent = datetime.now()  # .strftime('%b %d, %H:%M')
     data['time_sent'] = str(time_sent)
-    data['user_id'] = str(get_user_id(username))
+    user_id = str(get_user_id(username))
+    user = get_user(user_id)
+    data['user_id'] = user_id
+    data['avatar_id'] = user.avatar
 
     if username not in connected_sockets:
         current_app.logger.info('!!: {} tried to send a message without being connected to a room.'.format(username))
