@@ -28,7 +28,7 @@ def client_connect():
     if user_identity in connected_sockets:
         # if user already has an open socket
         open_sockets_for_user = connected_sockets[user_identity]
-        open_sockets_for_user.append(new_socket_id)
+        open_sockets_for_user.insert(new_socket_id)
         connected_sockets[user_identity] = open_sockets_for_user
     else:
         # user does not have an open socket atm
