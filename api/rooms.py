@@ -143,6 +143,9 @@ def view_dm(user_id):
     user_one = get_user(get_user_id(username))
     user_two = get_user(user_id)
 
+    if user_one == user_two:
+        return jsonify({'Error': 'Requested DM with self.'}), 400
+
     target_room = find_dm(user_one, user_two)  # find_dm orders params properly to prevent duplicate DMs
     if target_room:
         return jsonify(return_room_object(target_room)), 200
@@ -219,15 +222,16 @@ def single_room_members(room_id):
     members = []
 
     for member in members_raw:
+        print(member)
         try:
             # this is really messy, can this be improved?
-            this_user = get_user(get_user_id(member['_id']['username']))
+            this_user = get_user(str(member['_id']['user_id']))
         except KeyError as e:
             continue
         except TypeError as e:
-            return jsonify({'Error': e})
+            return jsonify({'Error': e}), 400
         if not this_user:
-            current_app.logger.info('Encountered unknown user {} in {}'.format(member['_id']['username'], room_id))
+            current_app.logger.info('Encountered unknown user {} in {}'.format(this_user, room_id))
             continue
 
         try:
@@ -237,10 +241,10 @@ def single_room_members(room_id):
 
         new_member = {
             'username': this_user.username,
-            'ID': this_user.identifier,
-            'added_at': member['added_at'].timestamp(),
-            'added_by': member['added_by'],
-            'is_room_admin': member['is_room_admin'],
+            'ID': this_user.ID,
+            'added_at': str(member['added_at']),  # .timestamp(),
+            'added_by': str(member['added_by']),
+            'is_room_admin': member['is_admin'],
             'avatar': avatar
         }
         members.append(parse_json(new_member))
