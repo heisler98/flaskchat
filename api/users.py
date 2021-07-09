@@ -33,7 +33,10 @@ def list_users():
     current_app.logger.info('{} requested a list of all users.'.format(user_id))
 
     for user_object in users_raw:
-        users.append(user_object.create_json())
+        if user_object.ID == user_id:
+            users.append(0, user_object)
+        else:
+            users.append(user_object.create_json())
 
     return jsonify(users), 200
 
