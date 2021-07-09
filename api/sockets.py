@@ -32,7 +32,7 @@ def client_connect():
         connected_sockets[user_identity] = open_sockets_for_user
     else:
         # user does not have an open socket atm
-        this_user = [current_socket_id]
+        this_user = [new_socket_id]
         connected_sockets[user_identity] = this_user
 
     current_app.logger.info(
