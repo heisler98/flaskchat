@@ -176,9 +176,9 @@ def create_dm(user_one, user_two):
     room_id = rooms_collection.insert_one(
         {'name': room_title, 'is_dm': True, 'created_by': None, 'created_at': datetime.now()}).inserted_id
 
-    # room_id, room_name, user_id, added_by, is_admin=False, is_owner=False
-    add_room_member(room_id, room_title, user_one.ID, None, is_dm=True)
-    add_room_member(room_id, room_title, user_two.ID, None, is_dm=True)
+    # room_id, room_name, user_id, added_by, is_admin=False, is_owner=False, is_dm=False
+    add_room_member(room_id, room_title, str(user_one.ID), None, is_dm=True)
+    add_room_member(room_id, room_title, str(user_two.ID), None, is_dm=True)
 
     return room_id
 
