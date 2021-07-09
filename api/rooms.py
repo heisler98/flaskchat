@@ -22,6 +22,17 @@ class Message:
         self.include_image = include_image
         self.image_id = image_id
 
+    def create_json(self):
+        return {
+            'time_sent': self.time_sent,
+            'text': self.text,
+            'username': self.username,
+            'user_id': self.user_id,
+            'avatar_id': self.avatar,
+            'include_image': self.include_image,
+            'image_id': self.image_id
+        }
+
 
 # returns a json object of a room to be returned via the API
 def return_room_object(room_id):
@@ -42,7 +53,7 @@ def return_room_object(room_id):
 
             # self, time_sent, text, username, user_id, avatar, include_image, image_id
             messages.append(Message(item['time_sent'], item['text'], item['include_image'], item['image_id'],
-                                    users[user_id].username, users[user_id].ID, users[user_id].avatar))
+                                    users[user_id].username, users[user_id].ID, users[user_id].avatar).create_json())
         except Exception as e:
             current_app.logger.info(e)
 
@@ -181,7 +192,7 @@ def get_room_messages(room_id):
 
             # self, time_sent, text, username, user_id, avatar, include_image, image_id
             messages.append(Message(item['time_sent'], item['text'], str(item['sender']), str(id), sender.avatar,
-                                    item['include_image'], item['image_id']))
+                                    item['include_image'], item['image_id']).create_json())
 
         return jsonify({'messages': messages})
     else:

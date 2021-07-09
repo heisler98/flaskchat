@@ -34,7 +34,7 @@ def list_users():
 
     for user_object in users_raw:
         if user_object.ID == user_id:
-            users.append(0, user_object)
+            users.insert(0, user_object)
         else:
             users.append(user_object.create_json())
 
