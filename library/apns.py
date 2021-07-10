@@ -38,7 +38,7 @@ request_headers = {
     'apns-expiration': '0',
     'apns-priority': '10',
     'apns-topic': BUNDLE_ID,
-    'authorization': 'bearer {0}'.format(token.decode('ascii'))
+    'authorization': 'bearer {0}'.format(token)
 }
 
 conn = HTTP20Connection('api.development.push.apple.com:443', force_proto='h2')
