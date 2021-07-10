@@ -44,7 +44,7 @@ def store_apn(user_id, token):
     try:
         apn_tokens = users_collection.find_one({'_id': ObjectId(user_id)}, {'apn': 1})['apn']
     except KeyError as e:
-        return None
+        apn_tokens = None
     if apn_tokens:
         if token in apn_tokens:
             return None
