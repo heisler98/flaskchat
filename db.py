@@ -119,7 +119,7 @@ def get_user(user_id):
     if not user_id:
         raise TypeError
 
-    user_id = str(user_id)
+    user_id = str(user_id)  # generally redundant
     print('DB: Attempting to fetch', user_id)
 
     user_data = users_collection.find_one({'_id': ObjectId(user_id)})

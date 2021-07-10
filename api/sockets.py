@@ -5,7 +5,7 @@ from flask import Blueprint, current_app, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_socketio import join_room, SocketIO, join_room, rooms
 from .app import socketio
-#import redis
+import redis
 
 from db import save_message, get_room_members, get_user_id, update_checkout, get_user, get_apn
 
@@ -122,10 +122,9 @@ def handle_send_message_event(data):
     room_member_objects = get_room_members(room)  # determine who should receive this message
     for db_item in room_member_objects:
         room_member_ids.append(str(db_item['_id']['user_id']))
-        current_app.logger.info(room_member_ids)
 
     if user_id in room_member_ids:  # if the author/sender is in the room they are trying to send to
-        current_app.logger.info("{} has sent message to the room {} at {}".format(user_id, room, time_sent))
+        current_app.logger.info("{} ({}) has sent message to the room {} at {}".format(user_id, username, room, time_sent))
 
         for member in room_member_ids:  # for person in room
             member_name = get_user(member).username
