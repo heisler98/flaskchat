@@ -182,9 +182,9 @@ def get_room_messages(room_id):
 
     if room and is_room_member(room_id, user_id):
         #page = json_input['page']
-        current_app.logger.info(page)
 
         page = int(request.args.get('page', 0))
+        current_app.logger.info(page)
 
         message_bson = get_messages(room_id, page)
         messages = []
