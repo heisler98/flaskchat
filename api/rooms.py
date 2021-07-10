@@ -178,20 +178,17 @@ def get_room_messages(room_id):
     room = get_room(room_id)
     username = get_jwt_identity()
     user_id = get_user_id(username)
-    #json_input = request.get_json(force=True)
 
     if room and is_room_member(room_id, user_id):
-        #page = json_input['page']
-
         page = int(request.args.get('page', 0))
-        current_app.logger.info(page)
+        #current_app.logger.info(page)
 
         message_bson = get_messages(room_id, page)
         messages = []
-        current_app.logger.info(message_bson)
+        #current_app.logger.info(message_bson)
         for item in message_bson:
             try:
-                this_user = get_user(str(item['_id']['user_id']))
+                this_user = get_user(str(item['sender']))
             except Exception as e:
                 current_app.logger.info(e)
                 continue
@@ -226,7 +223,7 @@ def single_room_members(room_id):
     members = []
 
     for member in members_raw:
-        print(member)
+        # print(member)
         try:
             # this is really messy, can this be improved?
             this_user = get_user(str(member['_id']['user_id']))
