@@ -56,6 +56,7 @@ def client_disconnect():
             current_app.logger.info('{} belonged to {}. They now have the following sockets open: {}'.format(disconnected_id, key, connected_sockets[key]))
 
             if len(user_sockets) == 0:
+                connected_sockets.pop(key, None)
                 update_last_seen(key)
 
     current_app.logger.info(connected_sockets)
