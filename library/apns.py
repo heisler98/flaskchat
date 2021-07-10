@@ -19,7 +19,7 @@ APP_ID = open('/tiny/flaskchat/apn_hunter').read()
 print(APP_ID)
 
 TEAM_ID = 'TN69P7NFS6'
-BUNDLE_ID = 'com.squidchat.Squidsquad'
+BUNDLE_ID = 'com.squidsquad.Squidchat'
 
 print('oooh')
 
