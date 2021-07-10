@@ -26,7 +26,8 @@ def register_apn_token():
     json_input = request.get_json(force=True)
 
     apn_token = json_input['token']
-    store_apn(user_id, apn_token)
+    res = store_apn(user_id, apn_token)
+    current_app.logger.info(res)
 
 
 @auth_blueprint.route('/login', methods=['POST'])
