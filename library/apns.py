@@ -42,8 +42,8 @@ class NotificationSystem:
     def __init__(self):
         self.conn = HTTP20Connection('api.development.push.apple.com:443', force_proto='h2')
 
-    def send_payload(self, payload, target_id):
-        path = '/3/device/{0}'.format(target_id)
+    def send_payload(self, payload, target_token):
+        path = '/3/device/{0}'.format(target_token)
 
         self.conn.request(
             'POST',

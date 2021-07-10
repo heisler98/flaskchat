@@ -136,8 +136,8 @@ def handle_send_message_event(data):
                 else:
                     for token in user_apn_tokens:
                         current_app.logger.info('{}, {}'.format(token, member))
-                        new_payload = notification_interface.payload_message(token, data['username'], data['text'])
-                        notification_interface.send_payload(new_payload)
+                        new_payload = notification_interface.payload_message(data['username'], data['text'])
+                        notification_interface.send_payload(new_payload, token)
 
         # room_id, text, sender, include_image, image_id
         save_message(room, message, user_id, include_image, image_id)  # to db
