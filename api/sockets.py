@@ -58,6 +58,8 @@ def client_disconnect():
             if len(user_sockets) == 0:
                 update_last_seen(key)
 
+    current_app.logger.info(connected_sockets)
+
 
 # update user object in DB to note when they were last online
 def update_last_seen(username):
