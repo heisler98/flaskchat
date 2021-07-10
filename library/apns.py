@@ -10,10 +10,10 @@ APNS_DEVELOPMENT_SERVER = 'api.sandbox.push.apple.com:443'
 APNS_PRODUCTION_SERVER = 'api.push.apple.com:443'
 
 APNS_AUTH_KEY = open('/tiny/flaskchat/key.p8')
-print(APNS_AUTH_KEY)
 APNS_KEY_ID = open('/tiny/flaskchat/key_id').read()
 print(APNS_KEY_ID)
 secret = APNS_AUTH_KEY.read()
+print(secret)
 
 APP_ID = open('/tiny/flaskchat/apn_hunter').read()
 print(APP_ID)
