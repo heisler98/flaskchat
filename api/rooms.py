@@ -172,25 +172,29 @@ def single_room(room_id):
     return jsonify({'Error': ''}), 500
 
 
-@rooms_blueprint.route('/rooms/<room_id>/messages', methods=['GET'])
+@rooms_blueprint.route('/rooms/<room_id>/messages/<page>', methods=['GET'])
 @jwt_required(fresh=True)
-def get_room_messages(room_id):
+def get_room_messages(room_id, page):
     room = get_room(room_id)
     username = get_jwt_identity()
     user_id = get_user_id(username)
-    json_input = request.get_json(force=True)
+    #json_input = request.get_json(force=True)
 
     if room and is_room_member(room_id, user_id):
-        page = json_input['page']
+        #page = json_input['page']
+        current_app.logger.info(page)
+
         # page = int(request.args.get('page', 0))
 
         message_bson = get_messages(room_id, page)
         messages = []
+        current_app.logger.info(message_bson)
         for item in message_bson:
             try:
                 user_id = get_user_id(item['sender'])
                 sender = get_user(user_id)
             except Exception as e:
+                current_app.logger.info(e)
                 continue
 
             # self, time_sent, text, username, user_id, avatar, include_image, image_id
