@@ -49,8 +49,6 @@ def client_disconnect():
     disconnected_id = request.sid
     current_app.logger.info('A socket with ID {} disconnected...'.format(disconnected_id))
 
-    remove_flag = ''
-
     for key in connected_sockets:
         user_sockets = connected_sockets[key]
         if disconnected_id in user_sockets:
@@ -58,11 +56,7 @@ def client_disconnect():
             current_app.logger.info('{} belonged to {}. They now have the following sockets open: {}'.format(disconnected_id, key, connected_sockets[key]))
 
             if len(user_sockets) == 0:
-                remove_flag = key
                 update_last_seen(key)
-
-    if remove_flag != '':
-        connected_sockets.pop(remove_flag, None)
 
     current_app.logger.info(connected_sockets)
 
@@ -128,7 +122,7 @@ def handle_send_message_event(data):
 
         for member in room_member_ids:  # for person in room
             member_name = get_user(member).username
-            if member_name in connected_sockets:  # if person is online w open socket
+            if member_name in connected_sockets and len(connected_sockets[member_name]) != 0:  # if person is online w open socket
                 target_socket_ids = connected_sockets[member_name]
                 try:
                     for socket in target_socket_ids:
