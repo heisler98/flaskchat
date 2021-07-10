@@ -59,10 +59,13 @@ def store_apn(user_id, token):
 
 
 def get_apn(user_id):
-    apn_tokens = users_collection.find_one({'_id': ObjectId(user_id)}, {'apn': 1})
+    try:
+        apn_tokens = users_collection.find_one({'_id': ObjectId(user_id)}, {'apn': 1})['apn']
+    except KeyError as e:
+        apn_tokens = None
     if not apn_tokens:
         return None
-    return list(apn_tokens['apn'])
+    return list(apn_tokens)
 
 
 def update_checkout(user_id):
