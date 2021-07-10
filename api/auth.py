@@ -16,7 +16,7 @@ def check_if_token_revoked(jwt_header, jwt_payload):
     pass
 
 
-@auth_blueprint.route('/apn', methods=['post'])
+@auth_blueprint.route('/apn', methods=['POST'])
 @jwt_required()
 def register_apn_token():
     current_app.logger.info('APN ENDPOINT')
