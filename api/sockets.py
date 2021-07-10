@@ -7,15 +7,22 @@ from flask_socketio import join_room, SocketIO, join_room, rooms
 from .app import socketio
 #import redis
 
-from db import save_message, get_room_members, get_user_id, update_checkout, get_user
+from apns2.client import APNsClient
+from apns2.payload import Payload, PayloadAlert
+
+from db import save_message, get_room_members, get_user_id, update_checkout, get_user, get_apn
 
 sockets_blueprint = Blueprint('sockets_blueprint', __name__)
 global connected_sockets
-connected_sockets = {
+connected_sockets = {}
 
 
-def generate_apn_payload():
-
+def apn_send_message(token_hex, message_text, message_author):
+    alert = PayloadAlert(title="MESSAGE", body=f"{message_author}: {message_text}")
+    payload = Payload(alert=alert, sound="default", badge=68)
+    topic = 'com.squidsquad.Squidchat'
+    client = APNsClient('/tiny/flaskchat/key.p8', use_sandbox=False, use_alternative_port=False)
+    client.send_notification(token_hex, payload, topic)
 
 
 # this event is automatic, triggered by a new socket connection
@@ -97,10 +104,11 @@ def handle_send_message_event(data):
         include_image = True
     except Exception as e:
         image_id = None
-    time_sent = datetime.now()  # .strftime('%b %d, %H:%M')
+    time_sent = datetime.now()
     data['time_sent'] = str(time_sent)
     user_id = str(get_user_id(username))
     user = get_user(user_id)
+    apn_tokens = get_apn(user_id)
     data['user_id'] = user_id
     data['avatar_id'] = user.avatar
 
@@ -118,10 +126,9 @@ def handle_send_message_event(data):
     if user_id in room_member_ids:  # if the author/sender is in the room they are trying to send to
         current_app.logger.info("{} has sent message to the room {} at {}".format(user_id, room, time_sent))
 
-        for member in room_member_ids:
+        for member in room_member_ids:  # for person in room
             member_name = get_user(member).username
-            # current_app.logger.info("emit to {}".format(member))
-            if member_name in connected_sockets:
+            if member_name in connected_sockets:  # if person is online w open socket
                 target_socket_ids = connected_sockets[member_name]
                 try:
                     for socket in target_socket_ids:
@@ -131,8 +138,12 @@ def handle_send_message_event(data):
                     current_app.logger.info('Failed to emit message to {}, connected on {}. They may not have an open '
                                             'connection. {}'.format(member_name, connected_sockets[member_name], e))
             else:
-                # current_app.logger.info('{} does not have an open socket connection.'.format(member_name))
-                pass
+                user_apn_tokens = get_apn(member)
+                if not user_apn_tokens:
+                    continue
+                else:
+                    for token in user_apn_tokens:
+                        apn_send_message(token, data['username'], data['text'])
 
         # room_id, text, sender, include_image, image_id
         save_message(room, message, user_id, include_image, image_id)  # to db
