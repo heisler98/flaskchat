@@ -130,12 +130,13 @@ def handle_send_message_event(data):
                     current_app.logger.info('Failed to emit message to {}, connected on {}. They may not have an open '
                                             'connection. {}'.format(member_name, connected_sockets[member_name], e))
             else:  # send push notifications for anyone offline
+                current_app('No open socket for {}, trying APN'.format(member))
                 user_apn_tokens = get_apn(member)
                 if not user_apn_tokens:
                     continue
                 else:
                     for token in user_apn_tokens:
-                        current_app.logger.info('{}, {}'.format(token, member))
+                        current_app.logger.info('NOTIF: {}, {}'.format(token, member))
                         new_payload = notification_interface.payload_message(data['username'], data['text'])
                         notification_interface.send_payload(new_payload, token)
 
