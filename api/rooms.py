@@ -172,7 +172,7 @@ def single_room(room_id):
     return jsonify({'Error': ''}), 500
 
 
-@rooms_blueprint.route('/rooms/<room_id>/messages/<page>', methods=['GET'])
+@rooms_blueprint.route('/rooms/<room_id>/messages', methods=['GET'])
 @jwt_required(fresh=True)
 def get_room_messages(room_id, page):
     room = get_room(room_id)
@@ -184,7 +184,7 @@ def get_room_messages(room_id, page):
         #page = json_input['page']
         current_app.logger.info(page)
 
-        # page = int(request.args.get('page', 0))
+        page = int(request.args.get('page', 0))
 
         message_bson = get_messages(room_id, page)
         messages = []
