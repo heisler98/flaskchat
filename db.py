@@ -40,6 +40,10 @@ def save_user(username, email, password, fullname):
     return identifier
 
 
+def store_apn(user_id, token):
+    users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'apn': token}})
+
+
 def update_checkout(user_id):
     now = datetime.now()
     users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'last_online': now}})

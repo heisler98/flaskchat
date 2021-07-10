@@ -7,13 +7,23 @@ from flask_cors import cross_origin
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
 from pymongo.errors import DuplicateKeyError
 
-from db import get_user_id, get_user, save_user, add_log_event
+from db import get_user_id, get_user, save_user, add_log_event, store_apn
 
 auth_blueprint = Blueprint('auth_blueprint', __name__)
 
 
 def check_if_token_revoked(jwt_header, jwt_payload):
     pass
+
+
+@auth_blueprint.route('/apn', methods=['post'])
+@jwt_required()
+def register_apn_token():
+    ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
+    json_input = request.get_json(force=True)
+
+    apn_token = json_input['token']
+    store_apn(apn_token)
 
 
 @auth_blueprint.route('/login', methods=['POST'])
