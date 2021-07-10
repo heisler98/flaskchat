@@ -174,7 +174,7 @@ def single_room(room_id):
 
 @rooms_blueprint.route('/rooms/<room_id>/messages', methods=['GET'])
 @jwt_required(fresh=True)
-def get_room_messages(room_id, page):
+def get_room_messages(room_id):
     room = get_room(room_id)
     username = get_jwt_identity()
     user_id = get_user_id(username)
