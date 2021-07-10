@@ -1,6 +1,5 @@
 # github.com/colingoodman
 
-import flask_jwt_extended
 import jwt
 import time
 import json
@@ -11,62 +10,64 @@ APNS_PRODUCTION_SERVER = 'api.push.apple.com:443'
 
 APNS_AUTH_KEY = open('/tiny/flaskchat/key.p8')
 APNS_KEY_ID = open('/tiny/flaskchat/key_id').read().strip()
-print(APNS_KEY_ID)
 secret = APNS_AUTH_KEY.read()
-print(secret)
 
-APP_ID = open('/tiny/flaskchat/apn_hunter').read()
-print(APP_ID)
+# APP_ID = open('/tiny/flaskchat/apn_hunter').read()
 
 TEAM_ID = 'TN69P7NFS6'
 BUNDLE_ID = 'com.squidsquad.Squidchat'
 
-print('oooh')
 
-token = jwt.encode(
-    {
-        'iss': TEAM_ID,
-        'iat': time.time()
-    },
-    secret,
-    algorithm='ES256',
-    headers={
-        'alg': 'ES256',
-        'kid': APNS_KEY_ID
+class NotificationSystem:
+    token = jwt.encode(
+        {
+            'iss': TEAM_ID,
+            'iat': time.time()
+        },
+        secret,
+        algorithm='ES256',
+        headers={
+            'alg': 'ES256',
+            'kid': APNS_KEY_ID
+        }
+    )
+
+    request_headers = {
+        'apns-expiration': '0',
+        'apns-priority': '10',
+        'apns-topic': BUNDLE_ID,
+        'authorization': 'bearer {0}'.format(token)
     }
-)
 
-path = '/3/device/{0}'.format(APP_ID)
-request_headers = {
-    'apns-expiration': '0',
-    'apns-priority': '10',
-    'apns-topic': BUNDLE_ID,
-    'authorization': 'bearer {0}'.format(token)
-}
+    def __init__(self):
+        self.conn = HTTP20Connection('api.development.push.apple.com:443', force_proto='h2')
 
-conn = HTTP20Connection('api.development.push.apple.com:443', force_proto='h2')
+    def send_payload(self, payload, target_id):
+        path = '/3/device/{0}'.format(target_id)
 
-payload_data = {
-    'aps': {
-        'alert': '????!!!',
-        'sound': '',
-        'badge': 68,
-        'content-available': 1
-    }
-}
-payload = json.dumps(payload_data).encode('utf-8')
+        self.conn.request(
+            'POST',
+            path,
+            payload,
+            headers=self.request_headers
+        )
 
-# Send our request
-conn.request(
-    'POST',
-    path,
-    payload,
-    headers=request_headers
-)
+        resp = self.conn.get_response()
 
-resp = conn.get_response()
-print(resp.status)
-print(resp.read())
+        return resp.status
 
+    def payload_message(self, author, body):
+        payload_data = {
+            'aps': {
+                'alert': {
+                    'title': 'New Message',
+                    'body': f'{author}: {body}'
+                },
+                'badge': 1
+            }
+        }
 
+        payload = json.dumps(payload_data).encode('utf-8')
+
+        return payload
 

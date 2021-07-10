@@ -4,7 +4,9 @@ from datetime import datetime
 from flask import Blueprint, current_app, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_socketio import join_room, SocketIO, join_room, rooms
-from .app import socketio
+
+from library.apns import NotificationSystem
+from app import socketio
 import redis
 
 from db import save_message, get_room_members, get_user_id, update_checkout, get_user, get_apn
@@ -13,17 +15,7 @@ sockets_blueprint = Blueprint('sockets_blueprint', __name__)
 global connected_sockets
 connected_sockets = {}
 
-
-def apn_send_message(token_hex, message_text, message_author):
-    payload = {
-        "aps": {
-            "alert": {
-                "title": "Title",
-                "body": f"{message_author}: {message_text}"
-            },
-            "badge": "68"
-        }
-    }
+notification_interface = NotificationSystem()
 
 
 # this event is automatic, triggered by a new socket connection
@@ -137,13 +129,15 @@ def handle_send_message_event(data):
                 except TypeError as e:
                     current_app.logger.info('Failed to emit message to {}, connected on {}. They may not have an open '
                                             'connection. {}'.format(member_name, connected_sockets[member_name], e))
-            else:
+            else:  # send push notifications for anyone offline
                 user_apn_tokens = get_apn(member)
                 if not user_apn_tokens:
                     continue
                 else:
                     for token in user_apn_tokens:
-                        apn_send_message(token, data['username'], data['text'])
+                        current_app.logger.info('{}, {}'.format(token, member))
+                        new_payload = notification_interface.payload_message(token, data['username'], data['text'])
+                        notification_interface.send_payload(new_payload)
 
         # room_id, text, sender, include_image, image_id
         save_message(room, message, user_id, include_image, image_id)  # to db
