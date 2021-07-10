@@ -43,11 +43,21 @@ def save_user(username, email, password, fullname):
 def store_apn(user_id, token):
     apn_tokens = users_collection.find_one({'_id': ObjectId(user_id)}, {'apn': 1})
     if apn_tokens:
-        apn_tokens.append(token)
-        users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'apn': apn_tokens}})
+        if token in apn_tokens:
+            return None
+        else:
+            apn_tokens.append(token)
+            users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'apn': apn_tokens}})
     else:
         apn_tokens = [token]
         users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'apn': apn_tokens}})
+
+
+def get_apn(user_id):
+    apn_tokens = users_collection.find_one({'_id': ObjectId(user_id)}, {'apn': 1})
+    if not apn_tokens:
+        return None
+    return apn_tokens
 
 
 def update_checkout(user_id):
