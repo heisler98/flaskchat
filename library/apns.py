@@ -27,7 +27,7 @@ token = jwt.encode(
     },
     secret,
     algorithm='ES256',
-    headers = {
+    headers={
         'alg': 'ES256',
         'kid': APNS_KEY_ID
     }
@@ -45,7 +45,7 @@ conn = HTTP20Connection('api.development.push.apple.com:443', force_proto='h2')
 
 payload_data = {
     'aps': {
-        'alert': 'All your base are belong to us.',
+        'alert': '????!!!',
         'sound': '',
         'content-available': 1
     }
