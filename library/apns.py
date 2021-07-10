@@ -54,7 +54,10 @@ class NotificationSystem:
 
         resp = self.conn.get_response()
 
-        return resp.status
+        print(resp.status)
+        print(resp.read())
+
+        return resp
 
     def payload_message(self, author, body):
         payload_data = {
