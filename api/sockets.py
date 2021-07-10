@@ -11,7 +11,11 @@ from db import save_message, get_room_members, get_user_id, update_checkout, get
 
 sockets_blueprint = Blueprint('sockets_blueprint', __name__)
 global connected_sockets
-connected_sockets = {}
+connected_sockets = {
+
+
+def generate_apn_payload():
+
 
 
 # this event is automatic, triggered by a new socket connection
