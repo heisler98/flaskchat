@@ -191,14 +191,13 @@ def get_room_messages(room_id):
         current_app.logger.info(message_bson)
         for item in message_bson:
             try:
-                user_id = get_user_id(item['sender'])
-                sender = get_user(user_id)
+                this_user = get_user(str(item['_id']['user_id']))
             except Exception as e:
                 current_app.logger.info(e)
                 continue
 
             # self, time_sent, text, username, user_id, avatar, include_image, image_id
-            messages.append(Message(item['time_sent'], item['text'], str(item['sender']), str(id), sender.avatar,
+            messages.append(Message(item['time_sent'], item['text'], str(item['sender']), str(id), this_user.avatar,
                                     item['include_image'], item['image_id']).create_json())
 
         return jsonify({'messages': messages})
