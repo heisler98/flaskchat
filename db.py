@@ -48,9 +48,11 @@ def store_apn(user_id, token):
         else:
             apn_tokens.append(token)
             users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'apn': apn_tokens}})
+            return 'Yes'
     else:
         apn_tokens = [token]
         users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'apn': apn_tokens}})
+        return 'Yes'
 
 
 def get_apn(user_id):

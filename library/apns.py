@@ -13,6 +13,8 @@ APNS_AUTH_KEY = open('/tiny/flaskchat/key.p8')
 APNS_KEY_ID = open('/tiny/flaskchat/key_id').read()
 secret = APNS_AUTH_KEY.read()
 
+APP_ID = ''
+
 TEAM_ID = 'TN69P7NFS6'
 BUNDLE_ID = 'com.squidchat.Squidsquad'
 
@@ -29,7 +31,7 @@ token = jwt.encode(
     }
 )
 
-path = '/3/device/{0}'.format(BUNDLE_ID)
+path = '/3/device/{0}'.format(APP_ID)
 request_headers = {
     'apns-expiration': '0',
     'apns-priority': '10',

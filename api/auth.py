@@ -19,11 +19,12 @@ def check_if_token_revoked(jwt_header, jwt_payload):
 @auth_blueprint.route('/apn', methods=['post'])
 @jwt_required()
 def register_apn_token():
+    current_app.logger.info('APN ENDPOINT')
     ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
     json_input = request.get_json(force=True)
 
     apn_token = json_input['token']
-    store_apn(apn_token)
+    print(store_apn(apn_token))
 
 
 @auth_blueprint.route('/login', methods=['POST'])
