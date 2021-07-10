@@ -29,6 +29,11 @@ def register_apn_token():
     res = store_apn(user_id, apn_token)
     current_app.logger.info(res)
 
+    if res:
+        return jsonify({'Good': 'Yeah'}), 200
+    else:
+        return jsonify({'Alright': 'Okay'}), 200
+
 
 @auth_blueprint.route('/login', methods=['POST'])
 @cross_origin()

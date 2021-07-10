@@ -42,7 +42,8 @@ def save_user(username, email, password, fullname):
 
 def store_apn(user_id, token):
     apn_tokens = users_collection.find_one({'_id': ObjectId(user_id)}, {'apn': 1})
-    return apn_tokens
+    if type(apn_tokens) == dict:
+        return None
     if apn_tokens:
         if token in apn_tokens:
             return None
