@@ -122,7 +122,7 @@ def handle_send_message_event(data):
 
         for member in room_member_ids:  # for person in room
             member_name = get_user(member).username
-            if member_name in connected_sockets and len(connected_sockets[member_name]) != 0:  # if person is online w open socket
+            if member_name in connected_sockets and len(connected_sockets[member_name]) != 0:
                 target_socket_ids = connected_sockets[member_name]
                 try:
                     for socket in target_socket_ids:

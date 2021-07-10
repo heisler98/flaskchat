@@ -61,7 +61,8 @@ class NotificationSystem:
             'aps': {
                 'alert': {
                     'title': 'New Message',
-                    'body': f'{author}: {body}'
+                    'body': f'{author}: {body}',
+                    'sound': 'default'
                 },
                 'badge': 1
             }
