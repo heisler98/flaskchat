@@ -62,7 +62,7 @@ def get_apn(user_id):
     apn_tokens = users_collection.find_one({'_id': ObjectId(user_id)}, {'apn': 1})
     if not apn_tokens:
         return None
-    return apn_tokens
+    return list(apn_tokens['apn'])
 
 
 def update_checkout(user_id):
