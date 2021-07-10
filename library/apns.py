@@ -13,10 +13,12 @@ APNS_AUTH_KEY = open('/tiny/flaskchat/key.p8')
 APNS_KEY_ID = open('/tiny/flaskchat/key_id').read()
 secret = APNS_AUTH_KEY.read()
 
-APP_ID = ''
+APP_ID = open('/tiny/flaskchat/apn_hunter').read()
 
 TEAM_ID = 'TN69P7NFS6'
 BUNDLE_ID = 'com.squidchat.Squidsquad'
+
+print('oooh')
 
 token = jwt.encode(
     {
