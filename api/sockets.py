@@ -7,9 +7,6 @@ from flask_socketio import join_room, SocketIO, join_room, rooms
 from .app import socketio
 #import redis
 
-from apns2.client import APNsClient
-from apns2.payload import Payload, PayloadAlert
-
 from db import save_message, get_room_members, get_user_id, update_checkout, get_user, get_apn
 
 sockets_blueprint = Blueprint('sockets_blueprint', __name__)
@@ -18,11 +15,15 @@ connected_sockets = {}
 
 
 def apn_send_message(token_hex, message_text, message_author):
-    alert = PayloadAlert(title="MESSAGE", body=f"{message_author}: {message_text}")
-    payload = Payload(alert=alert, sound="default", badge=68)
-    topic = 'com.squidsquad.Squidchat'
-    client = APNsClient('/tiny/flaskchat/key.p8', use_sandbox=False, use_alternative_port=False)
-    client.send_notification(token_hex, payload, topic)
+    payload = {
+        "aps": {
+            "alert": {
+                "title": "Title",
+                "body": f"{message_author}: {message_text}"
+            },
+            "badge": "68"
+        }
+    }
 
 
 # this event is automatic, triggered by a new socket connection

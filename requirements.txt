@@ -7,6 +7,8 @@ flask_jwt_extended == 4.1.0
 pytest == 6.2.4
 flask_cors == 3.0.10
 redis == 3.5.3
+jwt
+hyper
 sumy
 spotipy
 Flask-Limiter
