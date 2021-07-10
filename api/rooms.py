@@ -122,7 +122,6 @@ def create_room():
 @rooms_blueprint.route('/rooms/<room_id>', methods=['DELETE'])
 @jwt_required()
 def delete_some_room(room_id):
-    print('hit')
     username = get_jwt_identity()
     user_id = get_user_id(username)
 
@@ -179,16 +178,18 @@ def get_room_messages(room_id):
     room = get_room(room_id)
     username = get_jwt_identity()
     user_id = get_user_id(username)
+    json_input = request.get_json(force=True)
 
     if room and is_room_member(room_id, user_id):
-        page = int(request.args.get('page', 0))
+        page = json_input['page']
+        # page = int(request.args.get('page', 0))
 
         message_bson = get_messages(room_id, page)
         messages = []
         for item in message_bson:
             try:
-                id = get_user_id(item['sender'])
-                sender = get_user(id)
+                user_id = get_user_id(item['sender'])
+                sender = get_user(user_id)
             except Exception as e:
                 continue
 
