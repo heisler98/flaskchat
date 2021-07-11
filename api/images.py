@@ -63,15 +63,16 @@ def upload_image(file, user_id, room_id, is_avatar=False):
 @jwt_required(fresh=True)
 def post_image():
     username = get_jwt_identity()
+    user_id = get_user_id(username)
     json_input = request.get_json()
     current_app.logger.info("{} attempted to upload a file".format(username))
 
     if request.method == 'POST':
-        room_id = json_input['room_id']
+        room_id = request.form['room_id']
         file = request.files['file']
 
         try:
-            image_id = upload_image(file, username, room_id)
+            image_id = upload_image(file, user_id, room_id)
             return jsonify({'image_id': image_id}), 200
         except Exception as e:
             jsonify({'Error': 'Failed to upload, {}'.format(e)})
