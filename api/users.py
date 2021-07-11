@@ -14,7 +14,7 @@ def view_user(user_id):
     username = get_jwt_identity()
 
     current_app.logger.info('{} viewing profile of {} (GET)'.format(username, user_id))
-    user_raw = get_user(int(user_id))
+    user_raw = get_user(str(user_id))
 
     if not user_raw:
         return jsonify({'Error': 'User not found.'}), 404
