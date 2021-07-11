@@ -7,10 +7,11 @@ from werkzeug.security import check_password_hash
 
 
 class User:
-    def __init__(self, username, email, password, avatar, real_name, identifier, prev_avatars=None):
+    def __init__(self, username, email, password, avatar, real_name, identifier, prev_avatars=None, date_joined=None):
         self.username = username
         self.email = email
         self.password = password
+        self.date_joined = date_joined
         if avatar:
             self.avatar = str(avatar)
         else:

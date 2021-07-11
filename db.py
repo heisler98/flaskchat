@@ -139,8 +139,9 @@ def get_user(user_id):
         print('ERROR: Failed to fetch avatar for {}'.format(user_id), e)
         some_avatar = None
 
+    # username, email, password, avatar, real_name, identifier, prev_avatars=None, date_joined=None
     return User(user_data['username'], user_data['email'], user_data['password'],
-                some_avatar, user_data['real_name'], user_data['_id']) if user_data else None
+                some_avatar, user_data['real_name'], user_data['_id'], date_joined=user_data['date_joined']) if user_data else None
 
 
 def get_messages_by_user(username):
