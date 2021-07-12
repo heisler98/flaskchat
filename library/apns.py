@@ -38,7 +38,7 @@ class NotificationSystem:
     }
 
     def __init__(self):
-        self.conn = HTTP20Connection('api.development.push.apple.com:443', force_proto='h2')
+        self.conn = HTTP20Connection(APNS_PRODUCTION_SERVER, force_proto='h2')
 
     def send_payload(self, payload, target_token):
         path = '/3/device/{0}'.format(target_token)
