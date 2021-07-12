@@ -14,7 +14,7 @@ from model.user import User
 class Connect(object):
     @staticmethod
     def get_connection():
-        return MongoClient("mongodb://root:changeMeToAStrongPassword@localhost:27017/chatdb/?authSource=admin")
+        return MongoClient("mongodb://superuser:changeMeToAStrongPassword@localhost:27017/chatdb/?authSource=admin")
 
 
 client = Connect.get_connection()
