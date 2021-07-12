@@ -9,6 +9,8 @@ werkzeug == 2.0.1
 jwt == 1.2.0
 hyper == 0.7.0
 redis == 3.5.3
+pymongo == 3.11.4
+wheel
 
 pytest == 6.2.4
 
