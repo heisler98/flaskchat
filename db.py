@@ -204,6 +204,8 @@ def find_dm(user_one, user_two):
 
 def create_dm(user_one, user_two):
     room_title = ''
+    if user_one == user_two:
+        return None
     if user_one and user_two:
         if user_one.ID > user_two.ID:
             room_title = user_two.ID + user_one.ID

@@ -142,7 +142,7 @@ def view_dm(user_id):
     user_one = get_user(get_user_id(username))
     user_two = get_user(user_id)
 
-    if user_one == user_two:
+    if user_one.ID == user_two.ID or user_one.username == user_two.username:
         return jsonify({'Error': 'Requested DM with self.'}), 400
 
     target_room = find_dm(user_one, user_two)  # find_dm orders params properly to prevent duplicate DMs
