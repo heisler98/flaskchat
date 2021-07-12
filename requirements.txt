@@ -12,6 +12,7 @@ hyper == 0.7.0
 redis == 3.5.3
 pymongo == 3.11.4
 lxml == 4.6.3
+dnspython
 wheel
 
 pytest == 6.2.4
