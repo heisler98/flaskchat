@@ -3,7 +3,7 @@ from flask import Blueprint, current_app, request, jsonify
 from flask_jwt_extended import get_jwt_identity, jwt_required
 
 from db import change_user_password, get_user, get_user_id, get_all_users, add_log_event, \
-    change_user_attribute
+    update_user
 
 users_blueprint = Blueprint('users_blueprint', __name__)
 
@@ -79,21 +79,24 @@ def change_password(user_id):
 
 @users_blueprint.route('/users/<user_id>/edit', methods=['POST'])
 @jwt_required(fresh=True)
-def edit_user(user_id):  # NOT FINISHED YET
+def edit_user(user_id):
     username = get_jwt_identity()
     json_input = request.get_json()
 
-    var_changes = dict(json_input).keys()
+    changed_user = json_input['user'].items()
 
     target_user = get_user(user_id)
     if target_user.username != username:
         return jsonify({'Error': 'Not authorized'}), 403
 
-    if len(var_changes) == 0:
-        return jsonify({'Error': 'Empty json input'}), 400
+    if target_user.create_json() == changed_user:
+        return jsonify({'Error': 'No changes submitted.'}), 400
 
-    for key in var_changes:
-        if key == 'real_name':
-            # change_user_attribute ( username, attribute_type, value )
-            change_user_attribute(user_id, 'real_name', json_input[key])
+    changeable_values = ['email', 'real_name', 'username']
+    for kvp in changed_user:
+        if kvp[0] not in changeable_values:
+            return jsonify({'Error': 'You can only edit email, real_name, or username.'}), 400
+
+    update_user(user_id, changed_user)
+    return jsonify({'Success': 'User modified.'})
 
