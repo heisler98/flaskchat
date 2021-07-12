@@ -14,10 +14,10 @@ from model.user import User
 class Connect(object):
     @staticmethod
     def get_connection():
-        return MongoClient("mongodb://flaskuser:$193812465340@localhost:27017/chatdb?authSource=$chatdb")
+        return MongoClient(host='localhost', port='27017', username='flaskuser', password='193812465340', authSource='admin')
 
 
-client = Connect.get_connection()
+client = MongoClient(host='localhost', port='27017', username='flaskuser', password='193812465340', authSource='admin')
 
 chat_db = client['chatdb']
 users_collection = chat_db.get_collection('users')
