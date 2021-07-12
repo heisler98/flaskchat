@@ -10,10 +10,16 @@ from werkzeug.security import generate_password_hash
 
 from model.user import User
 
-client = MongoClient(
-    'mongodb+srv://user:SecurePassword@cluster0.ojjqo.mongodb.net/<dbname>?retryWrites=true&w=majority')
 
-chat_db = client.get_database('ChatDB')
+class Connect(object):
+    @staticmethod
+    def get_connection():
+        return MongoClient("mongodb://control:$#193812@localhost:27017/chatdb?authSource=$[authSource]")
+
+
+client = Connect.get_connection()
+
+chat_db = client.get_database('chatdb')
 users_collection = chat_db.get_collection('users')
 rooms_collection = chat_db.get_collection('rooms')
 room_members_collection = chat_db.get_collection('room_members')
@@ -22,6 +28,7 @@ reactions_collection = chat_db.get_collection('reactions')
 emoji_collection = chat_db.get_collection('emoji')
 logging_collection = chat_db.get_collection('logs')
 images_collection = chat_db.get_collection('images')
+
 
 # USERS
 
