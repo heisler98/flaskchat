@@ -106,7 +106,7 @@ def create_account():
             current_app.logger.info('{} created a new account, {}'.format(request.remote_addr, username))
 
             add_log_event(200, user_id, 'Signup', ip_address=ip)
-            return jsonify({'200': 'User created, {}.'.format(user_id)}), 200
+            return jsonify({'Success': 'User created.'.format(user_id)}), 200
         except DuplicateKeyError:
             return jsonify({'Error': 'User {} already exists.'.format(username)}), 400
     else:
