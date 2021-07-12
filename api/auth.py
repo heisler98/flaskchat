@@ -50,7 +50,7 @@ def login():
     except TypeError as e:
         return jsonify({'Error': 'Invalid request: Must be a json/dict.'}), 400
 
-    if len(username) == 0:
+    if len(username) == 0 or username == '':
         return jsonify({'Error': 'Please provide a username.'}), 400
     if len(password) == 0:
         return jsonify({'Error': 'Please provide a password'}), 400
