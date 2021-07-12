@@ -14,12 +14,12 @@ from model.user import User
 class Connect(object):
     @staticmethod
     def get_connection():
-        return MongoClient("mongodb://root:changeMeToAStrongPassword@localhost:27017/chatdb?authSource=$[authSource]")
+        return MongoClient("mongodb://root:changeMeToAStrongPassword@localhost:27017/chatdb/?authSource=admin")
 
 
 client = Connect.get_connection()
 
-chat_db = client.get_database('chatdb')
+chat_db = client['chatdb']
 users_collection = chat_db.get_collection('users')
 rooms_collection = chat_db.get_collection('rooms')
 room_members_collection = chat_db.get_collection('room_members')
