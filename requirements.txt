@@ -1,15 +1,16 @@
-flask == 1.1.2
-flask-socketio == 5.0.1
-eventlet == 0.31.0
-pymongo == 3.11.3
-werkzeug == 1.0.1
-flask_jwt_extended == 4.1.0
-pytest == 6.2.4
-flask_cors == 3.0.10
+flask == 2.0.1
+flask-cors == 3.0.10
+flask-jwt-extended == 4.2.3
+flask-limiter == 1.4
+flask_socketio == 5.1.0
+
+jinja2 == 3.0.1
+werkzeug == 2.0.1
+jwt == 1.2.0
+hyper == 0.7.0
 redis == 3.5.3
-pyjwt
-jwt
-hyper
-sumy
-spotipy
-Flask-Limiter
+
+pytest == 6.2.4
+
+sumy == 0.8.1
+spotipy == 2.18.0
