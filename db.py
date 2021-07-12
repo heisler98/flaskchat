@@ -84,8 +84,9 @@ def change_user_password(username, new_password):
     users_collection.update_one({'username': username}, {'$set': {'password': password_hash}})
 
 
-def change_user_attribute(username, attribute_type, value):
-    users_collection.update_one({'username': username}, {'$set': {attribute_type: value}})
+def update_user(user_id, itemized_user):
+    for kvp in itemized_user:
+        users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {kvp[0]: kvp[1]}})
 
 
 def change_user_avatar(user_id, file_id):
@@ -181,10 +182,10 @@ def get_room(room_id):
 def find_dm(user_one, user_two):
     room_title = ''
     if user_one and user_two:
-        if user_one.username > user_two.username:
-            room_title = user_two.username + user_one.username
+        if user_one.ID > user_two.ID:
+            room_title = user_two.ID + user_one.ID
         else:
-            room_title = user_one.username + user_two.username
+            room_title = user_one.ID + user_two.ID
 
     room = rooms_collection.find_one({'name': room_title})
 
@@ -197,10 +198,10 @@ def find_dm(user_one, user_two):
 def create_dm(user_one, user_two):
     room_title = ''
     if user_one and user_two:
-        if user_one.username > user_two.username:
-            room_title = user_two.username + user_one.username
+        if user_one.ID > user_two.ID:
+            room_title = user_two.ID + user_one.ID
         else:
-            room_title = user_one.username + user_two.username
+            room_title = user_one.ID + user_two.ID
 
     room_id = rooms_collection.insert_one(
         {'name': room_title, 'is_dm': True, 'created_by': None, 'created_at': datetime.now()}).inserted_id
