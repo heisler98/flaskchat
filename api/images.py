@@ -43,18 +43,24 @@ def upload_image(file, user_id, room_id, is_avatar=False):
         current_app.logger.info('Bad file type')
         raise IllegalTypeError('Invalid file type.')
 
+    image_id = ''
+
     try:
-        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], filename)
+        image_id = save_image(user_id, room_id, is_avatar)
+    except Exception as e:
+        current_app.logger.info(e)
+        return None
+
+    if image_id == '':
+        raise Exception
+
+    try:
+        # file path is the image_id
+        filepath = os.path.join(current_app.config['UPLOAD_FOLDER'], image_id)
         file.seek(0)  # save fails w/o
         file.save(filepath)  # store image locally on disk
     except Exception as e:
         current_app.logger.info(e)
-
-    try:
-        image_id = save_image(user_id, room_id, filepath, is_avatar)
-    except Exception as e:
-        current_app.logger.info(e)
-        return None
 
     return str(image_id)
 
@@ -113,7 +119,7 @@ def get_avatar(user_id):
     if request.method == 'GET':
         target_image_id = target_user.avatar
         if not target_image_id:
-            return jsonify({'Error': 'No associated avatar with this user'})
+            return jsonify({'Error': 'No associated avatar with this user'}), 400
         target_image = locate_image(image_id=target_image_id)
         if not target_image:
             return jsonify({'File not found': str(user_id + ' avatar')}), 400
