@@ -157,6 +157,9 @@ def view_dm(user_id):
 @jwt_required(fresh=True)
 def single_room(room_id):
     # json_input = request.get_json()
+    if room_id == 'create':
+        return jsonify({'Error': ''}), 405
+
     username = get_jwt_identity()
     user_id = get_user_id(username)
     room = get_room(room_id)
