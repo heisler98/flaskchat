@@ -343,11 +343,12 @@ def add_reaction(message_id, user_id, reaction_id):
 # IMAGES and UPLOADS
 
 
-def save_image(sender, room_id, path, is_avatar):
+def save_image(sender, room_id, is_avatar):
     current_time = datetime.now()
-    image_id = images_collection.insert_one({'room_id': room_id, 'avatar': is_avatar, 'location': path,
+    image_id = images_collection.insert_one({'room_id': room_id, 'avatar': is_avatar, 'location': None,
                                              'author': ObjectId(sender), 'time_sent': current_time}).inserted_id
-    return image_id
+    images_collection.update_one({'_id': ObjectId(str(image_id))}, {'$set': {'location': str(image_id)}})
+    return str(image_id)
 
 
 def locate_image(image_id):

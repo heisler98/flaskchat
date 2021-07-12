@@ -77,7 +77,7 @@ def change_password(user_id):
     return jsonify({'Error': ''}), 500
 
 
-@users_blueprint.route('/users/<user_id>/edit', methods=['POST'])
+@users_blueprint.route('/users/<user_id>', methods=['POST'])
 @jwt_required(fresh=True)
 def edit_user(user_id):
     username = get_jwt_identity()
