@@ -19,8 +19,8 @@ def check_if_token_revoked(jwt_header, jwt_payload):
 @auth_blueprint.route('/apn', methods=['POST'])
 @jwt_required()
 def register_apn_token():
-    identity = get_jwt_identity()
-    user_id = get_user_id(identity)
+    user_id = get_jwt_identity()
+    # user_id = get_user_id(identity)
     current_app.logger.info('APN ENDPOINT')
     ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
     json_input = request.get_json(force=True)
@@ -68,7 +68,7 @@ def login():
             access_token = create_access_token(identity=username, fresh=True)
             refresh_token = create_refresh_token(identity=username)
 
-            current_app.logger.info('%s logged in successfully', user.username)
+            current_app.logger.info('{} ({}) logged in successfully', username, user_id)
             add_log_event(200, username, 'Login', ip_address=ip)
 
             return jsonify({'Token': access_token, 'Refresh': refresh_token}), 200
@@ -119,10 +119,10 @@ def create_account():
 @jwt_required(refresh=True)
 def refresh():
     ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
-    identity = get_jwt_identity()
-    access_token = create_access_token(identity=identity, fresh=True)
+    user_id = get_jwt_identity()
+    access_token = create_access_token(identity=user_id, fresh=True)
 
-    add_log_event(200, identity, 'Refresh', ip_address=ip)
+    add_log_event(200, user_id, 'Refresh', ip_address=ip)
     return jsonify({'Token': access_token})
 
 
@@ -137,8 +137,8 @@ def logout():
 @auth_blueprint.route('/whoami', methods=['GET'])
 @jwt_required(fresh=True)
 def who():
-    username = get_jwt_identity()
-    return jsonify({'user': username}), 200
+    user_id = get_jwt_identity()
+    return jsonify({'user': user_id}), 200
 
 
 @auth_blueprint.route('/', methods=['GET'])

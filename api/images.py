@@ -68,10 +68,11 @@ def upload_image(file, user_id, room_id, is_avatar=False):
 @images_blueprint.route('/uploads/create', methods=['POST'])
 @jwt_required(fresh=True)
 def post_image():
-    username = get_jwt_identity()
-    user_id = get_user_id(username)
+    user_id = get_jwt_identity()
+    user = get_user(user_id)
+    #user_id = get_user_id(username)
     json_input = request.get_json()
-    current_app.logger.info("{} attempted to upload a file".format(username))
+    current_app.logger.info("{} attempted to upload a file".format(user.username))
 
     if request.method == 'POST':
         room_id = request.form['room_id']
@@ -87,10 +88,10 @@ def post_image():
 @images_blueprint.route('/uploads/<upload_id>', methods=['GET'])
 @jwt_required()
 def get_image(upload_id):
-    username = get_jwt_identity()
-    user_id = get_user_id(username)
+    user_id = get_jwt_identity()
+    user = get_user(user_id)
     target_image = locate_image(upload_id)
-    current_app.logger.info("{} attempted to view file {}".format(username, upload_id))
+    current_app.logger.info("{} attempted to view file {}".format(user.username, upload_id))
 
     if target_image:
         image_room = target_image['room_id']
@@ -137,13 +138,13 @@ def get_avatar(user_id):
 @jwt_required(fresh=True)
 def new_avatar(user_id):
     os.chdir(os.path.dirname(sys.argv[0]))
-    username = get_jwt_identity()
-    target_user = get_user(user_id)
+    auth_user_id = get_jwt_identity()
+    user = get_user(auth_user_id)
 
-    if not target_user:
+    if not user:
         return jsonify({'Error': 'User not found'}), 400
 
-    if target_user.username != username:
+    if auth_user_id != user_id:
         current_app.logger.info('!!! {} tried to change another users avatar: {}'.format(username, target_user.username))
         return jsonify({'Error': 'Not authorized'}), 403
 
@@ -163,7 +164,7 @@ def new_avatar(user_id):
 
         change_user_avatar(user_id, image_id)
 
-        current_app.logger.info('{} {} changed their avatar'.format(user_id, username))
+        current_app.logger.info('{} {} changed their avatar'.format(auth_user_id, user.username))
         return jsonify({'Success': 'Avatar changed, GET user for ID'}), 200
 
 
@@ -171,7 +172,7 @@ def new_avatar(user_id):
 @jwt_required()
 def switch_avatar(user_id):
     os.chdir(os.path.dirname(sys.argv[0]))
-    username = get_jwt_identity()
+    auth_user_id = get_jwt_identity()
     target_user = get_user(user_id)
     json_input = request.get_json()
     target_image = json_input['image_id']
@@ -179,8 +180,8 @@ def switch_avatar(user_id):
     if not target_user:
         return jsonify({'Error': 'User not found'}), 400
 
-    if target_user.username != username:
-        current_app.logger.info('!!! {} tried to change another users avatar: {}'.format(username, target_user.username))
+    if auth_user_id != user_id:
+        #current_app.logger.info('!!! {} tried to change another users avatar: {}'.format(target_user.username, target_user.username))
         return jsonify({'Error': 'Not authorized'}), 403
 
     if len(target_image) == 0:
@@ -191,17 +192,16 @@ def switch_avatar(user_id):
 
     if request.method == 'POST':
         change_user_avatar(target_user.username, target_image)
-        current_app.logger.info('{} switched their avatar with an existing image, {}'.format(username, image_id))
+        current_app.logger.info('{} switched their avatar with an existing image, {}'.format(target_user.username, target_image))
         return jsonify({'Success': 'Avatar changed.'}), 200
-
 
 
 @images_blueprint.route('/avatar/<user_id>/previous', methods=['GET'])
 @jwt_required()
 def previous_avatars_list(user_id):
     os.chdir(os.path.dirname(sys.argv[0]))
-    username = get_jwt_identity()
-    target_user = get_user(user_id)
+    auth_user_id = get_jwt_identity()
+    target_user = get_user(auth_user_id)
 
     if not target_user:
         return jsonify({'Error': 'User not found'}), 400

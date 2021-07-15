@@ -68,8 +68,7 @@ def return_room_object(room_id):
 @rooms_blueprint.route('/rooms/list', methods=['GET'])
 @jwt_required()
 def get_rooms():
-    username = get_jwt_identity()
-    user_id = get_user_id(username)
+    user_id = get_jwt_identity()
     room_list_raw = get_rooms_for_user(user_id)
     room_list = []
 
@@ -87,8 +86,7 @@ def get_rooms():
 @rooms_blueprint.route('/rooms/all', methods=['GET'])
 @jwt_required()
 def get_all_rooms():
-    username = get_jwt_identity()
-    user_id = get_user_id(username)
+    user_id = get_jwt_identity()
     room_list_raw = get_rooms_for_user(user_id)
 
     rooms_list = []
@@ -104,8 +102,7 @@ def get_all_rooms():
 @rooms_blueprint.route('/rooms/create', methods=['POST'])
 @jwt_required(fresh=True)
 def create_room():
-    username = get_jwt_identity()
-    user_id = get_user_id(username)
+    user_id = get_jwt_identity()
     json_input = request.get_json(force=True)
 
     try:
@@ -122,8 +119,7 @@ def create_room():
 @rooms_blueprint.route('/rooms/<room_id>', methods=['DELETE'])
 @jwt_required()
 def delete_some_room(room_id):
-    username = get_jwt_identity()
-    user_id = get_user_id(username)
+    user_id = get_jwt_identity()
 
     if is_room_admin(room_id, user_id):
         print('is admin')
@@ -137,9 +133,9 @@ def delete_some_room(room_id):
 @rooms_blueprint.route('/rooms/dm/<user_id>', methods=['GET'])
 @jwt_required(fresh=True)
 def view_dm(user_id):
-    username = get_jwt_identity()
+    user_id = get_jwt_identity()
 
-    user_one = get_user(get_user_id(username))
+    user_one = get_user(user_id)
     user_two = get_user(user_id)
 
     if user_one.ID == user_two.ID or user_one.username == user_two.username:
@@ -156,12 +152,10 @@ def view_dm(user_id):
 @rooms_blueprint.route('/rooms/<room_id>', methods=['GET'])
 @jwt_required(fresh=True)
 def single_room(room_id):
-    # json_input = request.get_json()
     if room_id == 'create':
         return jsonify({'Error': ''}), 405
 
-    username = get_jwt_identity()
-    user_id = get_user_id(username)
+    user_id = get_jwt_identity()
     room = get_room(room_id)
 
     if not room:
@@ -179,16 +173,15 @@ def single_room(room_id):
 @jwt_required(fresh=True)
 def get_room_messages(room_id):
     room = get_room(room_id)
-    username = get_jwt_identity()
-    user_id = get_user_id(username)
+    user_id = get_jwt_identity()
+    # user_id = get_user_id(username)
 
     if room and is_room_member(room_id, user_id):
         page = int(request.args.get('page', 0))
-        #current_app.logger.info(page)
 
         message_bson = get_messages(room_id, page)
         messages = []
-        #current_app.logger.info(message_bson)
+
         for item in message_bson:
             try:
                 this_user = get_user(str(item['sender']))
@@ -216,11 +209,11 @@ def toggle_room_admin(room_id):
 
 
 @rooms_blueprint.route('/rooms/<room_id>/members', methods=['GET'])
-@jwt_required()
+@jwt_required()  # is this checking for perms?
 def single_room_members(room_id):
-    username = get_jwt_identity()
+    user_id = get_jwt_identity()
 
-    current_app.logger.info('{} requested members for {}'.format(username, room_id))
+    current_app.logger.info('{} requested members for {}'.format(user_id, room_id))
 
     members_raw = get_room_members(room_id)
     members = []
@@ -259,11 +252,10 @@ def single_room_members(room_id):
 @rooms_blueprint.route('/rooms/<room_id>/members', methods=['POST'])
 @jwt_required()
 def room_add_members(room_id):
-    username = get_jwt_identity()
-    user_id = get_user_id(username)
+    user_id = get_jwt_identity()
     json_input = request.get_json(force=True)
 
-    current_app.logger.info('{} wants to add member(s) to {}'.format(username, room_id))
+    current_app.logger.info('{} wants to add member(s) to {}'.format(user_id, room_id))
 
     try:
         new_members = json_input['add_members']

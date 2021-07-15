@@ -129,6 +129,7 @@ def get_all_users():
     return list_of_users
 
 
+# REQUIRES user_id, NOT username
 def get_user(user_id):
     if not user_id:
         raise TypeError

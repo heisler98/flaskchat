@@ -11,10 +11,10 @@ users_blueprint = Blueprint('users_blueprint', __name__)
 @users_blueprint.route('/users/<user_id>', methods=['GET'])
 @jwt_required()
 def view_user(user_id):
-    username = get_jwt_identity()
+    auth_user_id = get_jwt_identity()
 
-    current_app.logger.info('{} viewing profile of {} (GET)'.format(username, user_id))
-    user_raw = get_user(str(user_id))
+    current_app.logger.info('{} viewing profile of {} (GET)'.format(auth_user_id, user_id))
+    user_raw = get_user(user_id)
 
     if not user_raw:
         return jsonify({'Error': 'User not found.'}), 404
@@ -25,12 +25,9 @@ def view_user(user_id):
 @users_blueprint.route('/users/list', methods=['GET'])
 @jwt_required()
 def list_users():
-    username = get_jwt_identity()
-    user_id = get_user_id(username)
+    user_id = get_jwt_identity()
     users_raw = get_all_users()  # returns a list of user objects
     users = []
-
-    current_app.logger.info('{} requested a list of all users.'.format(user_id))
 
     for user_object in users_raw:
         if user_object.ID == user_id:
@@ -44,8 +41,8 @@ def list_users():
 @users_blueprint.route('/users/me', methods=['GET'])
 @jwt_required()
 def get_me():
-    username = get_jwt_identity()
-    this_user = get_user(get_user_id(username))
+    user_id = get_jwt_identity()
+    this_user = get_user(user_id)
 
     return jsonify(this_user.create_json())
 
@@ -53,22 +50,23 @@ def get_me():
 @users_blueprint.route('/users/<user_id>/password', methods=['POST'])
 @jwt_required(fresh=True)
 def change_password(user_id):
-    username = get_jwt_identity()
+    user_id = get_jwt_identity()
+    user = get_user(user_id)
     json_input = request.get_json()
 
     if request.method == 'POST':
-        current_app.logger.info('NOTE: {} changing their password'.format(username, user_id))
+        current_app.logger.info('NOTE: {} changing their password'.format(user.username, user_id))
         new_password = json_input['new_password']
         old_password = json_input['old_password']
         try:
-            user_id = get_user_id(username)
+            user_id = get_user_id(user.username)
             user = get_user(user_id)
         except Exception as e:  # need to be more specific
             return jsonify({'Error': ''})
 
         if user and user.check_password(old_password):
-            change_user_password(username, new_password)
-            add_log_event(200, username, 'Password', ip_address=request.remote_addr)
+            change_user_password(user.username, new_password)
+            add_log_event(200, user.username, 'Password', ip_address=request.remote_addr)
 
             return jsonify({'Success': 'Password changed'}), 200
         else:
@@ -80,13 +78,14 @@ def change_password(user_id):
 @users_blueprint.route('/users/<user_id>', methods=['POST'])
 @jwt_required(fresh=True)
 def edit_user(user_id):
-    username = get_jwt_identity()
-    json_input = request.get_json()
+    auth_user_id = get_jwt_identity()
+    auth_user = get_user(auth_user_id)
+    target_user = get_user(user_id)
 
+    json_input = request.get_json()
     changed_user = json_input['user'].items()
 
-    target_user = get_user(user_id)
-    if target_user.username != username:
+    if target_user.ID != auth_user.ID:
         return jsonify({'Error': 'Not authorized'}), 403
 
     if target_user.create_json() == changed_user:

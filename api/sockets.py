@@ -22,25 +22,25 @@ notification_interface = NotificationSystem()
 @socketio.on('connect')
 @jwt_required()
 def client_connect():
-    user_identity = get_jwt_identity()  # user_identity is username, NOT id
+    user_id = get_jwt_identity()  # user_identity is username, NOT id
 
     new_socket_id = request.sid
-    current_app.logger.info('A socket for {} with ID {} has been created...'.format(user_identity, new_socket_id))
+    current_app.logger.info('A socket for {} with ID {} has been created...'.format(user_id, new_socket_id))
 
     join_room('server')  # add this new socket to room "server"
 
-    if user_identity in connected_sockets:
+    if user_id in connected_sockets:
         # if user already has an open socket
-        open_sockets_for_user = connected_sockets[user_identity]
+        open_sockets_for_user = connected_sockets[user_id]
         open_sockets_for_user.append(new_socket_id)
-        connected_sockets[user_identity] = open_sockets_for_user
+        connected_sockets[user_id] = open_sockets_for_user
     else:
         # user does not have an open socket atm
         this_user = [new_socket_id]
-        connected_sockets[user_identity] = this_user
+        connected_sockets[user_id] = this_user
 
     current_app.logger.info(
-        '{} now has the following sockets open: {}'.format(user_identity, connected_sockets[user_identity]))
+        '{} now has the following sockets open: {}'.format(user_id, connected_sockets[user_id]))
 
 
 # this event is automatic, triggered by a broken socket connection
@@ -70,6 +70,8 @@ def update_last_seen(username):
 @socketio.on('close_session')  # to be replaced with broken connection handling
 @jwt_required()
 def on_disconnect(data):
+    pass
+    """
     user_identity = get_jwt_identity()  # user_identity is username, NOT id
     current_socket_ids = connected_sockets[user_identity]
 
@@ -84,13 +86,13 @@ def on_disconnect(data):
         connected_sockets[user_identity] = new_socket_ids_list
 
     current_app.logger.info("{} is disconnecting, {}".format(user_identity, socket_id_close))
+    """
 
 
 @socketio.on('send_message')
 @jwt_required(fresh=True)
 def handle_send_message_event(data):
     username = data['username']
-    current_app.logger.info(data)
     room = data['room']  # client must pass room id here
     message = data['text']
     include_image = False
@@ -103,14 +105,12 @@ def handle_send_message_event(data):
     data['time_sent'] = str(time_sent)
     user_id = str(get_user_id(username))
     user = get_user(user_id)
-    apn_tokens = get_apn(user_id)
+    # apn_tokens = get_apn(user_id)
     data['user_id'] = user_id
     data['avatar_id'] = user.avatar
 
     if username not in connected_sockets:
         current_app.logger.info('!!: {} tried to send a message without being connected to a room.'.format(username))
-
-    user_id = get_user_id(username)
 
     room_member_ids = []
     room_member_objects = get_room_members(room)  # determine who should receive this message
@@ -122,6 +122,7 @@ def handle_send_message_event(data):
 
         for member in room_member_ids:  # for person in room
             member_name = get_user(member).username
+            current_app.logger.info('Testing {}'.format(member_name))
             if member_name in connected_sockets and len(connected_sockets[member_name]) != 0:
                 target_socket_ids = connected_sockets[member_name]
                 try:
@@ -151,7 +152,7 @@ def handle_send_message_event(data):
     else:
         current_app.logger.info("{} not authorized to send to {}".format(username, room))
 
-
+"""
 @socketio.on('send_react')
 @jwt_required()
 def attach_reaction():
@@ -165,7 +166,7 @@ def attach_reaction():
 
     add_reaction(target_message_id, user_id, reaction)
 
-    socketio.emit('receive_react', data, room=socket)
+    socketio.emit('receive_react', data, room=socket)"""
 
 
 @socketio.on('im_typing')
