@@ -145,7 +145,7 @@ def new_avatar(user_id):
         return jsonify({'Error': 'User not found'}), 400
 
     if auth_user_id != user_id:
-        current_app.logger.info('!!! {} tried to change another users avatar: {}'.format(username, target_user.username))
+        # current_app.logger.info('!!! {} tried to change another users avatar: {}'.format(username, user.username))
         return jsonify({'Error': 'Not authorized'}), 403
 
     if request.method == 'POST':
