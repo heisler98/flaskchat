@@ -65,8 +65,8 @@ def login():
             return jsonify({'Error': 'Bad username.'}), 400
 
         if user and user.check_password(password):
-            access_token = create_access_token(identity=username, fresh=True)
-            refresh_token = create_refresh_token(identity=username)
+            access_token = create_access_token(identity=user_id, fresh=True)
+            refresh_token = create_refresh_token(identity=user_id)
 
             current_app.logger.info('{} ({}) logged in successfully', username, user_id)
             add_log_event(200, username, 'Login', ip_address=ip)
