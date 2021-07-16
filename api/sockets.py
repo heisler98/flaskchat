@@ -43,22 +43,34 @@ def client_connect():
         '{} now has the following sockets open: {}'.format(user_id, connected_sockets[user_id]))
 
 
-# this event is automatic, triggered by a broken socket connection
-@socketio.on('disconnect')
-def client_disconnect():
-    disconnected_id = request.sid
+def remove_connection(disconnected_id):
     current_app.logger.info('A socket with ID {} disconnected...'.format(disconnected_id))
 
     for key in connected_sockets:
         user_sockets = connected_sockets[key]
         if disconnected_id in user_sockets:
             user_sockets.remove(disconnected_id)
-            current_app.logger.info('{} belonged to {}. They now have the following sockets open: {}'.format(disconnected_id, key, connected_sockets[key]))
+            current_app.logger.info(
+                '{} belonged to {}. They now have the following sockets open: {}'.format(disconnected_id, key,
+                                                                                         connected_sockets[key]))
 
             if len(user_sockets) == 0:
                 update_last_seen(key)
 
     current_app.logger.info(connected_sockets)
+
+
+@socketio.on('kill_socket')
+def client_disconnect():
+    disconnected_id = request.sid
+    remove_connection(disconnected_id)
+
+
+# this event is automatic, triggered by a broken socket connection
+@socketio.on('disconnect')
+def client_disconnect():
+    disconnected_id = request.sid
+    remove_connection(disconnected_id)
 
 
 # update user object in DB to note when they were last online

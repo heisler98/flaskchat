@@ -302,8 +302,9 @@ def add_reaction(message, reaction, username):
 # MESSAGES
 
 
-def save_message(room_id, text, sender, include_image, image_id):
+def save_message(room_id, text, sender, include_image=None, image_id=None):
     current_time = datetime.now()
+    print('Saving a message to DB')
     if include_image and image_id:
         messages_collection.insert_one({'room_id': ObjectId(room_id), 'text': text, 'sender': ObjectId(sender),
                                         'time_sent': current_time, 'include_image': True,
