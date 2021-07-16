@@ -121,7 +121,7 @@ def handle_send_message_event(data):
     data['user_id'] = user_id
     data['avatar_id'] = user.avatar
 
-    if username not in connected_sockets:
+    if user_id not in connected_sockets:
         current_app.logger.info('!!: {} tried to send a message without being connected to a room.'.format(username))
 
     room_member_ids = []
