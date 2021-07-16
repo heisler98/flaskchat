@@ -1,14 +1,14 @@
-// flask packages
+# flask packages
 flask == 2.0.1
 flask-cors == 3.0.10
 flask-jwt-extended == 4.2.3
 flask-limiter == 1.4
 flask_socketio == 5.1.0
 
-// websocket server
+# websocket server
 eventlet == 0.31.1
 
-// other core packages
+# other core packages
 jinja2 == 3.0.1
 werkzeug == 2.0.1
 jwt == 1.2.0
@@ -22,5 +22,5 @@ wheel
 
 pytest == 6.2.4
 
-// random other stuff
+# random other stuff
 sumy == 0.8.1
