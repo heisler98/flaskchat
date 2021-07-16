@@ -121,17 +121,17 @@ def handle_send_message_event(data):
         current_app.logger.info("{} ({}) has sent message to the room {} at {}".format(user_id, username, room, time_sent))
 
         for member in room_member_ids:  # for person in room
-            member_name = get_user(member).username
-            current_app.logger.info('Testing {}'.format(member_name))
-            if member_name in connected_sockets and len(connected_sockets[member_name]) != 0:
-                target_socket_ids = connected_sockets[member_name]
+            member_id = get_user(member).ID
+            current_app.logger.info('Testing {}'.format(member_id))
+            if member_id in connected_sockets and len(connected_sockets[member_id]) != 0:
+                target_socket_ids = connected_sockets[member_id]
                 try:
                     for socket in target_socket_ids:
                         socketio.emit('receive_message', data, room=socket)  # emit to specific user
                         current_app.logger.info('Sent to {}'.format(socket))
                 except TypeError as e:
                     current_app.logger.info('Failed to emit message to {}, connected on {}. They may not have an open '
-                                            'connection. {}'.format(member_name, connected_sockets[member_name], e))
+                                            'connection. {}'.format(member_id, connected_sockets[member_id], e))
             else:  # send push notifications for anyone offline
                 pass
                 """
