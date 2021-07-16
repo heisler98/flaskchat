@@ -34,5 +34,5 @@ def create_app(debug=True):
         default_limits=["240 per minute"]
     )
 
-    socketio.init_app(app)
+    socketio.init_app(app, async_mode='eventlet')
     return app
