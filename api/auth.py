@@ -68,7 +68,7 @@ def login():
             access_token = create_access_token(identity=user_id, fresh=True)
             refresh_token = create_refresh_token(identity=user_id)
 
-            current_app.logger.info('{} ({}) logged in successfully', username, user_id)
+            current_app.logger.info('Login')
             add_log_event(200, username, 'Login', ip_address=ip)
 
             return jsonify({'Token': access_token, 'Refresh': refresh_token}), 200

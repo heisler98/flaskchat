@@ -11,6 +11,8 @@ from api.app import create_app, socketio
 
 from flask_cors import CORS
 
+import logging
+
 # App Setup
 app = create_app(debug=True)
 CORS(app)
@@ -22,6 +24,10 @@ app.register_blueprint(rooms_blueprint, url_prefix='/api')
 app.register_blueprint(users_blueprint, url_prefix='/api')
 app.register_blueprint(images_blueprint, url_prefix='/api')
 app.register_blueprint(sockets_blueprint, url_prefix='/api')
+
+
+log = logging.getLogger('werkzeug')
+log.disabled = True
 
 
 if __name__ == '__main__':
