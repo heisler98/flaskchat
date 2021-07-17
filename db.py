@@ -308,13 +308,13 @@ def add_reaction(message, reaction, username):
 
 
 def get_latest_bucket_number(room_id):
-    latest_bucket = messages_collection.find({'room_id': ObjectId(room_id)}).sort({'_id': -1}).limit(1)
+    latest_bucket = messages_collection.find({'room_id': ObjectId(room_id)}).sort('_id', -1).limit(1)
     return int(latest_bucket['bucket_number'])
 
 
 def save_message(room_id, text, sender, bucket_number, image_id=None):
     current_time = time.time()
-    latest_bucket = messages_collection.find({'room_id': ObjectId(room_id)}).sort({'_id': -1}).limit(1)
+    latest_bucket = messages_collection.find({'room_id': ObjectId(room_id)}).sort('_id', -1).limit(1)
     latest_bucket_messages = latest_bucket['messages']
 
     if len(latest_bucket_messages) <= 50:
