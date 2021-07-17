@@ -1,6 +1,7 @@
 # github.com/colingoodman
 
 from datetime import datetime
+import time
 # from bson import ObjectId
 import bson
 from pymongo import MongoClient, DESCENDING
@@ -39,7 +40,7 @@ def save_user(username, email, password, fullname):
     if existing_username:
         raise DuplicateKeyError('Username already exists.')
 
-    now = datetime.now()
+    now = time.time()
     password_hash = generate_password_hash(password)
     identifier = users_collection.insert_one({'username': username, 'email': email, 'password': password_hash,
                                               'real_name': fullname, 'date_joined': now, 'avatar': None}).inserted_id
@@ -76,7 +77,7 @@ def get_apn(user_id):
 
 
 def update_checkout(user_id):
-    now = datetime.now()
+    now = time.time()
     users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'last_online': now}})
 
 
@@ -87,7 +88,7 @@ def crown_user(username, status=True):
 
 def change_user_password(username, new_password):
     password_hash = generate_password_hash(new_password)
-    now = datetime.now()
+    # now = datetime.now()
     users_collection.update_one({'username': username}, {'$set': {'password': password_hash}})
 
 
@@ -214,7 +215,7 @@ def create_dm(user_one, user_two):
             room_title = user_one.ID + user_two.ID
 
     room_id = rooms_collection.insert_one(
-        {'name': room_title, 'is_dm': True, 'created_by': None, 'created_at': datetime.now()}).inserted_id
+        {'name': room_title, 'is_dm': True, 'created_by': None, 'created_at': time.time()}).inserted_id
 
     # room_id, room_name, user_id, added_by, is_admin=False, is_owner=False, is_dm=False
     add_room_member(room_id, room_title, str(user_one.ID), None, is_dm=True)
@@ -226,7 +227,7 @@ def create_dm(user_one, user_two):
 def save_room(room_name, created_by):
     room_id = rooms_collection.insert_one(
         {'name': room_name, 'is_dm': False, 'created_by': ObjectId(created_by),
-         'created_at': datetime.now()}).inserted_id
+         'created_at': time.time()}).inserted_id
     return room_id
 
 
@@ -240,7 +241,7 @@ def add_room_member(room_id, room_name, user_id, added_by, is_admin=False, is_ow
                                         'name': room_name,
                                         'added_by': ObjectId(added_by),
                                         'is_dm': is_dm,
-                                        'added_at': datetime.now(),
+                                        'added_at': time.time(),
                                         'is_admin': is_admin,
                                         'is_owner': is_owner})
 
@@ -249,7 +250,7 @@ def add_room_members(room_id, room_name, user_ids, added_by):
     room_members_collection.insert_many([{'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)},
                                           'name': room_name,
                                           'added_by': added_by,
-                                          'added_at': datetime.now(),
+                                          'added_at': time.time(),
                                           'is_dm': False,
                                           'is_admin': False,
                                           'is_owner': False} for user_id in user_ids])
@@ -287,7 +288,7 @@ def delete_room(room_id):
 
 
 def add_log_event(response_code, username, event_type, context=None, ip_address=None):
-    logging_collection.insert_one({'context': context, 'response': response_code, 'time': datetime.now(),
+    logging_collection.insert_one({'context': context, 'response': response_code, 'time': time.time(),
                                    'event': event_type, 'user': username, 'ip_address': ip_address})
 
 
@@ -308,7 +309,7 @@ def get_latest_bucket_number(room_id):
 
 
 def save_message(room_id, text, sender, bucket_number, image_id=None):
-    current_time = datetime.now()
+    current_time = time.time()
     latest_bucket = messages_collection.find_one({'room_id': ObjectId(room_id)}).sort({'_id': -1})
     latest_bucket_messages = latest_bucket['messages']
 
@@ -353,7 +354,7 @@ def get_messages(room_id, bucket_number=0):
 
 
 def add_reaction(message_id, user_id, reaction_id):
-    now = datetime.now()
+    now = time.time()
     reaction_array = messages_collection.find_one({'_id': ObjectId(message_id)}, {'reactions': 1})
     reaction_object_id = reactions_collection.insert_one({
         'user_id': ObjectId(user_id),
@@ -373,7 +374,7 @@ def add_reaction(message_id, user_id, reaction_id):
 
 
 def save_image(sender, room_id, is_avatar):
-    current_time = datetime.now()
+    current_time = time.time()
     image_id = images_collection.insert_one({'room_id': room_id, 'avatar': is_avatar, 'location': None,
                                              'author': ObjectId(sender), 'time_sent': current_time}).inserted_id
     images_collection.update_one({'_id': ObjectId(str(image_id))}, {'$set': {'location': str(image_id)}})

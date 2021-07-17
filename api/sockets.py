@@ -1,5 +1,6 @@
 # github.com/colingoodman
 from datetime import datetime
+import time
 
 from flask import Blueprint, current_app, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
@@ -93,8 +94,8 @@ def handle_send_message_event(data):
         include_image = True
     except Exception as e:
         image_id = None
-    time_sent = datetime.now()
-    data['time_sent'] = str(time_sent)
+    time_sent = time.time()
+    data['time_sent'] = time_sent
     user = get_user(user_id)
     # apn_tokens = get_apn(user_id)
     data['user_id'] = user_id
