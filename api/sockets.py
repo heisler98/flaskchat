@@ -9,7 +9,7 @@ from library.apns import NotificationSystem
 from .app import socketio
 import redis
 
-from db import save_message, get_room_members, get_user_id, update_checkout, get_user, get_apn
+from db import save_message, get_room_members, get_user_id, update_checkout, get_user, get_apn, add_reaction
 
 sockets_blueprint = Blueprint('sockets_blueprint', __name__)
 global connected_sockets
@@ -22,7 +22,7 @@ notification_interface = NotificationSystem()
 @socketio.on('connect')
 @jwt_required()
 def client_connect():
-    user_id = get_jwt_identity()  # user_identity is username, NOT id
+    user_id = get_jwt_identity()
 
     new_socket_id = request.sid
     current_app.logger.info('A socket for {} with ID {} has been created...'.format(user_id, new_socket_id))
@@ -79,31 +79,11 @@ def update_last_seen(username):
     update_checkout(user_id)
 
 
-@socketio.on('close_session')  # to be replaced with broken connection handling
-@jwt_required()
-def on_disconnect(data):
-    pass
-    """
-    user_identity = get_jwt_identity()  # user_identity is username, NOT id
-    current_socket_ids = connected_sockets[user_identity]
-
-    socket_id_close = data['socket_id']  # client must pass their socket id
-    new_socket_ids_list = current_socket_ids.pop(socket_id_close)
-
-    if len(new_socket_ids_list) == 0:
-        removing_entry = connected_sockets.pop(user_identity, None)
-        if not removing_entry:
-            raise Exception
-    else:
-        connected_sockets[user_identity] = new_socket_ids_list
-
-    current_app.logger.info("{} is disconnecting, {}".format(user_identity, socket_id_close))
-    """
-
-
 @socketio.on('send_message')
 @jwt_required(fresh=True)
 def handle_send_message_event(data):
+    user_id = get_jwt_identity()
+
     username = data['username']
     room = data['room']  # client must pass room id here
     message = data['text']
@@ -115,7 +95,6 @@ def handle_send_message_event(data):
         image_id = None
     time_sent = datetime.now()
     data['time_sent'] = str(time_sent)
-    user_id = str(get_user_id(username))
     user = get_user(user_id)
     # apn_tokens = get_apn(user_id)
     data['user_id'] = user_id
@@ -164,21 +143,26 @@ def handle_send_message_event(data):
     else:
         current_app.logger.info("{} not authorized to send to {}".format(username, room))
 
-"""
+
 @socketio.on('send_react')
 @jwt_required()
-def attach_reaction():
-    user_id = data['user_id']
+def attach_reaction(data):
+    user_id = get_jwt_identity()
+    user = get_user(user_id)
+
     target_message_id = data['message_id']
-    room_id = data['room']  # client must pass room id here
     reaction = data['reaction']
     time_sent = datetime.now()
+
+    data['username'] = user.username
+    data['user_id'] = user.ID
 
     current_app.logger.info('{} reacted to {} with {} at {}'.format(user_id, target_message_id, reaction, time_sent))
 
     add_reaction(target_message_id, user_id, reaction)
 
-    socketio.emit('receive_react', data, room=socket)"""
+    # need to update this for appropriate room
+    socketio.emit('receive_react', data)
 
 
 @socketio.on('im_typing')
