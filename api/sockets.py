@@ -10,7 +10,8 @@ from library.apns import NotificationSystem
 from .app import socketio
 import redis
 
-from db import save_message, get_room_members, get_user_id, update_checkout, get_user, get_apn, add_reaction
+from db import save_message, get_room_members, get_user_id, update_checkout, get_user, get_apn, add_reaction, \
+    get_latest_bucket_number
 
 sockets_blueprint = Blueprint('sockets_blueprint', __name__)
 global connected_sockets
@@ -133,8 +134,9 @@ def handle_send_message_event(data):
                         new_payload = notification_interface.payload_message(data['username'], data['text'])
                         resp = notification_interface.send_payload(new_payload, token)
                         current_app.logger.info('{} and {} as response.'.format(resp.status, resp.read()))
-        # room_id, text, sender, include_image, image_id
-        save_message(room, message, user_id, include_image, image_id)  # to db
+        # room_id, text, sender, bucket_number=0, image_id=None
+        bucket_number = get_latest_bucket_number(room)
+        save_message(room, message, user_id, bucket_number, image_id)  # to db
     else:
         current_app.logger.info("{} not authorized to send to {}".format(username, room))
 
