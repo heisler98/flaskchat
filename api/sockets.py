@@ -178,3 +178,8 @@ def not_typing(data):
     username = data['room_id']
     socketio.emit('not_typing', data)
 
+
+# for updating all clients regarding misc server-wide activity
+def update_clients_avatar(data):
+    socketio.emit('avatar_changed', data)
+

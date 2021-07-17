@@ -7,6 +7,7 @@ from flask import Blueprint, current_app, request, jsonify, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 
+from api.sockets import update_clients_avatar
 from db import save_image, change_user_avatar, get_user, locate_image, is_room_member, get_user_id
 from helper_functions import allowed_file
 
@@ -163,6 +164,9 @@ def new_avatar(user_id):
             return jsonify({'Error': 'No idea'}), 500
 
         change_user_avatar(user_id, image_id)
+        update_clients_avatar({
+            f'{user_id}': f'{image_id}'
+        })
 
         current_app.logger.info('{} {} changed their avatar'.format(auth_user_id, user.username))
         return jsonify({'Success': 'Avatar changed, GET user for ID'}), 200
@@ -191,7 +195,11 @@ def switch_avatar(user_id):
         return jsonify({'Error': 'Image not found.'}), 400
 
     if request.method == 'POST':
-        change_user_avatar(target_user.username, target_image)
+        change_user_avatar(user_id, image_id)
+        update_clients_avatar({
+            f'{user_id}': f'{image_id}'
+        })
+
         current_app.logger.info('{} switched their avatar with an existing image, {}'.format(target_user.username, target_image))
         return jsonify({'Success': 'Avatar changed.'}), 200
 
