@@ -6,7 +6,8 @@ from flask import Blueprint, jsonify, current_app, request
 from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from db import get_room_members, get_user, get_user_id, get_messages, is_room_member, get_room, create_dm, find_dm, \
-    save_room, get_rooms_for_user, add_room_member, delete_room, is_room_admin, toggle_admin, add_room_members
+    save_room, get_rooms_for_user, add_room_member, delete_room, is_room_admin, toggle_admin, add_room_members, \
+    get_latest_bucket_number
 from helper_functions import parse_json
 
 rooms_blueprint = Blueprint('rooms_blueprint', __name__)
@@ -37,6 +38,7 @@ class Message:
 # returns a json object of a room to be returned via the API
 def return_room_object(room_id):
     this_room = get_room(room_id)
+    bucket_number = get_latest_bucket_number(room_id)
 
     if not this_room:
         raise Exception
@@ -58,6 +60,7 @@ def return_room_object(room_id):
 
     return {
         'name': this_room['name'],
+        'bucket_number': bucket_number,
         'is_dm': this_room['is_dm'],
         'messages': messages,
         'created_by': str(this_room['created_by']),
@@ -174,12 +177,11 @@ def single_room(room_id):
 def get_room_messages(room_id):
     room = get_room(room_id)
     user_id = get_jwt_identity()
-    # user_id = get_user_id(username)
 
     if room and is_room_member(room_id, user_id):
-        page = int(request.args.get('page', 0))
+        bucket = int(request.args.get('bucket_number', 0))
 
-        message_bson = get_messages(room_id, page)
+        message_bson = get_messages(room_id, bucket)
         messages = []
 
         for item in message_bson:

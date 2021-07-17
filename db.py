@@ -302,6 +302,11 @@ def add_reaction(message, reaction, username):
 # MESSAGES
 
 
+def get_latest_bucket_number(room_id):
+    latest_bucket = messages_collection.find_one({'room_id': ObjectId(room_id)}).sort({'_id': -1})
+    return int(latest_bucket['bucket_number'])
+
+
 def save_message(room_id, text, sender, bucket_number, image_id=None):
     current_time = datetime.now()
     latest_bucket = messages_collection.find_one({'room_id': ObjectId(room_id)}).sort({'_id': -1})
