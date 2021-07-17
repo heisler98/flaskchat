@@ -165,7 +165,8 @@ def new_avatar(user_id):
 
         change_user_avatar(user_id, image_id)
         update_clients_avatar({
-            f'{user_id}': f'{image_id}'
+            'user_id': user_id,
+            'image_id': image_id
         })
 
         current_app.logger.info('{} {} changed their avatar'.format(auth_user_id, user.username))

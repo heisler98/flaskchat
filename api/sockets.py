@@ -20,6 +20,18 @@ connected_sockets = {}
 notification_interface = NotificationSystem()
 
 
+def announce_connect(user_id):
+    socketio.emit('user_online', {
+        'user_id': f'{user_id}'
+    })
+
+
+def announce_disconnect(user_id):
+    socketio.emit('user_offline', {
+        'user_id': f'{user_id}'
+    })
+
+
 # this event is automatic, triggered by a new socket connection
 @socketio.on('connect')
 @jwt_required()
@@ -41,6 +53,7 @@ def client_connect():
         this_user = [new_socket_id]
         connected_sockets[user_id] = this_user
 
+    announce_connect(user_id)
     current_app.logger.info(
         '{} now has the following sockets open: {}'.format(user_id, connected_sockets[user_id]))
 
@@ -58,6 +71,7 @@ def remove_connection(disconnected_id):
 
             if len(user_sockets) == 0:
                 update_last_seen(key)
+                announce_disconnect(key)
 
     current_app.logger.info(connected_sockets)
 

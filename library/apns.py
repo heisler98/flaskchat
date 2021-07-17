@@ -63,9 +63,9 @@ class NotificationSystem:
                 'alert': {
                     'title': 'New Message',
                     'body': f'{author}: {body}',
-                    'sound': 'default'
+                    'sound': 'bingbong.aiff'
                 },
-                'badge': 1
+                'badge': 420
             }
         }
 
