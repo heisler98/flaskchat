@@ -47,16 +47,17 @@ def return_room_object(room_id):
     message_bson = get_messages(room_id)
     messages = []
     users = {}
-    for item in message_bson:
-        try:
-            user_id = str(item['sender'])
-            if user_id not in users:
-                users[user_id] = get_user(user_id)
-            # self, time_sent, text, username, user_id, avatar, include_image, image_id
-            messages.append(Message(item['time_sent'], item['text'], users[user_id].username, users[user_id].ID,
-                                    users[user_id].avatar, item['include_image'], item['image_id']).create_json())
-        except Exception as e:
-            current_app.logger.info(e)
+    if message_bson:
+        for item in message_bson:
+            try:
+                user_id = str(item['sender'])
+                if user_id not in users:
+                    users[user_id] = get_user(user_id)
+                # self, time_sent, text, username, user_id, avatar, include_image, image_id
+                messages.append(Message(item['time_sent'], item['text'], users[user_id].username, users[user_id].ID,
+                                        users[user_id].avatar, item['include_image'], item['image_id']).create_json())
+            except Exception as e:
+                current_app.logger.info(e)
 
     return {
         'name': this_room['name'],
