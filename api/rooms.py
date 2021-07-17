@@ -149,12 +149,12 @@ def get_room_more(room_id):
 @rooms_blueprint.route('/rooms/dm/<user_id>', methods=['GET'])
 @jwt_required(fresh=True)
 def view_dm(user_id):
-    user_id = get_jwt_identity()
+    auth_user_id = get_jwt_identity()
 
-    user_one = get_user(user_id)
+    user_one = get_user(auth_user_id)
     user_two = get_user(user_id)
 
-    if user_one.ID == user_two.ID or user_one.username == user_two.username:
+    if user_one.ID == user_two.ID:
         return jsonify({'Error': 'Requested DM with self.'}), 400
 
     target_room = find_dm(user_one, user_two)  # find_dm orders params properly to prevent duplicate DMs
