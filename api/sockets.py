@@ -109,6 +109,7 @@ def handle_send_message_event(data):
 
     if user_id in room_member_ids:  # if the author/sender is in the room they are trying to send to
         current_app.logger.info("{} ({}) has sent message to the room {} at {}".format(user_id, username, room, time_sent))
+        apns_targets = []
 
         for member in room_member_ids:  # for person in room
             member_id = get_user(member).ID
@@ -126,15 +127,21 @@ def handle_send_message_event(data):
                 if not user_apn_tokens:
                     continue
                 else:
-                    for token in user_apn_tokens:
-                        new_payload = notification_interface.payload_message(data['username'], data['text'])
-                        resp = notification_interface.send_payload(new_payload, token)
-                        current_app.logger.info('{} : {} as response from APNS for {}.'.format(resp.status, resp.read(), token))
+                    apns_targets.extend(user_apn_tokens)
         # room_id, text, sender, bucket_number=0, image_id=None
+        handle_apns_load(apns_targets, data)
         bucket_number = get_latest_bucket_number(room)
         save_message(room, message, user_id, bucket_number, image_id)  # to db
     else:
         current_app.logger.info("{} not authorized to send to {}".format(username, room))
+
+
+def handle_apns_load(apns_targets, data):
+    for token in apns_targets:
+        new_payload = notification_interface.payload_message(data['username'], data['text'])
+        resp = notification_interface.send_payload(new_payload, token)
+        if resp.status != 200:
+            current_app.logger.info('{} : {} as response from APNS for {}.'.format(resp.status, resp.read(), token))
 
 
 @socketio.on('send_react')
