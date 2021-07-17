@@ -321,17 +321,20 @@ def get_latest_bucket_number(room_id):
 
 def save_message(room_id, text, sender, bucket_number=0, image_id=None):
     current_time = time.time()
+    new_bucket = False
     try:
         latest_bucket = list(messages_collection.find({'room_id': ObjectId(room_id)}).sort('_id', -1).limit(1))[0]
     except Exception as e:
-        latest_bucket = None
-    if not latest_bucket:
-        latest_bucket_messages = 51
-    else:
-        latest_bucket_messages = latest_bucket['messages']
+        latest_bucket = None  # latest_bucket null if not in DB
 
-    if len(latest_bucket_messages) <= 50:
-        # add message to bucket
+    if latest_bucket:  # if latest_bucket exists, grab messages
+        latest_bucket_messages = latest_bucket['messages']
+        if len(latest_bucket_messages) > 50:
+            new_bucket = True
+    else:  # if latest_bucket doesnt exist, create one
+        new_bucket = True
+
+    if not new_bucket:  # append to existing bucket
         latest_bucket_messages.append({
             'text': text,
             'sender': ObjectId(sender),
@@ -340,8 +343,7 @@ def save_message(room_id, text, sender, bucket_number=0, image_id=None):
         })
         messages_collection.update_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number},
                                        {'$set': {'messages': latest_bucket_messages}})
-    else:
-        # create a new bucket
+    else:  # create a new bucket
         bucket_number += 1
         new_bucket_messages = [
             {
