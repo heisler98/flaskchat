@@ -364,12 +364,12 @@ def save_message(room_id, text, sender, bucket_number=0, image_id=None):
 def get_messages(room_id, bucket_number=0):
     try:
         some_bucket = messages_collection.find_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number})
-        messages = some_bucket['messages']
+        messages = list(some_bucket['messages'])
         return messages
     except Exception as e:
         print(e)
-        return None
-    return None
+        return []
+    return []
 
 
 def add_reaction(message_id, user_id, reaction_id):

@@ -40,6 +40,9 @@ def return_room_object(room_id):
     this_room = get_room(room_id)
     bucket_number = get_latest_bucket_number(room_id)
 
+    if not bucket_number:
+        bucket_number = 0
+
     if not this_room:
         raise Exception
 
