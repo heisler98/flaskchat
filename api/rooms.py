@@ -205,8 +205,8 @@ def get_room_messages(room_id):
                 continue
 
             # self, time_sent, text, username, user_id, avatar, image_id
-            messages.append(Message(item['time_sent'], item['text'], this_user.username, this_user.ID, this_user.avatar,
-                                    item['image_id']).create_json())
+            messages.append(Message(item['time_sent'], item['text'], this_user.username, str(this_user.ID),
+                                    str(this_user.avatar), str(item['image_id'])).create_json())
 
         return jsonify({'messages': messages})
     else:
