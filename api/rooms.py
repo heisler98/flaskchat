@@ -14,13 +14,12 @@ rooms_blueprint = Blueprint('rooms_blueprint', __name__)
 
 
 class Message:
-    def __init__(self, time_sent, text, username, user_id, avatar, include_image, image_id):
+    def __init__(self, time_sent, text, username, user_id, avatar, image_id):
         self.time_sent = time_sent
         self.text = text
         self.username = username
         self.user_id = user_id
         self.avatar = avatar
-        self.include_image = include_image
         self.image_id = image_id
 
     def create_json(self):
@@ -30,7 +29,6 @@ class Message:
             'username': self.username,
             'user_id': self.user_id,
             'avatar_id': self.avatar,
-            'include_image': self.include_image,
             'image_id': self.image_id
         }
 
@@ -56,9 +54,9 @@ def return_room_object(room_id):
                 user_id = str(item['sender'])
                 if user_id not in users:
                     users[user_id] = get_user(user_id)
-                # self, time_sent, text, username, user_id, avatar, include_image, image_id
+                # self, time_sent, text, username, user_id, avatar, image_id
                 messages.append(Message(item['time_sent'], item['text'], users[user_id].username, users[user_id].ID,
-                                        users[user_id].avatar, item['include_image'], item['image_id']).create_json())
+                                        users[user_id].avatar, item['image_id']).create_json())
             except Exception as e:
                 current_app.logger.info(e)
 
@@ -206,9 +204,9 @@ def get_room_messages(room_id):
                 current_app.logger.info(e)
                 continue
 
-            # self, time_sent, text, username, user_id, avatar, include_image, image_id
+            # self, time_sent, text, username, user_id, avatar, image_id
             messages.append(Message(item['time_sent'], item['text'], this_user.username, this_user.ID, this_user.avatar,
-                                    item['include_image'], item['image_id']).create_json())
+                                    item['image_id']).create_json())
 
         return jsonify({'messages': messages})
     else:
