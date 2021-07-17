@@ -97,7 +97,7 @@ def handle_send_message_event(data):
     time_sent = time.time()
     data['time_sent'] = time_sent
     user = get_user(user_id)
-    # apn_tokens = get_apn(user_id)
+    apn_tokens = get_apn(user_id)
     data['user_id'] = user_id
     data['avatar_id'] = user.avatar
 
@@ -125,20 +125,16 @@ def handle_send_message_event(data):
                     current_app.logger.info('Failed to emit message to {}, connected on {}. They may not have an open '
                                             'connection. {}'.format(member_id, connected_sockets[member_id], e))
             else:  # send push notifications for anyone offline
-                pass
-                """
-                current_app.logger.info('No open socket for {}, trying APN'.format(member))
+                # current_app.logger.info('No open socket for {}, trying APN'.format(member))
                 user_apn_tokens = get_apn(member)
                 current_app.logger.info(user_apn_tokens)
                 if not user_apn_tokens:
                     continue
                 else:
                     for token in user_apn_tokens:
-                        current_app.logger.info('NOTIF: {}, {}'.format(token, member))
                         new_payload = notification_interface.payload_message(data['username'], data['text'])
                         resp = notification_interface.send_payload(new_payload, token)
                         current_app.logger.info('{} and {} as response.'.format(resp.status, resp.read()))
-                """
         # room_id, text, sender, include_image, image_id
         save_message(room, message, user_id, include_image, image_id)  # to db
     else:
