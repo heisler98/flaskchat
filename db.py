@@ -302,27 +302,49 @@ def add_reaction(message, reaction, username):
 # MESSAGES
 
 
-def save_message(room_id, text, sender, include_image=None, image_id=None):
+def save_message(room_id, text, sender, bucket_number, image_id=None):
     current_time = datetime.now()
-    print('Saving a message to DB')
-    if include_image and image_id:
-        messages_collection.insert_one({'room_id': ObjectId(room_id), 'text': text, 'sender': ObjectId(sender),
-                                        'time_sent': current_time, 'include_image': True,
-                                        'image_id': ObjectId(image_id)})
+    latest_bucket = messages_collection.find_one({'room_id': ObjectId(room_id)}).sort({'_id': -1})
+    latest_bucket_messages = latest_bucket['messages']
+
+    if len(latest_bucket_messages) <= 50:
+        # add message to bucket
+        latest_bucket_messages.append({
+            'text': text,
+            'sender': ObjectId(sender),
+            'time_sent': current_time,
+            'image_id': ObjectId(image_id)
+        })
+        messages_collection.update_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number},
+                                       {'$set': {'messages': latest_bucket_messages}})
     else:
-        messages_collection.insert_one({'room_id': ObjectId(room_id), 'text': text, 'sender': ObjectId(sender),
-                                        'time_sent': current_time, 'include_image': False,
-                                        'image_id': None})
+        # create a new bucket
+        bucket_number += 1
+        new_bucket_messages = [
+            {
+                'text': text,
+                'sender': ObjectId(sender),
+                'time_sent': current_time,
+                'image_id': ObjectId(image_id)
+            }
+        ]
+        new_bucket = {
+            'room_id': ObjectId(room_id),
+            'bucket_number': bucket_number,
+            'messages': new_bucket_messages
+        }
+        messages_collection.insert_one(new_bucket)
+
+    return bucket_number
 
 
-def get_messages(room_id, page=0):
-    MESSAGE_FETCH_LIMIT = 50
-    offset = page * MESSAGE_FETCH_LIMIT
-    messages = list(  # sort() ascending is default, can also be descending
-        messages_collection.find({'room_id': ObjectId(room_id)}).sort('_id').limit(MESSAGE_FETCH_LIMIT).skip(offset))
-    for message in messages:
-        message['time_sent'] = message['time_sent']
-    return messages[::-1]
+def get_messages(room_id, bucket_number=0):
+    try:
+        some_bucket = messages_collection.find_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number})
+    except Exception as e:
+        print(e)
+        return None
+    return some_bucket['messages']
 
 
 def add_reaction(message_id, user_id, reaction_id):
