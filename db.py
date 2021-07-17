@@ -135,11 +135,11 @@ def get_user(user_id):
         raise TypeError
 
     user_id = str(user_id)  # generally redundant
-    print('DB: Attempting to fetch', user_id)
+    # print('DB: Attempting to fetch', user_id)
 
     user_data = users_collection.find_one({'_id': ObjectId(user_id)})
     if user_data:
-        print('DB: Fetched', user_id, '({})'.format(user_data['username']))
+        pass
     try:
         some_avatar = user_data['avatar']
     except KeyError:  # user has no avatar
