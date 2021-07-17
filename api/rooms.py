@@ -45,7 +45,7 @@ def return_room_object(room_id):
         raise Exception
 
     # grab messages for this room
-    message_bson = get_messages(room_id)
+    message_bson = get_messages(room_id, bucket_number)
     messages = []
     users = {}
     if message_bson:
