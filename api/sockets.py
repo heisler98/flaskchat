@@ -89,16 +89,13 @@ def handle_send_message_event(data):
     username = data['username']
     room = data['room']  # client must pass room id here
     message = data['text']
-    include_image = False
     try:
         image_id = data['image_id']
-        include_image = True
     except Exception as e:
         image_id = None
     time_sent = time.time()
     data['time_sent'] = time_sent
     user = get_user(user_id)
-    apn_tokens = get_apn(user_id)
     data['user_id'] = user_id
     data['avatar_id'] = user.avatar
 

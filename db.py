@@ -335,24 +335,44 @@ def save_message(room_id, text, sender, bucket_number=0, image_id=None):
         new_bucket = True
 
     if not new_bucket:  # append to existing bucket
-        latest_bucket_messages.append({
-            'text': text,
-            'sender': ObjectId(sender),
-            'time_sent': current_time,
-            'image_id': ObjectId(image_id)
-        })
-        messages_collection.update_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number},
-                                       {'$set': {'messages': latest_bucket_messages}})
-    else:  # create a new bucket
-        bucket_number += 1
-        new_bucket_messages = [
-            {
+        if image_id:
+            latest_bucket_messages.append({
                 'text': text,
                 'sender': ObjectId(sender),
                 'time_sent': current_time,
                 'image_id': ObjectId(image_id)
-            }
-        ]
+            })
+            messages_collection.update_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number},
+                                           {'$set': {'messages': latest_bucket_messages}})
+        else:
+            latest_bucket_messages.append({
+                'text': text,
+                'sender': ObjectId(sender),
+                'time_sent': current_time,
+                'image_id': None
+            })
+            messages_collection.update_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number},
+                                           {'$set': {'messages': latest_bucket_messages}})
+    else:  # create a new bucket
+        bucket_number += 1
+        if image_id:
+            new_bucket_messages = [
+                {
+                    'text': text,
+                    'sender': ObjectId(sender),
+                    'time_sent': current_time,
+                    'image_id': ObjectId(image_id)
+                }
+            ]
+        else:
+            new_bucket_messages = [
+                {
+                    'text': text,
+                    'sender': ObjectId(sender),
+                    'time_sent': current_time,
+                    'image_id': None
+                }
+            ]
         new_bucket = {
             'room_id': ObjectId(room_id),
             'bucket_number': bucket_number,
