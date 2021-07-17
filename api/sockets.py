@@ -129,7 +129,7 @@ def handle_send_message_event(data):
                     for token in user_apn_tokens:
                         new_payload = notification_interface.payload_message(data['username'], data['text'])
                         resp = notification_interface.send_payload(new_payload, token)
-                        current_app.logger.info('{} : {} as response from APNS for {}.'.format(resp.status, resp.content, token))
+                        current_app.logger.info('{} : {} as response from APNS for {}.'.format(resp.status, resp.text, token))
         # room_id, text, sender, bucket_number=0, image_id=None
         bucket_number = get_latest_bucket_number(room)
         save_message(room, message, user_id, bucket_number, image_id)  # to db
