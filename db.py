@@ -188,6 +188,10 @@ def get_room(room_id):
     return rooms_collection.find_one({'_id': ObjectId(room_id)})
 
 
+def get_room_admins(room_id):
+    return room_members_collection.find({'_id.room_id': ObjectId(room_id), 'is_admin': True})
+
+
 def find_dm(user_one, user_two):
     room_title = ''
     if user_one and user_two:

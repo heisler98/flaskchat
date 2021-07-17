@@ -7,7 +7,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from db import get_room_members, get_user, get_user_id, get_messages, is_room_member, get_room, create_dm, find_dm, \
     save_room, get_rooms_for_user, add_room_member, delete_room, is_room_admin, toggle_admin, add_room_members, \
-    get_latest_bucket_number
+    get_latest_bucket_number, get_room_admins
 from helper_functions import parse_json
 
 rooms_blueprint = Blueprint('rooms_blueprint', __name__)
@@ -131,6 +131,17 @@ def delete_some_room(room_id):
         return jsonify({'Error': 'Not authorized'}), 403
 
     return jsonify({'Success': '{} has been purged.'.format(room_id)})
+
+
+@rooms_blueprint.route('/rooms/<room_id>/more', methods=['GET'])
+@jwt_required()
+def get_room_more(room_id):
+    user_id = get_jwt_identity()
+    room_admins = get_room_admins()
+
+    return jsonify({
+        'admins': room_admins
+    })
 
 
 @rooms_blueprint.route('/rooms/dm/<user_id>', methods=['GET'])
