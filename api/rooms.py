@@ -56,7 +56,7 @@ def return_room_object(room_id):
                     users[user_id] = get_user(user_id)
                 # self, time_sent, text, username, user_id, avatar, image_id
                 messages.append(Message(item['time_sent'], item['text'], users[user_id].username, users[user_id].ID,
-                                        users[user_id].avatar, item['image_id']).create_json())
+                                        users[user_id].avatar, str(item['image_id'])).create_json())
             except Exception as e:
                 current_app.logger.info(e)
 
