@@ -13,63 +13,6 @@ from helper_functions import parse_json
 rooms_blueprint = Blueprint('rooms_blueprint', __name__)
 
 
-class Message:
-    def __init__(self, time_sent, text, username, user_id, avatar, image_id):
-        self.time_sent = time_sent
-        self.text = text
-        self.username = username
-        self.user_id = user_id
-        self.avatar = avatar
-        self.image_id = image_id
-
-    def create_json(self):
-        return {
-            'time_sent': self.time_sent,
-            'text': self.text,
-            'username': self.username,
-            'user_id': self.user_id,
-            'avatar_id': self.avatar,
-            'image_id': self.image_id
-        }
-
-
-# returns a json object of a room to be returned via the API
-def return_room_object(room_id):
-    this_room = get_room(room_id)
-    bucket_number = get_latest_bucket_number(room_id)
-
-    if not bucket_number:
-        bucket_number = 0
-
-    if not this_room:
-        raise Exception
-
-    # grab messages for this room
-    message_bson = get_messages(room_id, bucket_number)
-    messages = []
-    users = {}
-    if message_bson:
-        for item in message_bson:
-            try:
-                user_id = str(item['sender'])
-                if user_id not in users:
-                    users[user_id] = get_user(user_id)
-                # self, time_sent, text, username, user_id, avatar, image_id
-                messages.append(Message(item['time_sent'], item['text'], users[user_id].username, users[user_id].ID,
-                                        users[user_id].avatar, str(item['image_id'])).create_json())
-            except Exception as e:
-                current_app.logger.info(e)
-
-    return {
-        'name': this_room['name'],
-        'bucket_number': bucket_number,
-        'is_dm': this_room['is_dm'],
-        'messages': messages,
-        'created_by': str(this_room['created_by']),
-        'room_id': str(this_room['_id'])
-    }
-
-
 @rooms_blueprint.route('/rooms/list', methods=['GET'])
 @jwt_required()
 def get_rooms():
@@ -98,7 +41,8 @@ def get_all_rooms():
 
     for room_raw in room_list_raw:
         room_parsed = parse_json(room_raw)
-        this_room = return_room_object(room_parsed['_id']['room_id']['$oid'])
+        room_object = get_room(room_parsed)
+        this_room = room_object.create_json()
         rooms_list.append(this_room)
 
     return jsonify({'rooms': rooms_list})
@@ -159,10 +103,12 @@ def view_dm(user_id):
 
     target_room = find_dm(user_one, user_two)  # find_dm orders params properly to prevent duplicate DMs
     if target_room:
-        return jsonify(return_room_object(target_room)), 200
+        room_object = get_room(target_room)
+        return jsonify(room_object.created_json()), 200
     else:
         new_dm = create_dm(user_one, user_two)
-        return jsonify(return_room_object(new_dm)), 200
+        room_object = get_room(new_dm)
+        return jsonify(room_object.create_json()), 200
 
 
 @rooms_blueprint.route('/rooms/<room_id>', methods=['GET'])
@@ -180,9 +126,19 @@ def single_room(room_id):
     if not is_room_member(room_id, user_id):
         return jsonify({'Error': 'You are not a member of this room.'}), 403
     else:
-        return return_room_object(room_id)
+        return jsonify(room.create_json())
 
     return jsonify({'Error': ''}), 500
+
+
+@rooms_blueprint.route('/rooms/<room_id>', methods=['POST'])
+@jwt_required()
+def edit_single_room(room_id):
+    auth_user_id = get_jwt_identity()
+    user = get_user(auth_user_id)
+    room = get_room(room_id)
+
+    json_input = request.get_json(force=True)
 
 
 @rooms_blueprint.route('/rooms/<room_id>/messages', methods=['GET'])
@@ -192,23 +148,7 @@ def get_room_messages(room_id):
     user_id = get_jwt_identity()
 
     if room and is_room_member(room_id, user_id):
-        bucket = int(request.args.get('bucket_number', 0))
-
-        message_bson = get_messages(room_id, bucket)
-        messages = []
-
-        for item in message_bson:
-            try:
-                this_user = get_user(str(item['sender']))
-            except Exception as e:
-                current_app.logger.info(e)
-                continue
-
-            # self, time_sent, text, username, user_id, avatar, image_id
-            messages.append(Message(item['time_sent'], item['text'], this_user.username, str(this_user.ID),
-                                    str(this_user.avatar), str(item['image_id'])).create_json())
-
-        return jsonify({'messages': messages})
+        return jsonify(room.messages)
     else:
         return jsonify({'Error': 'Room not found'}), 400
 
@@ -286,10 +226,10 @@ def room_add_members(room_id):
 
     try:
         if len(new_members) == 1:
-            add_room_member(room_id, target_room['name'], new_members[0], user_id)
+            add_room_member(room_id, target_room.name, new_members[0], user_id)
             current_app.logger.info('Added a user to {}'.format(room_id))
         elif len(new_members) > 1:
-            add_room_members(room_id, target_room['name'], new_members, user_id)
+            add_room_members(room_id, target_room.name, new_members, user_id)
             current_app.logger.info('Added {} users to {}'.format(len(new_members), room_id))
         else:
             return jsonify({'Error': 'Bad input'}), 400

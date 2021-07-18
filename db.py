@@ -10,6 +10,8 @@ from pymongo.errors import DuplicateKeyError
 from werkzeug.security import generate_password_hash
 
 from model.user import User
+from model.room import Room
+from model.room import Message
 
 
 class Connect(object):
@@ -98,22 +100,24 @@ def update_user(user_id, itemized_user):
 
 
 def change_user_avatar(user_id, file_id):
+    user = get_user(user_id)
     current_avatar = users_collection.find_one({'_id': ObjectId(user_id)}, {'avatar': 1})
     previous_avatars = users_collection.find_one({'_id': ObjectId(user_id)}, {'previous_avatars': 1})
 
-    #users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'previous_avatars': previous_avatars}})
-    users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'avatar': file_id}})
-
-    return None
-
-    if previous_avatars:  # if this attr exists
-        previous_avatars.append(current_avatar) # does not have append
-        # users_collection.update_one({'username': username}, {'$set': {'previous_avatars': previous_avatars}})
-    elif current_avatar:  # there are no previous avatars but there is a current one
-        previous_avatars = [current_avatar]
-        # users_collection.update_one({'username': username}, {'$set': {'previous_avatars': previous_avatars}})
-    else:  # there are no previous or current avatars
-        previous_avatars = []
+    # this probably needs refactoring
+    if not previous_avatars and not current_avatar:  # user has no avatar and no previous avatars
+        users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'avatar': file_id}})
+        users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'previous_avatars': []}})
+    elif current_avatar and not previous_avatars:  # user has a current avatar but no previous avatars
+        old_avatar = user.avatar
+        previous_avatars = [old_avatar]
+        users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'avatar': file_id}})
+        users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'previous_avatars': previous_avatars}})
+    elif current_avatar and previous_avatars:  # user has both current avatar and previous avatars
+        old_avatar = user.avatar
+        previous_avatars.append(old_avatar)
+        users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'avatar': file_id}})
+        users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'previous_avatars': previous_avatars}})
 
 
 def get_all_users():
@@ -185,7 +189,8 @@ def is_room_member(room_id, user_id):
 
 
 def get_room(room_id):
-    return rooms_collection.find_one({'_id': ObjectId(room_id)})
+    room = rooms_collection.find_one({'_id': ObjectId(room_id)})
+    return Room(room['name'], room_id, room['is_dm'], room['bucket_number'], room['created_by'])
 
 
 def get_room_admins(room_id):
@@ -240,6 +245,7 @@ def update_room(room_id, attribute_type, value):
     # room_members_collection.update_many({'_id.room_id': ObjectId(room_id)}, {'$set': {'name': room_name}})
 
 
+# refactor to not require room_name ?
 def add_room_member(room_id, room_name, user_id, added_by, is_admin=False, is_owner=False, is_dm=False):
     room_members_collection.insert_one({'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)},
                                         'name': room_name,
