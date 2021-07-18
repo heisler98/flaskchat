@@ -198,7 +198,7 @@ def single_room_members(room_id):
 
         new_member = {
             'username': this_user.username,
-            'ID': this_user.ID,
+            'user_id': this_user.ID,
             'added_at': str(member['added_at']),  # .timestamp(),
             'added_by': str(member['added_by']),
             'is_room_admin': member['is_admin'],
