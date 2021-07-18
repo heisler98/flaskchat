@@ -154,8 +154,9 @@ def get_room_messages(room_id):
     user_id = get_jwt_identity()
 
     if room and is_room_member(room_id, user_id):
-        bucket_number = int(get_latest_bucket_number(room_id))
+        bucket_number = int(get_latest_bucket_number(room_id))  # defaulted to latest bucket if none given in args
         requested_bucket_number = int(request.args.get('bucket_number', bucket_number))
+
         message_bson = get_messages(room_id, requested_bucket_number)
         messages = []
         users = {}
