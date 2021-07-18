@@ -106,7 +106,7 @@ def view_dm(user_id):
         target_room = find_dm(user_one, user_two)  # find_dm orders params properly to prevent duplicate DMs
         if target_room:
             room_object = get_room(target_room)
-            return jsonify(room_object.created_json()), 200
+            return jsonify(room_object.create_json()), 200
         else:
             new_dm = create_dm(user_one, user_two)
             room_object = get_room(new_dm)
