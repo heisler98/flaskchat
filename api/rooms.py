@@ -239,7 +239,7 @@ def room_add_members(room_id):
     return jsonify({'Success': 'User(s) added'}), 200
 
 
-@rooms_blueprint('/rooms/search', methods=['POST'])
+@rooms_blueprint.route('/rooms/search', methods=['POST'])
 @jwt_required()
 def search_messages():  # !! this is a slow (brute-force) implementation of search
     json_input = request.get_json(force=True)
