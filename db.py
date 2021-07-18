@@ -190,7 +190,9 @@ def is_room_member(room_id, user_id):
 
 def get_room(room_id):
     room = rooms_collection.find_one({'_id': ObjectId(room_id)})
-    return Room(room['name'], room_id, room['is_dm'], room['bucket_number'], room['created_by'])
+    room_object = Room(room['name'], room_id, room['is_dm'], room['bucket_number'], room['created_by'])
+    room_object.set_messages(load_messages(room_id, room.bucket_number))
+    return room_object
 
 
 def get_room_admins(room_id):
@@ -311,6 +313,26 @@ def add_reaction(message, reaction, username):
 
 
 # MESSAGES
+
+
+def load_messages(room_id, bucket_number):
+    message_bson = get_messages(room_id, bucket_number)
+    messages = []
+    users = {}  # for tracking users already obtained
+
+    if message_bson and bucket_number > 0:
+        for item in message_bson:
+            try:
+                user_id = str(item['sender'])
+                if user_id not in users:
+                    users[user_id] = get_user(user_id)
+                # self, time_sent, text, username, user_id, avatar, image_id
+                messages.append(Message(item['time_sent'], item['text'], users[user_id].username, users[user_id].ID,
+                                        users[user_id].avatar, str(item['image_id'])).create_json())
+            except Exception as e:
+                print(e)
+
+    return messages
 
 
 def get_latest_bucket_number(room_id):
