@@ -9,6 +9,7 @@ from db import get_room_members, get_user, get_user_id, get_messages, is_room_me
     save_room, get_rooms_for_user, add_room_member, delete_room, is_room_admin, toggle_admin, add_room_members, \
     get_latest_bucket_number, get_room_admins, add_log_event
 from helper_functions import parse_json
+from model.room import Message
 
 rooms_blueprint = Blueprint('rooms_blueprint', __name__)
 
@@ -153,7 +154,22 @@ def get_room_messages(room_id):
     user_id = get_jwt_identity()
 
     if room and is_room_member(room_id, user_id):
-        return jsonify(room.messages)
+        bucket_number = int(get_latest_bucket_number(room_id))
+        requested_bucket_number = int(request.args.get('bucket_number', bucket_number))
+        message_bson = get_messages(room_id, requested_bucket_number)
+        messages = []
+        users = {}
+        for item in message_bson:
+            try:
+                user_id = str(item['sender'])
+                if user_id not in users:
+                    users[user_id] = get_user(user_id)
+                # time_sent, text, username, user_id, avatar, image_id)
+                messages.append(Message(item['time_sent'], item['text'], users[user_id].username, users[user_id].ID,
+                                        users[user_id].avatar, str(item['image_id'])).create_json())
+            except Exception as e:
+                current_app.logger.info(e)
+        return jsonify(messages)
     else:
         return jsonify({'Error': 'Room not found'}), 400
 
