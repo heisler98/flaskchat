@@ -344,7 +344,7 @@ def get_latest_bucket_number(room_id):
         latest_bucket = list(messages_collection.find({'room_id': ObjectId(room_id)}).sort('_id', -1).limit(1))[0]
     except Exception as e:
         latest_bucket = None
-    if not latest_bucket:
+    if not latest_bucket:  # no buckets
         latest_bucket_messages = 0
     else:
         latest_bucket_messages = int(latest_bucket['bucket_number'])
