@@ -190,12 +190,7 @@ def is_room_member(room_id, user_id):
 
 def get_room(room_id):
     room = rooms_collection.find_one({'_id': ObjectId(room_id)})
-    try:
-        x = room['bucket_number']
-        if x:
-            bucket_number = room['bucket_number']
-    except KeyError as e:
-        bucket_number = get_latest_bucket_number(room_id)
+    bucket_number = get_latest_bucket_number(room_id)
 
     room_object = Room(room['name'], room_id, room['is_dm'], bucket_number, room['created_by'])
     room_object.set_messages(load_messages(room_id, room_object.bucket_number))
