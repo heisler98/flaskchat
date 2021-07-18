@@ -190,7 +190,11 @@ def is_room_member(room_id, user_id):
 
 def get_room(room_id):
     room = rooms_collection.find_one({'_id': ObjectId(room_id)})
-    room_object = Room(room['name'], room_id, room['is_dm'], room['bucket_number'], room['created_by'])
+    if room['bucket_number']:  # rooms are not instantiated with a bucket number
+        bucket_number = room['bucket_number']
+    else:
+        bucket_number = 0
+    room_object = Room(room['name'], room_id, room['is_dm'], bucket_number, room['created_by'])
     room_object.set_messages(load_messages(room_id, room.bucket_number))
     return room_object
 
@@ -340,8 +344,8 @@ def get_latest_bucket_number(room_id):
         latest_bucket = list(messages_collection.find({'room_id': ObjectId(room_id)}).sort('_id', -1).limit(1))[0]
     except Exception as e:
         latest_bucket = None
-    if not latest_bucket:
-        latest_bucket_messages = None
+    if not latest_bucket:  # no buckets
+        latest_bucket_messages = 0
     else:
         latest_bucket_messages = int(latest_bucket['bucket_number'])
     return latest_bucket_messages
