@@ -195,7 +195,7 @@ def get_room(room_id):
         if x:
             bucket_number = room['bucket_number']
     except KeyError as e:
-        bucket_number = 0
+        bucket_number = get_latest_bucket_number(room_id)
 
     room_object = Room(room['name'], room_id, room['is_dm'], bucket_number, room['created_by'])
     room_object.set_messages(load_messages(room_id, room_object.bucket_number))
@@ -233,7 +233,8 @@ def create_dm(user_one, user_two):
             room_title = user_one.ID + user_two.ID
 
     room_id = rooms_collection.insert_one(
-        {'name': room_title, 'is_dm': True, 'created_by': None, 'created_at': time.time()}).inserted_id
+        {'name': room_title, 'bucket_number': 0, 'is_dm': True, 'created_by': None,
+         'created_at': time.time()}).inserted_id
 
     # room_id, room_name, user_id, added_by, is_admin=False, is_owner=False, is_dm=False
     add_room_member(room_id, room_title, str(user_one.ID), None, is_dm=True)
@@ -244,7 +245,7 @@ def create_dm(user_one, user_two):
 
 def save_room(room_name, created_by):
     room_id = rooms_collection.insert_one(
-        {'name': room_name, 'is_dm': False, 'created_by': ObjectId(created_by),
+        {'name': room_name, 'is_dm': False, 'created_by': ObjectId(created_by), 'bucket_number': 0,
          'created_at': time.time()}).inserted_id
     return room_id
 
@@ -344,6 +345,7 @@ def load_messages(room_id, bucket_number):
 
 def get_latest_bucket_number(room_id):
     try:
+        # finds the latest bucket in the messages collection
         latest_bucket = list(messages_collection.find({'room_id': ObjectId(room_id)}).sort('_id', -1).limit(1))[0]
     except Exception as e:
         latest_bucket = None
@@ -351,6 +353,10 @@ def get_latest_bucket_number(room_id):
         latest_bucket_messages = 0
     else:
         latest_bucket_messages = int(latest_bucket['bucket_number'])
+
+    # stores the latest buckets number in the rooms DB
+    messages_collection.update_one({'room_id': ObjectId(room_id)}, {'$set': {'bucket_number': latest_bucket_messages}})
+
     return latest_bucket_messages
 
 
