@@ -7,7 +7,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from db import get_room_members, get_user, get_user_id, get_messages, is_room_member, get_room, create_dm, find_dm, \
     save_room, get_rooms_for_user, add_room_member, delete_room, is_room_admin, toggle_admin, add_room_members, \
-    get_latest_bucket_number, get_room_admins
+    get_latest_bucket_number, get_room_admins, add_log_event
 from helper_functions import parse_json
 
 rooms_blueprint = Blueprint('rooms_blueprint', __name__)
@@ -101,14 +101,19 @@ def view_dm(user_id):
     if user_one.ID == user_two.ID:
         return jsonify({'Error': 'Requested DM with self.'}), 400
 
-    target_room = find_dm(user_one, user_two)  # find_dm orders params properly to prevent duplicate DMs
-    if target_room:
-        room_object = get_room(target_room)
-        return jsonify(room_object.created_json()), 200
-    else:
-        new_dm = create_dm(user_one, user_two)
-        room_object = get_room(new_dm)
-        return jsonify(room_object.create_json()), 200
+    try:
+        target_room = find_dm(user_one, user_two)  # find_dm orders params properly to prevent duplicate DMs
+        if target_room:
+            room_object = get_room(target_room)
+            return jsonify(room_object.created_json()), 200
+        else:
+            new_dm = create_dm(user_one, user_two)
+            room_object = get_room(new_dm)
+            return jsonify(room_object.create_json()), 200
+    except BrokenPipeError as e:
+        ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
+        add_log_event(200, auth_user_id, '{}'.format(e), ip_address=ip)
+        return jsonify({'Error': 'Please try again. {}'.format(e)}), 500
 
 
 @rooms_blueprint.route('/rooms/<room_id>', methods=['GET'])
