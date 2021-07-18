@@ -41,6 +41,11 @@ def client_connect():
     new_socket_id = request.sid
     current_app.logger.info('A socket for {} with ID {} has been created...'.format(user_id, new_socket_id))
 
+    if not user_id:
+        current_app.logger.info('WARNING: Someone attempted to connect without authentication! Closing {}'
+                                .format(new_socket_id))
+        socketio.disconnect(new_socket_id)
+
     join_room('server')  # add this new socket to room "server"
 
     if user_id in connected_sockets:
