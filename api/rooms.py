@@ -297,3 +297,27 @@ def room_add_members(room_id):
         return jsonify({'Error': 'Failed to add user. {}'.format(e)}), 500
 
     return jsonify({'Success': 'User(s) added'}), 200
+
+
+@rooms_blueprint('/rooms/search', methods=['POST'])
+@jwt_required()
+def search_messages():  # !! this is a slow (brute-force) implementation of search
+    json_input = request.get_json(force=True)
+    key_words = list(json_input['words'])
+    rooms = list(json_input['room_ids'])
+
+    output = []
+
+    for room in rooms:
+        bucket_max = get_latest_bucket_number(room)
+        for bucket in range(1, bucket_max):
+            messages = get_messages(room, bucket)
+            for message in messages:
+                for word in key_words:
+                    if word in message:
+                        output.append(message)
+
+    return jsonify({
+        'results': output
+    })
+
