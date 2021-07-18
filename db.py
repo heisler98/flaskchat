@@ -190,7 +190,11 @@ def is_room_member(room_id, user_id):
 
 def get_room(room_id):
     room = rooms_collection.find_one({'_id': ObjectId(room_id)})
-    room_object = Room(room['name'], room_id, room['is_dm'], room['bucket_number'], room['created_by'])
+    if room['bucket_number']:  # rooms are not instantiated with a bucket number
+        bucket_number = room['bucket_number']
+    else:
+        bucket_number = 0
+    room_object = Room(room['name'], room_id, room['is_dm'], bucket_number, room['created_by'])
     room_object.set_messages(load_messages(room_id, room.bucket_number))
     return room_object
 
