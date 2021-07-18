@@ -198,7 +198,7 @@ def get_room(room_id):
         bucket_number = 0
 
     room_object = Room(room['name'], room_id, room['is_dm'], bucket_number, room['created_by'])
-    room_object.set_messages(load_messages(room_id, room.bucket_number))
+    room_object.set_messages(load_messages(room_id, room_object.bucket_number))
     return room_object
 
 
