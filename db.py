@@ -17,7 +17,8 @@ from model.room import Message
 class Connect(object):
     @staticmethod
     def get_connection():
-        return MongoClient(host='localhost', port=27017, username='flaskuser', password='193812465340', authSource='admin')
+        return MongoClient(host='localhost', port=27017, username='flaskuser', password='193812465340',
+                           authSource='admin')
 
 
 client = MongoClient(host='localhost', port=27017, username='flaskuser', password='193812465340', authSource='admin')
@@ -155,7 +156,8 @@ def get_user(user_id):
 
     # username, email, password, avatar, real_name, identifier, prev_avatars=None, date_joined=None
     return User(user_data['username'], user_data['email'], user_data['password'],
-                some_avatar, user_data['real_name'], user_data['_id'], date_joined=user_data['date_joined']) if user_data else None
+                some_avatar, user_data['real_name'], user_data['_id'],
+                date_joined=user_data['date_joined']) if user_data else None
 
 
 def get_messages_by_user(username):
@@ -184,8 +186,41 @@ def get_user_id(username):
 def is_room_member(room_id, user_id):
     if not room_id:
         return False
-    output = room_members_collection.count_documents({'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)}})
+    output = room_members_collection.count_documents(
+        {'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)}})
     return output
+
+
+def room_is_mute(room_id, user_id):
+    if not room_id:
+        return False
+    if not is_room_member(room_id, user_id):
+        raise FileNotFoundError('Unauthorized')
+    output = room_members_collection.find_one({'_id.user_id': ObjectId(user_id), '_id.room_id': ObjectId(room_id)},
+                                              {'mute', 1})
+    if not output:
+        room_members_collection.update_one({'_id.user_id': ObjectId(user_id), '_id.room_id': ObjectId(room_id)},
+                                           {'$set': {'mute': False}})
+        return False
+    else:
+        return output
+
+
+def toggle_mute(room_id, user_id):
+    output = room_members_collection.find_one({'_id.user_id': ObjectId(user_id), '_id.room_id': ObjectId(room_id)},
+                                              {'mute', 1})
+    if not is_room_member(room_id, user_id):
+        raise FileNotFoundError('Unauthorized')
+
+    if not output:
+        room_members_collection.update_one({'_id.user_id': ObjectId(user_id), '_id.room_id': ObjectId(room_id)},
+                                           {'$set': {'mute': True}})
+        return True
+    else:
+        toggle = not output
+        room_members_collection.update_one({'_id.user_id': ObjectId(user_id), '_id.room_id': ObjectId(room_id)},
+                                           {'$set': {'mute': toggle}})
+        return toggle
 
 
 def get_room(room_id):

@@ -7,7 +7,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from db import get_room_members, get_user, get_user_id, get_messages, is_room_member, get_room, create_dm, find_dm, \
     save_room, get_rooms_for_user, add_room_member, delete_room, is_room_admin, toggle_admin, add_room_members, \
-    get_latest_bucket_number, get_room_admins, add_log_event
+    get_latest_bucket_number, get_room_admins, add_log_event, room_is_mute, toggle_mute
 from helper_functions import parse_json
 from model.room import Message
 
@@ -135,6 +135,26 @@ def single_room(room_id):
         return jsonify(room.create_json())
 
     return jsonify({'Error': ''}), 500
+
+
+@rooms_blueprint.route('/rooms/<room_id>/mute', methods=['GET', 'PUT'])
+@jwt_required()
+def room_mute(room_id):
+    user_id = get_jwt_identity()
+
+    if not is_room_member(room_id, user_id):
+        return jsonify({'Error': 'You are not a member of this room.'}), 403
+
+    if request.method == 'GET':
+        mute_status = room_is_mute(room_id, user_id)
+        return jsonify({
+            'muted': mute_status
+        })
+    elif request.method == 'PUT':
+        mute_status = toggle_mute(room_id, user_id)
+        return jsonify({
+            'muted': mute_status
+        })
 
 
 @rooms_blueprint.route('/rooms/<room_id>', methods=['POST'])
