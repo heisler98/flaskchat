@@ -41,7 +41,7 @@ def get_all_rooms():
 
     for room_raw in room_list_raw:
         room_parsed = parse_json(room_raw)
-        room_object = get_room(str(room_parsed['_id']['room_id']))
+        room_object = get_room(str(room_parsed['_id']['room_id']['$oid']))
         this_room = room_object.create_json()
         rooms_list.append(this_room)
 
