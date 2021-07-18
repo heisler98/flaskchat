@@ -345,7 +345,7 @@ def get_latest_bucket_number(room_id):
     except Exception as e:
         latest_bucket = None
     if not latest_bucket:
-        latest_bucket_messages = None
+        latest_bucket_messages = 0
     else:
         latest_bucket_messages = int(latest_bucket['bucket_number'])
     return latest_bucket_messages
