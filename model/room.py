@@ -28,7 +28,7 @@ class Room:
     def __init__(self, name, room_id, is_dm, bucket_number, created_by):
         self.name = name
         self.messages = []
-        self.ID = str(room_id)
+        self.room_id = str(room_id)
         self.is_dm = is_dm
         self.bucket_number = bucket_number
         self.created_by = created_by
@@ -39,7 +39,7 @@ class Room:
     def create_json(self):
         new_dict = {
             'name': self.name,
-            'ID': self.ID,
+            'room_id': self.room_id,
             'is_dm': self.is_dm,
             'bucket_number': self.bucket_number,
             'created_by': str(self.created_by),

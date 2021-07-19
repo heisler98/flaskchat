@@ -7,8 +7,10 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from db import get_room_members, get_user, get_user_id, get_messages, is_room_member, get_room, create_dm, find_dm, \
     save_room, get_rooms_for_user, add_room_member, delete_room, is_room_admin, toggle_admin, add_room_members, \
-    get_latest_bucket_number, get_room_admins, add_log_event
+    get_latest_bucket_number, get_room_admins, add_log_event, room_is_mute, toggle_mute
 from helper_functions import parse_json
+from model.room import Message
+from model.user import User
 
 rooms_blueprint = Blueprint('rooms_blueprint', __name__)
 
@@ -105,7 +107,7 @@ def view_dm(user_id):
         target_room = find_dm(user_one, user_two)  # find_dm orders params properly to prevent duplicate DMs
         if target_room:
             room_object = get_room(target_room)
-            return jsonify(room_object.created_json()), 200
+            return jsonify(room_object.create_json()), 200
         else:
             new_dm = create_dm(user_one, user_two)
             room_object = get_room(new_dm)
@@ -136,6 +138,26 @@ def single_room(room_id):
     return jsonify({'Error': ''}), 500
 
 
+@rooms_blueprint.route('/rooms/<room_id>/mute', methods=['GET', 'PUT'])
+@jwt_required()
+def room_mute(room_id):
+    user_id = get_jwt_identity()
+
+    if not is_room_member(room_id, user_id):
+        return jsonify({'Error': 'You are not a member of this room.'}), 403
+
+    if request.method == 'GET':
+        mute_status = room_is_mute(room_id, user_id)
+        return jsonify({
+            'muted': mute_status
+        })
+    elif request.method == 'PUT':
+        mute_status = toggle_mute(room_id, user_id)
+        return jsonify({
+            'muted': mute_status
+        })
+
+
 @rooms_blueprint.route('/rooms/<room_id>', methods=['POST'])
 @jwt_required()
 def edit_single_room(room_id):
@@ -153,7 +175,23 @@ def get_room_messages(room_id):
     user_id = get_jwt_identity()
 
     if room and is_room_member(room_id, user_id):
-        return jsonify(room.messages)
+        bucket_number = int(get_latest_bucket_number(room_id))  # defaulted to latest bucket if none given in args
+        requested_bucket_number = int(request.args.get('bucket_number', bucket_number))
+
+        message_bson = get_messages(room_id, requested_bucket_number)
+        messages = []
+        users = {}
+        for item in message_bson:
+            try:
+                user_id = str(item['sender'])
+                if user_id not in users:
+                    users[user_id] = get_user(user_id)
+                # time_sent, text, username, user_id, avatar, image_id)
+                messages.append(Message(item['time_sent'], item['text'], users[user_id].username, users[user_id].ID,
+                                        users[user_id].avatar, str(item['image_id'])).create_json())
+            except Exception as e:
+                current_app.logger.info(e)
+        return jsonify(messages)
     else:
         return jsonify({'Error': 'Room not found'}), 400
 
@@ -172,14 +210,15 @@ def toggle_room_admin(room_id):
 @jwt_required()  # is this checking for perms?
 def single_room_members(room_id):
     user_id = get_jwt_identity()
-
     current_app.logger.info('{} requested members for {}'.format(user_id, room_id))
 
     members_raw = get_room_members(room_id)
     members = []
 
+    if not is_room_member(room_id, user_id):
+        return jsonify({'Error': 'You are not a member of the requested room.'}), 403
+
     for member in members_raw:
-        # print(member)
         try:
             # this is really messy, can this be improved?
             this_user = get_user(str(member['_id']['user_id']))
@@ -188,25 +227,12 @@ def single_room_members(room_id):
         except TypeError as e:
             return jsonify({'Error': e}), 400
         if not this_user:
-            current_app.logger.info('Encountered unknown user {} in {}'.format(this_user, room_id))
             continue
 
-        try:
-            avatar = this_user.avatar
-        except Exception as e:
-            avatar = None
+        new_member = get_user(this_user)
+        members.append(new_member.create_json())
 
-        new_member = {
-            'username': this_user.username,
-            'ID': this_user.ID,
-            'added_at': str(member['added_at']),  # .timestamp(),
-            'added_by': str(member['added_by']),
-            'is_room_admin': member['is_admin'],
-            'avatar': avatar
-        }
-        members.append(parse_json(new_member))
-
-    return jsonify({'members': members}), 200
+    return jsonify(members), 200
 
 
 @rooms_blueprint.route('/rooms/<room_id>/members', methods=['POST'])

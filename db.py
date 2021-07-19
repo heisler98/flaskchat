@@ -17,7 +17,8 @@ from model.room import Message
 class Connect(object):
     @staticmethod
     def get_connection():
-        return MongoClient(host='localhost', port=27017, username='flaskuser', password='193812465340', authSource='admin')
+        return MongoClient(host='localhost', port=27017, username='flaskuser', password='193812465340',
+                           authSource='admin')
 
 
 client = MongoClient(host='localhost', port=27017, username='flaskuser', password='193812465340', authSource='admin')
@@ -155,7 +156,8 @@ def get_user(user_id):
 
     # username, email, password, avatar, real_name, identifier, prev_avatars=None, date_joined=None
     return User(user_data['username'], user_data['email'], user_data['password'],
-                some_avatar, user_data['real_name'], user_data['_id'], date_joined=user_data['date_joined']) if user_data else None
+                some_avatar, user_data['real_name'], user_data['_id'],
+                date_joined=user_data['date_joined']) if user_data else None
 
 
 def get_messages_by_user(username):
@@ -184,21 +186,49 @@ def get_user_id(username):
 def is_room_member(room_id, user_id):
     if not room_id:
         return False
-    output = room_members_collection.count_documents({'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)}})
+    output = room_members_collection.count_documents(
+        {'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)}})
     return output
+
+
+def room_is_mute(room_id, user_id):
+    if not room_id:
+        return False
+    if not is_room_member(room_id, user_id):
+        raise FileNotFoundError('Unauthorized')
+    output = room_members_collection.find_one({'_id.user_id': ObjectId(user_id), '_id.room_id': ObjectId(room_id)},
+                                              {'mute', 1})
+    if not output:
+        room_members_collection.update_one({'_id.user_id': ObjectId(user_id), '_id.room_id': ObjectId(room_id)},
+                                           {'$set': {'mute': False}})
+        return False
+    else:
+        return output
+
+
+def toggle_mute(room_id, user_id):
+    output = room_members_collection.find_one({'_id.user_id': ObjectId(user_id), '_id.room_id': ObjectId(room_id)},
+                                              {'mute', 1})
+    if not is_room_member(room_id, user_id):
+        raise FileNotFoundError('Unauthorized')
+
+    if not output:
+        room_members_collection.update_one({'_id.user_id': ObjectId(user_id), '_id.room_id': ObjectId(room_id)},
+                                           {'$set': {'mute': True}})
+        return True
+    else:
+        toggle = not output
+        room_members_collection.update_one({'_id.user_id': ObjectId(user_id), '_id.room_id': ObjectId(room_id)},
+                                           {'$set': {'mute': toggle}})
+        return toggle
 
 
 def get_room(room_id):
     room = rooms_collection.find_one({'_id': ObjectId(room_id)})
-    try:
-        x = room['bucket_number']
-        if x:
-            bucket_number = room['bucket_number']
-    except KeyError as e:
-        bucket_number = 0
+    bucket_number = get_latest_bucket_number(room_id)
 
     room_object = Room(room['name'], room_id, room['is_dm'], bucket_number, room['created_by'])
-    room_object.set_messages(load_messages(room_id, room.bucket_number))
+    room_object.set_messages(load_messages(room_id, room_object.bucket_number))
     return room_object
 
 
@@ -233,7 +263,8 @@ def create_dm(user_one, user_two):
             room_title = user_one.ID + user_two.ID
 
     room_id = rooms_collection.insert_one(
-        {'name': room_title, 'is_dm': True, 'created_by': None, 'created_at': time.time()}).inserted_id
+        {'name': room_title, 'bucket_number': 0, 'is_dm': True, 'created_by': None,
+         'created_at': time.time()}).inserted_id
 
     # room_id, room_name, user_id, added_by, is_admin=False, is_owner=False, is_dm=False
     add_room_member(room_id, room_title, str(user_one.ID), None, is_dm=True)
@@ -244,7 +275,7 @@ def create_dm(user_one, user_two):
 
 def save_room(room_name, created_by):
     room_id = rooms_collection.insert_one(
-        {'name': room_name, 'is_dm': False, 'created_by': ObjectId(created_by),
+        {'name': room_name, 'is_dm': False, 'created_by': ObjectId(created_by), 'bucket_number': 0,
          'created_at': time.time()}).inserted_id
     return room_id
 
@@ -344,6 +375,7 @@ def load_messages(room_id, bucket_number):
 
 def get_latest_bucket_number(room_id):
     try:
+        # finds the latest bucket in the messages collection
         latest_bucket = list(messages_collection.find({'room_id': ObjectId(room_id)}).sort('_id', -1).limit(1))[0]
     except Exception as e:
         latest_bucket = None
@@ -351,6 +383,10 @@ def get_latest_bucket_number(room_id):
         latest_bucket_messages = 0
     else:
         latest_bucket_messages = int(latest_bucket['bucket_number'])
+
+    # stores the latest buckets number in the rooms DB
+    messages_collection.update_one({'room_id': ObjectId(room_id)}, {'$set': {'bucket_number': latest_bucket_messages}})
+
     return latest_bucket_messages
 
 
