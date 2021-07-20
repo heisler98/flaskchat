@@ -35,4 +35,4 @@ if __name__ == '__main__':
         os.chdir(os.path.dirname(sys.argv[0]))
         socketio.run(app, host='0.0.0.0', debug=True, port=5000)
     else:
-        socketio.run(app, debug=True, port=5001)
+        socketio.run(app, host='0.0.0.0', debug=True, port=5001)
