@@ -229,7 +229,7 @@ def single_room_members(room_id):
         if not this_user:
             continue
 
-        new_member = get_user(this_user)
+        new_member = get_user(this_user.ID)
         members.append(new_member.create_json())
 
     return jsonify(members), 200
