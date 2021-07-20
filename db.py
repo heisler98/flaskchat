@@ -221,10 +221,11 @@ def toggle_mute(room_id, user_id):
 
 
 def get_room(room_id):
+    print(room_id, 'get_room in DB')
     room = rooms_collection.find_one({'_id': ObjectId(room_id)})
     bucket_number = get_latest_bucket_number(room_id)
 
-    room_object = Room(room['name'], room_id, room['is_dm'], bucket_number, room['created_by'])
+    room_object = Room(room['name'], room_id, room['is_dm'], bucket_number, str(room['created_by']))
     room_object.set_messages(load_messages(room_id, room_object.bucket_number))
     return room_object
 
@@ -377,6 +378,7 @@ def get_latest_bucket_number(room_id):
         latest_bucket = list(messages_collection.find({'room_id': ObjectId(room_id)}).sort('_id', -1).limit(1))[0]
     except Exception as e:
         latest_bucket = None
+
     if not latest_bucket:  # no buckets
         latest_bucket_number = 0
     else:
@@ -424,9 +426,11 @@ def save_message(room_id, text, user_id, image_id=None):
 def get_messages(room_id, bucket_number=0):
     if not room_id:
         raise Exception('Invalid room_id.')
+    if bucket_number == 0:
+        return []
 
     try: 
-        messages = messages_collection.find_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number})['messages']
+        messages = messages_collection.find_one({'room_id': ObjectId(str(room_id)), 'bucket_number': bucket_number})['messages']
     except KeyError as e:
         messages = None
 
