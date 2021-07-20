@@ -385,8 +385,10 @@ def get_latest_bucket_number(room_id):
     return latest_bucket_number
 
 
-def save_message(room_id, text, sender, image_id=None):
+def save_message(room_id, text, user_id, image_id=None):
     current_time = time.time()
+
+    user_object = get_user(user_id)
     
     if image_id:
         image_field = ObjectId(image_id)
@@ -399,7 +401,7 @@ def save_message(room_id, text, sender, image_id=None):
 
     if len(messages) < 50:
         # time_sent, text, username, user_id, avatar, image_id
-        new_message = Message(current_time, text, ObjectId(sender), image_field)
+        new_message = Message(current_time, text, username=user_object.username, user_id=user_id, avatar=user_object.avatar, image_id=image_field)
         messages.append(new_message.create_json())
 
         messages_collection.update_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number},
