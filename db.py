@@ -180,6 +180,14 @@ def get_user_id(username):
 # ROOMS
 
 
+def is_room(some_id):
+    query = rooms_collection.find({'_id': ObjectId(some_id)})
+    if query:
+        return True
+    else:
+        return False
+
+
 def is_room_member(room_id, user_id):
     if not room_id:
         return False

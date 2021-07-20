@@ -7,7 +7,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from db import get_room_members, get_user, get_user_id, get_messages, is_room_member, get_room, create_dm, find_dm, \
     save_room, get_rooms_for_user, add_room_member, delete_room, is_room_admin, toggle_admin, add_room_members, \
-    get_latest_bucket_number, get_room_admins, add_log_event, room_is_mute, toggle_mute
+    get_latest_bucket_number, get_room_admins, add_log_event, room_is_mute, toggle_mute, is_room
 from helper_functions import parse_json
 from model.room import Message
 from model.user import User
@@ -72,6 +72,9 @@ def create_room():
 def delete_some_room(room_id):
     user_id = get_jwt_identity()
 
+    if not is_room(room_id):
+        return jsonify({'Error': 'Not Found'}), 404
+
     if is_room_admin(room_id, user_id):
         print('is admin')
         delete_room(room_id)
@@ -124,6 +127,9 @@ def single_room(room_id):
     if room_id == 'create':
         return jsonify({'Error': ''}), 405
 
+    if not is_room(room_id):
+        return jsonify({'Error': 'Not Found'}), 404
+
     user_id = get_jwt_identity()
     room = get_room(room_id)
 
@@ -173,6 +179,12 @@ def edit_single_room(room_id):
 def get_room_messages(room_id):
     room = get_room(room_id)
     user_id = get_jwt_identity()
+
+    if not room:
+        return jsonify({'Error': 'Not Found'}), 404
+
+    if not is_room(room_id):
+        return jsonify({'Error': 'Not Found'}), 404
 
     if room and is_room_member(room_id, user_id):
         bucket_number = int(get_latest_bucket_number(room_id))  # defaulted to latest bucket if none given in args
