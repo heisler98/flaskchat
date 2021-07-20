@@ -185,7 +185,11 @@ def is_room_member(room_id, user_id):
         return False
     output = room_members_collection.count_documents(
         {'_id': {'room_id': ObjectId(room_id), 'user_id': ObjectId(user_id)}})
-    return output
+    
+    if output > 0:
+        return True
+    else:
+        return False
 
 
 def room_is_mute(room_id, user_id):
