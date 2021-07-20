@@ -178,7 +178,11 @@ def get_room_messages(room_id):
         bucket_number = int(get_latest_bucket_number(room_id))  # defaulted to latest bucket if none given in args
         requested_bucket_number = int(request.args.get('bucket_number', bucket_number))
 
-        message_bson = get_messages(room_id, requested_bucket_number)
+        try:
+            message_bson = get_messages(room.room_id, requested_bucket_number)
+        except Exception as e:
+            current_app.logger.info(e)
+        
         messages = []
         users = {}
         for item in message_bson:

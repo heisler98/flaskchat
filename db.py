@@ -422,6 +422,9 @@ def save_message(room_id, text, user_id, image_id=None):
 
 
 def get_messages(room_id, bucket_number=0):
+    if not room_id:
+        raise Exception('Invalid room_id.')
+
     try: 
         messages = messages_collection.find_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number})['messages']
     except KeyError as e:
