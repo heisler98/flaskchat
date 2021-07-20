@@ -101,24 +101,21 @@ def update_user(user_id, itemized_user):
 
 
 def change_user_avatar(user_id, file_id):
-    user = get_user(user_id)
-    current_avatar = users_collection.find_one({'_id': ObjectId(user_id)}, {'avatar': 1})
-    previous_avatars = users_collection.find_one({'_id': ObjectId(user_id)}, {'previous_avatars': 1})
+    try:
+        current_avatar = users_collection.find_one({'_id': ObjectId(user_id)}, {'avatar': 1})['avatar']
+    except KeyError as e:
+        current_avatar = None
+    
+    try:
+        previous_avatars = users_collection.find_one({'_id': ObjectId(user_id)}, {'previous_avatars': 1})['previous_avatars']
+    except KeyError as e:
+        previous_avatars = []
 
-    # this probably needs refactoring
-    if not previous_avatars and not current_avatar:  # user has no avatar and no previous avatars
-        users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'avatar': file_id}})
-        users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'previous_avatars': []}})
-    elif current_avatar and not previous_avatars:  # user has a current avatar but no previous avatars
-        old_avatar = user.avatar
-        previous_avatars = [old_avatar]
-        users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'avatar': file_id}})
-        users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'previous_avatars': previous_avatars}})
-    elif current_avatar and previous_avatars:  # user has both current avatar and previous avatars
-        old_avatar = user.avatar
-        previous_avatars.append(old_avatar)
-        users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'avatar': file_id}})
-        users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'previous_avatars': previous_avatars}})
+    if current_avatar:
+        previous_avatars.append(current_avatar)
+
+    users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'avatar': ObjectId(file_id)}})
+    users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'previous_avatars': previous_avatars}})
 
 
 def get_all_users():
@@ -380,58 +377,41 @@ def get_latest_bucket_number(room_id):
     except Exception as e:
         latest_bucket = None
     if not latest_bucket:  # no buckets
-        latest_bucket_messages = 0
+        latest_bucket_number = 0
     else:
-        latest_bucket_messages = int(latest_bucket['bucket_number'])
+        latest_bucket_number = int(latest_bucket['bucket_number'])
 
-    # stores the latest buckets number in the rooms DB
-    messages_collection.update_one({'room_id': ObjectId(room_id)}, {'$set': {'bucket_number': latest_bucket_messages}})
-
-    return latest_bucket_messages
+    return latest_bucket_number
 
 
-def save_message(room_id, text, sender, bucket_number=0, image_id=None):
+def save_message(room_id, text, sender, image_id=None):
     current_time = time.time()
+    
     if image_id:
         image_field = ObjectId(image_id)
     else:
         image_field = None
+
+    bucket_number = get_latest_bucket_number(room_id)
+    messages = get_messages(room_id, bucket_number)
     new_bucket = False
-    try:
-        latest_bucket = list(messages_collection.find({'room_id': ObjectId(room_id)}).sort('_id', -1).limit(1))[0]
-    except Exception as e:
-        latest_bucket = None  # latest_bucket null if not in DB
 
-    if latest_bucket:  # if latest_bucket exists, grab messages
-        latest_bucket_messages = latest_bucket['messages']
-        if len(latest_bucket_messages) > 50:
-            new_bucket = True
-    else:  # if latest_bucket doesnt exist, create one
-        new_bucket = True
+    if len(messages) < 50:
+        # time_sent, text, username, user_id, avatar, image_id
+        new_message = Message(current_time, text, ObjectId(sender), image_field)
+        messages.append(new_message.create_json())
 
-    if not new_bucket:  # append to existing bucket
-        latest_bucket_messages.append({
-            'text': text,
-            'sender': ObjectId(sender),
-            'time_sent': current_time,
-            'image_id': image_field
-        })
         messages_collection.update_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number},
-                                       {'$set': {'messages': latest_bucket_messages}})
-    else:  # create a new bucket
+                                       {'$set': {'messages': messages}})
+    else:
+        new_message = Message(current_time, text, ObjectId(sender), image_field)
+        new_message_list = [new_message.create_json()]
+
         bucket_number += 1
-        new_bucket_messages = [
-            {
-                'text': text,
-                'sender': ObjectId(sender),
-                'time_sent': current_time,
-                'image_id': image_field
-            }
-        ]
         new_bucket = {
             'room_id': ObjectId(room_id),
             'bucket_number': bucket_number,
-            'messages': new_bucket_messages
+            'messages': new_message_list
         }
         messages_collection.insert_one(new_bucket)
 
@@ -439,14 +419,15 @@ def save_message(room_id, text, sender, bucket_number=0, image_id=None):
 
 
 def get_messages(room_id, bucket_number=0):
-    try:
-        some_bucket = messages_collection.find_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number})
-        messages = list(some_bucket['messages'])
+    try: 
+        messages = messages_collection.find_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number})['messages']
+    except KeyError as e:
+        messages = None
+
+    if messages:
         return messages
-    except Exception as e:
-        print(e)
+    else:
         return []
-    return []
 
 
 def add_reaction(message_id, user_id, reaction_id):
