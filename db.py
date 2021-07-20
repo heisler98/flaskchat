@@ -224,7 +224,7 @@ def get_room(room_id):
     room = rooms_collection.find_one({'_id': ObjectId(room_id)})
     bucket_number = get_latest_bucket_number(room_id)
 
-    room_object = Room(room['name'], room_id, room['is_dm'], bucket_number, str(room['created_by']))
+    room_object = Room(room['name'], str(room_id), room['is_dm'], bucket_number, str(room['created_by']))
     room_object.set_messages(load_messages(room_id, room_object.bucket_number))
     return room_object
 
@@ -383,6 +383,8 @@ def get_latest_bucket_number(room_id):
     else:
         latest_bucket_number = int(latest_bucket['bucket_number'])
 
+    print('Get latest bucket number', room_id, latest_bucket_number)
+
     return latest_bucket_number
 
 
@@ -428,10 +430,13 @@ def get_messages(room_id, bucket_number=0):
     if bucket_number == 0:
         return []
 
-    try: 
+    try:
         messages = messages_collection.find_one({'room_id': ObjectId(str(room_id)), 'bucket_number': bucket_number})['messages']
+        print('get_messages', room_id, bucket_number, messages)
     except KeyError as e:
         messages = None
+
+    print('get_messages', room_id, bucket_number)
 
     if messages:
         return messages

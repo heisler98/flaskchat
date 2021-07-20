@@ -9,9 +9,9 @@ class Message:
         self.time_sent = time_sent
         self.text = text
         self.username = username
-        self.user_id = user_id
+        self.user_id = str(user_id)
         self.avatar = avatar
-        self.image_id = image_id
+        self.image_id = str(image_id)
 
     def create_json(self):
         if self.image_id != None:

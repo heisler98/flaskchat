@@ -179,7 +179,7 @@ def get_room_messages(room_id):
         requested_bucket_number = int(request.args.get('bucket_number', bucket_number))
 
         try:
-            message_bson = get_messages(room.room_id, requested_bucket_number)
+            message_bson = get_messages(str(room.room_id), requested_bucket_number)
 
             messages = []
             users = {}
