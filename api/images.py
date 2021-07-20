@@ -99,7 +99,7 @@ def get_image(upload_id):
         if not is_room_member(image_room, user_id) and not target_image['avatar']:  # avatars can be accessed anywhere
             return jsonify({'Error': 'Not authorized'}), 403
 
-        file_path = os.path.join('/tiny/flaskchat', current_app.config['UPLOAD_FOLDER'], target_image['location'])
+        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], target_image['location'])
         current_app.logger.info(file_path)
         if os.path.exists(file_path):
             return send_file(file_path)

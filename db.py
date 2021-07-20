@@ -350,6 +350,7 @@ def add_reaction(message, reaction, username):
 # MESSAGES
 
 
+# turns a list (from DB) of jsons into a list of message objects
 def load_messages(room_id, bucket_number):
     message_bson = get_messages(room_id, bucket_number)
     messages = []

@@ -149,7 +149,7 @@ def handle_send_message_event(data):
                     apns_targets.extend(user_apn_tokens)
         # room_id, text, sender, bucket_number=0, image_id=None
         handle_apns_load(apns_targets, data)
-        save_message(room, message, user_id, iimage_id)  # to db
+        save_message(room, message, user_id, image_id)  # to db
     else:
         current_app.logger.info("{} not authorized to send to {}".format(username, room))
 
