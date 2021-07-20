@@ -30,7 +30,7 @@ def get_rooms():
     for item in room_list:
         id_list.append(item['_id']['room_id']['$oid'])
 
-    return jsonify({'rooms': id_list}), 200
+    return jsonify(id_list), 200
 
 
 @rooms_blueprint.route('/rooms/all', methods=['GET'])
@@ -180,21 +180,22 @@ def get_room_messages(room_id):
 
         try:
             message_bson = get_messages(room.room_id, requested_bucket_number)
+
+            messages = []
+            users = {}
+            for item in message_bson:
+                try:
+                    user_id = str(item['sender'])
+                    if user_id not in users:
+                        users[user_id] = get_user(user_id)
+                    # time_sent, text, username, user_id, avatar, image_id)
+                    messages.append(Message(item['time_sent'], item['text'], users[user_id].username, users[user_id].ID,
+                                            users[user_id].avatar, str(item['image_id'])).create_json())
+                except Exception as e:
+                    current_app.logger.info(e)
         except Exception as e:
             current_app.logger.info(e)
         
-        messages = []
-        users = {}
-        for item in message_bson:
-            try:
-                user_id = str(item['sender'])
-                if user_id not in users:
-                    users[user_id] = get_user(user_id)
-                # time_sent, text, username, user_id, avatar, image_id)
-                messages.append(Message(item['time_sent'], item['text'], users[user_id].username, users[user_id].ID,
-                                        users[user_id].avatar, str(item['image_id'])).create_json())
-            except Exception as e:
-                current_app.logger.info(e)
         return jsonify(messages)
     else:
         return jsonify({'Error': 'Room not found'}), 400

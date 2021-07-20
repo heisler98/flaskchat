@@ -221,7 +221,6 @@ def toggle_mute(room_id, user_id):
 
 
 def get_room(room_id):
-    print(room_id, 'get_room in DB')
     room = rooms_collection.find_one({'_id': ObjectId(room_id)})
     bucket_number = get_latest_bucket_number(room_id)
 
