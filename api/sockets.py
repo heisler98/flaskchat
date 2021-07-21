@@ -11,7 +11,7 @@ from .app import socketio
 import redis
 
 from db import save_message, get_room_members, get_user_id, update_checkout, get_user, get_apn, add_reaction, \
-    get_latest_bucket_number
+    get_latest_bucket_number, purge_apn
 
 sockets_blueprint = Blueprint('sockets_blueprint', __name__)
 global connected_sockets
@@ -157,11 +157,15 @@ def handle_send_message_event(data):
 
 
 def handle_apns_load(apns_targets, data):
+    bad_tokens = []
     for token in apns_targets:
         new_payload = notification_interface.payload_message(data['username'], data['text'])
-        resp = notification_interface.send_payload(new_payload, token)
-        if resp.status != 200:
-            current_app.logger.info('{} : {} as response from APNS for {}.'.format(resp.status, resp.read(), token))
+        success = notification_interface.send_payload(new_payload, token)
+        if not success:
+            bad_tokens.append()
+    for bad_token in bad_tokens:
+        purge_apn(bad_token)
+        
 
 
 @socketio.on('send_react')

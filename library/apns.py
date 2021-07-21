@@ -52,10 +52,13 @@ class NotificationSystem:
 
         resp = self.conn.get_response()
 
-        print(resp.status)
+        # print(resp.status)
         print(resp.read())
 
-        return resp
+        if 'BadDeviceToken' in resp.read() or resp.status == 410 or resp.status == 400:
+            return False
+
+        return True
 
     def payload_message(self, author, body):
         payload_data = {

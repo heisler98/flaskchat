@@ -69,6 +69,10 @@ def store_apn(user_id, token):
         return 'Yes'
 
 
+def purge_apn(token):
+    users_collection.update({}, {'$pull': {'apn': token}})
+
+
 def get_apn(user_id):
     try:
         apn_tokens = users_collection.find_one({'_id': ObjectId(user_id)}, {'apn': 1})['apn']
