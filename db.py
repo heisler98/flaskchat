@@ -134,8 +134,8 @@ def get_all_users():
 
 # REQUIRES user_id, NOT username
 def get_user(user_id):
-    if not user_id:
-        raise TypeError
+    if type(user_id) == User:
+        raise TypeError('Using User object instead of user_id.')
 
     user_id = str(user_id)  # generally redundant
     # print('DB: Attempting to fetch', user_id)
@@ -233,6 +233,9 @@ def toggle_mute(room_id, user_id):
 
 
 def get_room(room_id):
+    if type(room_id) == Room:
+        raise TypeError('Using Room object instead of room_id.')
+
     room = rooms_collection.find_one({'_id': ObjectId(room_id)})
     bucket_number = get_latest_bucket_number(room_id)
 
@@ -364,6 +367,9 @@ def add_reaction(message, reaction, username):
 
 # turns a list (from DB) of jsons into a list of message objects
 def load_messages(room_id, bucket_number):
+    if type(room_id) == Room:
+        raise TypeError('Using Room object instead of room_id.')
+
     message_bson = get_messages(room_id, bucket_number)
 
     messages = []
@@ -385,6 +391,9 @@ def load_messages(room_id, bucket_number):
 
 
 def get_latest_bucket_number(room_id):
+    if type(room_id) == Room:
+        raise TypeError('Using Room object instead of room_id.')
+
     try:
         # finds the latest bucket in the messages collection
         latest_bucket = list(messages_collection.find({'room_id': ObjectId(room_id)}).sort('_id', -1).limit(1))[0]
@@ -401,7 +410,12 @@ def get_latest_bucket_number(room_id):
     return latest_bucket_number
 
 
-def save_message(room_id, text, user_id, image_id=None):
+def save_message(room_id, text, sender, image_id=None):
+    if type(room_id) == Room:
+        raise TypeError('Using Room object instead of room_id.')
+    if type(sender) == User:
+        raise TypeError('Using User object instead of user_id.')
+
     current_time = time.time()
     print('DB: SAVE_MESSAGE', room_id, text, user_id, current_time)
 
@@ -439,13 +453,10 @@ def save_message(room_id, text, user_id, image_id=None):
 
 
 def get_messages(room_id, bucket_number=0):
-    if not room_id:
-        raise Exception('Invalid room_id.')
-    if bucket_number == 0:
-        return []
+    if type(room_id) == Room:
+        raise TypeError('Using Room object instead of room_id.')
 
-    try:
-        print('ooh!')
+    try: 
         messages = messages_collection.find_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number})['messages']
         print('get_messages', room_id, bucket_number, messages)
     except KeyError as e:
