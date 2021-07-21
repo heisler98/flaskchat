@@ -420,7 +420,22 @@ def save_message(room_id, text, user_id, image_id=None):
 
     bucket_number = get_latest_bucket_number(room_id)
     messages = get_messages(room_id, bucket_number)
+
     new_bucket = False
+
+    if not messages:
+        new_message = Message(current_time, text, ObjectId(user_id), image_field)
+        new_message_list = [new_message.create_json()]
+
+        bucket_number += 1
+        new_bucket = {
+            'room_id': ObjectId(room_id),
+            'bucket_number': bucket_number,
+            'messages': new_message_list
+        }
+        messages_collection.insert_one(new_bucket)
+
+        return bucket_number
 
     if len(messages) < 50:
         # time_sent, text, username, user_id, avatar, image_id
@@ -446,6 +461,9 @@ def save_message(room_id, text, user_id, image_id=None):
 def get_messages(room_id, bucket_number=0):
     if type(room_id) == Room:
         raise TypeError('Using Room object instead of room_id.')
+
+    if bucket_number == 0:
+        return None
 
     try: 
         messages = messages_collection.find_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number})['messages']

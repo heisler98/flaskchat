@@ -195,9 +195,12 @@ def get_room_messages(room_id):
 
         try:
             message_bson = get_messages(str(room.room_id), requested_bucket_number)
+
+            if not message_bson:
+                return jsonify([]), 200
             
             if len(message_bson) == 0:
-                return jsonify([])
+                return jsonify([]), 200
 
             messages = []
             users = {}
@@ -308,6 +311,8 @@ def search_messages():  # !! this is a slow (brute-force) implementation of sear
         bucket_max = get_latest_bucket_number(room)
         for bucket in range(1, bucket_max):
             messages = get_messages(room, bucket)
+            if not messages:
+                continue
             for message in messages:
                 for word in key_words:
                     if word in message:
