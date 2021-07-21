@@ -195,7 +195,7 @@ def get_room_messages(room_id):
 
         try:
             message_bson = get_messages(str(room.room_id), requested_bucket_number)
-            return message_bson
+            return jsonify(message_bson)
 
             if not message_bson:
                 return jsonify([]), 200
