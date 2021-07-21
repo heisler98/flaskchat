@@ -100,8 +100,8 @@ def get_room_more(room_id):
 def view_dm(user_id):
     auth_user_id = get_jwt_identity()
 
-    user_one = get_user(auth_user_id)
-    user_two = get_user(user_id)
+    user_one = get_user(str(auth_user_id))
+    user_two = get_user(str(user_id))
 
     if user_one.ID == user_two.ID:
         return jsonify({'Error': 'Requested DM with self.'}), 400
