@@ -162,7 +162,7 @@ def handle_apns_load(apns_targets, data):
         new_payload = notification_interface.payload_message(data['username'], data['text'])
         success = notification_interface.send_payload(new_payload, token)
         if not success:
-            bad_tokens.append()
+            bad_tokens.append(token)
     for bad_token in bad_tokens:
         purge_apn(bad_token)
         

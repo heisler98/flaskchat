@@ -55,7 +55,7 @@ class NotificationSystem:
         # print(resp.status)
         print(resp.read())
 
-        if 'BadDeviceToken' in resp.read() or resp.status == 410 or resp.status == 400:
+        if resp.status == 410 or resp.status == 400:
             return False
 
         return True

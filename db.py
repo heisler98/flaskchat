@@ -441,7 +441,7 @@ def save_message(room_id, text, user_id, image_id=None):
 
         return bucket_number
 
-    if len(messages) < 50:
+    if len(messages) < 51:
         messages_collection.update_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number},
                                        {'$push': {'messages': new_message.create_json()}})
     else:  # need a new bucket
