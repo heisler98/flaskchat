@@ -237,7 +237,7 @@ def get_room(room_id):
     bucket_number = get_latest_bucket_number(room_id)
 
     room_object = Room(room['name'], str(room_id), room['is_dm'], bucket_number, str(room['created_by']))
-    room_object.set_messages(load_messages(room_id, room_object.bucket_number))
+    room_object.set_messages(load_messages(room_id, room_object.bucket_number))  # this line may be causing issues
     return room_object
 
 
@@ -365,6 +365,7 @@ def add_reaction(message, reaction, username):
 # turns a list (from DB) of jsons into a list of message objects
 def load_messages(room_id, bucket_number):
     message_bson = get_messages(room_id, bucket_number)
+
     messages = []
     users = {}  # for tracking users already obtained
 
@@ -438,6 +439,7 @@ def save_message(room_id, text, user_id, image_id=None):
 
 
 def get_messages(room_id, bucket_number=0):
+    return []
     if not room_id:
         raise Exception('Invalid room_id.')
     if bucket_number == 0:
