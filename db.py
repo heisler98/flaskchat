@@ -411,20 +411,18 @@ def save_message(room_id, text, user_id, image_id=None):
     current_time = time.time()
     print('DB: SAVE_MESSAGE', room_id, text, user_id, current_time)
 
-    user_object = get_user(user_id)
-    
     if image_id:
         image_field = ObjectId(image_id)
     else:
         image_field = None
 
-    bucket_number = get_latest_bucket_number(room_id)
-    messages = get_messages(room_id, bucket_number)
+    user_object = get_user(user_id)
+    new_message = Message(current_time, text, username=user_object.username, user_id=user_id, avatar=user_object.avatar, image_id=image_field)
 
-    new_bucket = False
+    bucket_number = get_latest_bucket_number(room_id)  # return 0 if no buckets
+    messages = get_messages(room_id, bucket_number)  # return null if bucket_number == 0
 
     if not messages:
-        new_message = Message(current_time, text, ObjectId(user_id), image_field)
         new_message_list = [new_message.create_json()]
 
         bucket_number += 1
@@ -438,13 +436,9 @@ def save_message(room_id, text, user_id, image_id=None):
         return bucket_number
 
     if len(messages) < 50:
-        # time_sent, text, username, user_id, avatar, image_id
-        new_message = Message(current_time, text, username=user_object.username, user_id=user_id, avatar=user_object.avatar, image_id=image_field)
-
         messages_collection.update_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number},
                                        {'$push': {'messages': new_message.create_json()}})
-    else:
-        new_message = Message(current_time, text, ObjectId(user_id), image_field)
+    else:  # need a new bucket
         new_message_list = [new_message.create_json()]
 
         bucket_number += 1
