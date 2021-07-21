@@ -453,7 +453,7 @@ def get_messages(room_id, bucket_number=0):
     except TypeError as e:
         print(messages_collection.find_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number}))
         print('TYPE ERROR')
-        return []
+        return [room_id, bucket_number, 'AHHH']
 
     print('get_messages', room_id, bucket_number)
 
