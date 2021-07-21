@@ -103,6 +103,7 @@ def update_last_seen(username):
 @socketio.on('send_message')
 @jwt_required(fresh=True)
 def handle_send_message_event(data):
+    current_app.logger.info('Caught message from client.')
     user_id = get_jwt_identity()
 
     username = data['username']
