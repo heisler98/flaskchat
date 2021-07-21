@@ -234,7 +234,7 @@ def get_room(room_id):
     # message_bson = 
 
     room_object = Room(room['name'], str(room_id), room['is_dm'], bucket_number, str(room['created_by']))
-    room_object.set_messages(get_messages(str(room.room_id), bucket_number))  # this line may be causing issues
+    room_object.set_messages(get_messages(str(room_id), bucket_number))  # this line may be causing issues
     return room_object
 
 
