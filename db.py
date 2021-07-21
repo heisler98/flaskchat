@@ -105,17 +105,9 @@ def change_user_avatar(user_id, file_id):
         current_avatar = users_collection.find_one({'_id': ObjectId(user_id)}, {'avatar': 1})['avatar']
     except KeyError as e:
         current_avatar = None
-    
-    try:
-        previous_avatars = users_collection.find_one({'_id': ObjectId(user_id)}, {'previous_avatars': 1})['previous_avatars']
-    except KeyError as e:
-        previous_avatars = []
-
-    if current_avatar:
-        previous_avatars.append(current_avatar)
 
     users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'avatar': ObjectId(file_id)}})
-    users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'previous_avatars': previous_avatars}})
+    users_collection.update_one({'_id': ObjectId(user_id)}, {'$push': {'previous_avatars': current_avatar}}, upsert=True)
 
 
 def get_all_users():
@@ -410,7 +402,7 @@ def get_latest_bucket_number(room_id):
     return latest_bucket_number
 
 
-def save_message(room_id, text, sender, image_id=None):
+def save_message(room_id, text, user_id, image_id=None):
     if type(room_id) == Room:
         raise TypeError('Using Room object instead of room_id.')
     if type(sender) == User:
@@ -433,12 +425,11 @@ def save_message(room_id, text, sender, image_id=None):
     if len(messages) < 50:
         # time_sent, text, username, user_id, avatar, image_id
         new_message = Message(current_time, text, username=user_object.username, user_id=user_id, avatar=user_object.avatar, image_id=image_field)
-        messages.append(new_message.create_json())
 
         messages_collection.update_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number},
-                                       {'$set': {'messages': messages}})
+                                       {'$push': {'messages': new_message.create_json()}})
     else:
-        new_message = Message(current_time, text, ObjectId(sender), image_field)
+        new_message = Message(current_time, text, ObjectId(user_id), image_field)
         new_message_list = [new_message.create_json()]
 
         bucket_number += 1
