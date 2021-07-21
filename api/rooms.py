@@ -210,10 +210,12 @@ def get_room_messages(room_id):
                                             users[user_id].avatar, str(item['image_id'])).create_json())
                 except Exception as e:
                     current_app.logger.info(e)
+
+            return jsonify(messages)
         except Exception as e:
             current_app.logger.info(e)
         
-        return jsonify(messages)
+        return jsonify({'e': 'e'}), 500
     else:
         return jsonify({'Error': 'Room not found'}), 400
 
