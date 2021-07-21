@@ -444,7 +444,8 @@ def get_messages(room_id, bucket_number=0):
         return []
 
     try:
-        messages = messages_collection.find_one({'room_id': ObjectId(str(room_id)), 'bucket_number': bucket_number})['messages']
+        print('ooh!')
+        messages = messages_collection.find_one({'room_id': ObjectId(room_id), 'bucket_number': bucket_number})['messages']
         print('get_messages', room_id, bucket_number, messages)
     except KeyError as e:
         messages = None

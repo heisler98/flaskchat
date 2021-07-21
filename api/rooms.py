@@ -188,12 +188,12 @@ def get_room_messages(room_id):
 
     if room and is_room_member(room_id, user_id):
         bucket_number = get_latest_bucket_number(room_id)  # defaulted to latest bucket if none given in args
-        requested_bucket_number = int(request.args.get('bucket_number', default=bucket_number))
+        requested_bucket_number = 1 #int(request.args.get('bucket_number', default=bucket_number))
         
         if not requested_bucket_number:
             return jsonify({'Error': 'Stinky stinky'}), 500
 
-        current_app.logger.info(str(requested_bucket_number + '##################################'))
+        current_app.logger.info(str(str(requested_bucket_number) + '##################################'))
 
         try:
             message_bson = get_messages(str(room.room_id), requested_bucket_number)
