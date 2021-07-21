@@ -193,6 +193,8 @@ def get_room_messages(room_id):
         if not requested_bucket_number:
             return jsonify({'Error': 'Stinky stinky'}), 500
 
+        current_app.logger.info(str(requested_bucket_number + '##################################'))
+
         try:
             message_bson = get_messages(str(room.room_id), requested_bucket_number)
 

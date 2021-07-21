@@ -402,6 +402,7 @@ def get_latest_bucket_number(room_id):
 
 def save_message(room_id, text, user_id, image_id=None):
     current_time = time.time()
+    print('DB: SAVE_MESSAGE', room_id, text, user_id, current_time)
 
     user_object = get_user(user_id)
     
