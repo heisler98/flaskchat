@@ -195,6 +195,7 @@ def get_room_messages(room_id):
 
         try:
             message_bson = get_messages(str(room.room_id), requested_bucket_number)
+            current_app.logger.info(str(message_bson))
             if len(message_bson) == 0:
                 return jsonify([])
 
