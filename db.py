@@ -439,7 +439,6 @@ def save_message(room_id, text, user_id, image_id=None):
 
 
 def get_messages(room_id, bucket_number=0):
-    return []
     if not room_id:
         raise Exception('Invalid room_id.')
     if bucket_number == 0:
