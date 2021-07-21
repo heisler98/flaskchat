@@ -7,7 +7,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from db import get_room_members, get_user, get_user_id, get_messages, is_room_member, get_room, create_dm, find_dm, \
     save_room, get_rooms_for_user, add_room_member, delete_room, is_room_admin, toggle_admin, add_room_members, \
-    get_latest_bucket_number, get_room_admins, add_log_event, room_is_mute, toggle_mute
+    get_latest_bucket_number, get_room_admins, add_log_event, room_is_mute, toggle_mute, is_room
 from helper_functions import parse_json
 from model.room import Message
 from model.user import User
@@ -30,7 +30,7 @@ def get_rooms():
     for item in room_list:
         id_list.append(item['_id']['room_id']['$oid'])
 
-    return jsonify({'rooms': id_list}), 200
+    return jsonify(id_list), 200
 
 
 @rooms_blueprint.route('/rooms/all', methods=['GET'])
@@ -71,6 +71,9 @@ def create_room():
 @jwt_required()
 def delete_some_room(room_id):
     user_id = get_jwt_identity()
+
+    if not is_room(room_id):
+        return jsonify({'Error': 'Not Found'}), 404
 
     if is_room_admin(room_id, user_id):
         print('is admin')
@@ -124,6 +127,9 @@ def single_room(room_id):
     if room_id == 'create':
         return jsonify({'Error': ''}), 405
 
+    if not is_room(room_id):
+        return jsonify({'Error': 'Not Found'}), 404
+
     user_id = get_jwt_identity()
     room = get_room(room_id)
 
@@ -174,24 +180,43 @@ def get_room_messages(room_id):
     room = get_room(room_id)
     user_id = get_jwt_identity()
 
-    if room and is_room_member(room_id, user_id):
-        bucket_number = int(get_latest_bucket_number(room_id))  # defaulted to latest bucket if none given in args
-        requested_bucket_number = int(request.args.get('bucket_number', bucket_number))
+    if not room:
+        return jsonify({'Error': 'Not Found'}), 404
 
-        message_bson = get_messages(room_id, requested_bucket_number)
-        messages = []
-        users = {}
-        for item in message_bson:
-            try:
-                user_id = str(item['sender'])
-                if user_id not in users:
-                    users[user_id] = get_user(user_id)
-                # time_sent, text, username, user_id, avatar, image_id)
-                messages.append(Message(item['time_sent'], item['text'], users[user_id].username, users[user_id].ID,
-                                        users[user_id].avatar, str(item['image_id'])).create_json())
-            except Exception as e:
-                current_app.logger.info(e)
-        return jsonify(messages)
+    if not is_room(room_id):
+        return jsonify({'Error': 'Not Found'}), 404
+
+    if room and is_room_member(room_id, user_id):
+        bucket_number = get_latest_bucket_number(room_id)  # defaulted to latest bucket if none given in args
+        requested_bucket_number = 1 #int(request.args.get('bucket_number', default=bucket_number))
+        
+        if not requested_bucket_number:
+            return jsonify({'Error': 'Stinky stinky'}), 500
+
+        try:
+            message_bson = get_messages(str(room.room_id), requested_bucket_number)
+            
+            if len(message_bson) == 0:
+                return jsonify([])
+
+            messages = []
+            users = {}
+            for item in message_bson:
+                try:
+                    user_id = str(item['sender'])
+                    if user_id not in users:
+                        users[user_id] = get_user(user_id)
+                    # time_sent, text, username, user_id, avatar, image_id)
+                    messages.append(Message(item['time_sent'], item['text'], users[user_id].username, users[user_id].ID,
+                                            users[user_id].avatar, str(item['image_id'])).create_json())
+                except Exception as e:
+                    current_app.logger.info(e)
+
+            return jsonify(messages)
+        except Exception as e:
+            current_app.logger.info(e)
+        
+        return jsonify({'e': 'e'}), 500
     else:
         return jsonify({'Error': 'Room not found'}), 400
 
