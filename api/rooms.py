@@ -100,8 +100,8 @@ def get_room_more(room_id):
 def view_dm(user_id):
     auth_user_id = get_jwt_identity()
 
-    user_one = get_user(auth_user_id)
-    user_two = get_user(user_id)
+    user_one = get_user(str(auth_user_id))
+    user_two = get_user(str(user_id))
 
     if user_one.ID == user_two.ID:
         return jsonify({'Error': 'Requested DM with self.'}), 400
@@ -188,16 +188,20 @@ def get_room_messages(room_id):
 
     if room and is_room_member(room_id, user_id):
         bucket_number = get_latest_bucket_number(room_id)  # defaulted to latest bucket if none given in args
-        requested_bucket_number = 1 #int(request.args.get('bucket_number', default=bucket_number))
+        requested_bucket_number = int(request.args.get('bucket_number', default=bucket_number))
         
         if not requested_bucket_number:
             return jsonify({'Error': 'Stinky stinky'}), 500
 
         try:
             message_bson = get_messages(str(room.room_id), requested_bucket_number)
+            return jsonify(message_bson)
+
+            if not message_bson:
+                return jsonify([]), 200
             
             if len(message_bson) == 0:
-                return jsonify([])
+                return jsonify([]), 200
 
             messages = []
             users = {}
@@ -308,6 +312,8 @@ def search_messages():  # !! this is a slow (brute-force) implementation of sear
         bucket_max = get_latest_bucket_number(room)
         for bucket in range(1, bucket_max):
             messages = get_messages(room, bucket)
+            if not messages:
+                continue
             for message in messages:
                 for word in key_words:
                     if word in message:

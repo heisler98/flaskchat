@@ -26,7 +26,7 @@ def create_app(debug=True):
     app.config["JWT_HEADER_NAME"] = 'tasty_token'
 
     # app.config['UPLOAD_FOLDER'] = '/tiny/development/uploads' # dev
-    app.config['UPLOAD_FOLDER'] = ' /tiny/flaskchat/uploads' # prod
+    app.config['UPLOAD_FOLDER'] = '/tiny/flaskchat/uploads' # prod
 
     limiter = Limiter(
         app,
