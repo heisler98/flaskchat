@@ -171,7 +171,7 @@ def edit_single_room(room_id):
     auth_user = get_user(auth_user_id)
 
     json_input = request.get_json(force=True)
-    changed_room = json_input['user'].items()
+    changed_room = json_input['room'].items()
 
     if not is_room_member(room_id, auth_user_id):
         return jsonify({'Error': 'Not authorized'}), 403
