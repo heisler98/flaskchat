@@ -236,9 +236,9 @@ def get_room(room_id):
     room = rooms_collection.find_one({'_id': ObjectId(room_id)})
     bucket_number = get_latest_bucket_number(room_id)
     
-    if room['emoji']:
+    try:
         emoji = room['emoji']
-    else:
+    except TypeError as e:
         emoji = None
 
     room_object = Room(room['name'], str(room_id), room['is_dm'], bucket_number, str(room['created_by'], emoji=emoji))
