@@ -50,23 +50,21 @@ def get_me():
 @users_blueprint.route('/users/<user_id>/password', methods=['POST'])
 @jwt_required(fresh=True)
 def change_password(user_id):
-    user_id = get_jwt_identity()
-    user = get_user(user_id)
+    auth_user_id = get_jwt_identity()
+    auth_user = get_user(auth_user_id)
     json_input = request.get_json()
 
     if request.method == 'POST':
-        current_app.logger.info('NOTE: {} changing their password'.format(user.username, user_id))
+        current_app.logger.info('NOTE: {} changing their password'.format(auth_user.username, user_id))
         new_password = json_input['new_password']
         old_password = json_input['old_password']
-        try:
-            user_id = get_user_id(user.username)
-            user = get_user(user_id)
-        except Exception as e:  # need to be more specific
-            return jsonify({'Error': ''})
 
-        if user and user.check_password(old_password):
-            change_user_password(user.username, new_password)
-            add_log_event(200, user.username, 'Password', ip_address=request.remote_addr)
+        if len(new_password) == 0 or len(old_password) == 0:
+            return jsonify({'Error': 'Empty input fields.'}), 400
+
+        if auth_user and auth_user.check_password(old_password):
+            change_user_password(auth_user_id, new_password)
+            add_log_event(200, auth_user.ID, 'Password', ip_address=request.remote_addr)
 
             return jsonify({'Success': 'Password changed'}), 200
         else:

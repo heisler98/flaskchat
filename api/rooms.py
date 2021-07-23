@@ -235,6 +235,46 @@ def toggle_room_admin(room_id):
     return jsonify({'Success': 'Toggled admin'})
 
 
+# this code was saved from a trashed commit, need to reintegrate it later
+@rooms_blueprint.route('/rooms/<room_id>/members_test', methods=['GET', 'POST'])
+@jwt_required()
+def single_room_members_test(room_id):
+    user_id = get_jwt_identity()
+    current_app.logger.info('{} requested members for {}'.format(user_id, room_id))
+
+    members_from_db = get_room_members(room_id)
+    this_room = get_room(room_id)
+    members = []
+
+    if not this_room or not members_from_db:
+        return jsonify({'Error': 'Room not found.'}), 404
+
+    if not is_room_member(room_id, user_id):
+        return jsonify({'Error': 'You are not a member of the requested room.'}), 403
+
+    if request.method == 'GET':
+        for member in members_from_db:
+            try:
+                some_user = get_user(str(member['_id']['user_id']))
+            except KeyError as e:
+                continue
+            except TypeError as e:
+                return jsonify({'Error': e}), 400
+            if not some_user:
+                continue
+
+            members.append(some_user.create_json())
+
+        return jsonify(members), 200
+    elif request.method == 'POST':
+        json_input = request.get_json(force=True)
+
+        try:
+            new_members = json_input['add_members']
+        except Exception as e:
+            return jsonify({'Error': 'Bad input'}), 400
+
+
 @rooms_blueprint.route('/rooms/<room_id>/members', methods=['GET'])
 @jwt_required()  # is this checking for perms?
 def single_room_members(room_id):
