@@ -238,7 +238,7 @@ def get_room(room_id):
     
     try:
         emoji = room['emoji']
-    except TypeError as e:
+    except KeyError as e:
         emoji = None
 
     room_object = Room(room['name'], str(room_id), room['is_dm'], bucket_number, str(room['created_by'], emoji=emoji))
