@@ -114,12 +114,15 @@ def handle_send_message_event(data):
     username = data['username']
     room = data['room']  # client must pass room id here
     message = data['text']
-    if len(message) == 0:
-        return None
+    
     try:
         image_id = data['image_id']
     except Exception as e:
         image_id = None
+
+    if len(message) == 0 and not image_id:
+        return None
+    
     time_sent = time.time()
     data['time_sent'] = time_sent
     user = get_user(user_id)
