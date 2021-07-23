@@ -39,10 +39,9 @@ images_collection = chat_db.get_collection('images')
 
 # create a new user record, used for signups
 def save_user(username, email, password, fullname):
-    if users_collection.find_one({'username': username}, {'username': 1}):
+    existing_username = users_collection.find_one({'username': username}, {'username': 1})
+    if existing_username:
         raise DuplicateKeyError('Username already exists.')
-    if users_collection.find_one({'email': email}, {'email': 1}):
-        raise DuplicateKeyError('Email already exists.')
 
     now = time.time()
     password_hash = generate_password_hash(password)
@@ -94,10 +93,10 @@ def crown_user(username, status=True):
     users_collection.update_one({'username': username}, {'$set': {'god': status}})
 
 
-def change_user_password(user_id, new_password):
+def change_user_password(username, new_password):
     password_hash = generate_password_hash(new_password)
     # now = datetime.now()
-    users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'password': password_hash}})
+    users_collection.update_one({'username': username}, {'$set': {'password': password_hash}})
 
 
 def update_user(user_id, itemized_user):
@@ -235,15 +234,10 @@ def get_room(room_id):
 
     room = rooms_collection.find_one({'_id': ObjectId(room_id)})
     bucket_number = get_latest_bucket_number(room_id)
-    
-    try:
-        emoji = room['emoji']
-    except KeyError as e:
-        emoji = ''
-    except TypeError as e:
-        emoji = ''
 
-    room_object = Room(room['name'], str(room_id), room['is_dm'], bucket_number, str(room['created_by']), emoji=emoji)
+    # message_bson = 
+
+    room_object = Room(room['name'], str(room_id), room['is_dm'], bucket_number, str(room['created_by']))
     room_object.set_messages(get_messages(str(room_id), bucket_number))  # this line may be causing issues
     return room_object
 
@@ -296,9 +290,9 @@ def save_room(room_name, created_by):
     return room_id
 
 
-def update_room(room_id, itemized_room):
-    for kvp in itemized_room:
-        users_collection.update_one({'_id': ObjectId(room_id)}, {'$set': {kvp[0]: kvp[1]}})
+def update_room(room_id, attribute_type, value):
+    rooms_collection.update_one({'_id': ObjectId(room_id)}, {'$set': {attribute_type: value}})
+    # room_members_collection.update_many({'_id.room_id': ObjectId(room_id)}, {'$set': {'name': room_name}})
 
 
 # refactor to not require room_name ?
