@@ -159,14 +159,13 @@ def handle_send_message_event(data):
 def handle_apns_load(apns_targets, data):
     bad_tokens = []
     for token in apns_targets:
-        new_payload = notification_interface.payload_message(data['username'], data['text'])
+        new_payload = notification_interface.payload_message(data['username'], data['text'])  # need to edit
         success = notification_interface.send_payload(new_payload, token)
         if not success:
             bad_tokens.append(token)
     for bad_token in bad_tokens:
         purge_apn(bad_token)
         
-
 
 @socketio.on('send_react')
 @jwt_required()

@@ -60,17 +60,29 @@ class NotificationSystem:
 
         return True
 
-    def payload_message(self, author, body):
-        payload_data = {
-            'aps': {
-                'alert': {
-                    'title': 'New Message',
-                    'body': f'{author}: {body}',
-                    'sound': 'bingbong.aiff'
-                },
-                'badge': 420
+    def payload_message(self, author, body, room_title='Channel', type=0):
+        if type == 0:  # room
+            payload_data = {
+                'aps': {
+                    'alert': {
+                        'title': f'{room_title}',
+                        'body': f'{author}: {body}',
+                        'sound': 'bingbong.aiff'
+                    },
+                    'badge': 68
+                }
             }
-        }
+        elif type == 1:  # DM
+            payload_data = {
+                'aps': {
+                    'alert': {
+                        'title': f'{author}',
+                        'body': f'{body}',
+                        'sound': 'bingbong.aiff'
+                    },
+                    'badge': 70
+                }
+            }
 
         payload = json.dumps(payload_data).encode('utf-8')
 
