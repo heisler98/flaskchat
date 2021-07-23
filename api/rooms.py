@@ -7,7 +7,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from db import get_room_members, get_user, get_user_id, get_messages, is_room_member, get_room, create_dm, find_dm, \
     save_room, get_rooms_for_user, add_room_member, delete_room, is_room_admin, toggle_admin, add_room_members, \
-    get_latest_bucket_number, get_room_admins, add_log_event, room_is_mute, toggle_mute, is_room
+    get_latest_bucket_number, get_room_admins, add_log_event, room_is_mute, toggle_mute, is_room, update_room
 from helper_functions import parse_json
 from model.room import Message
 from model.user import User
@@ -47,7 +47,7 @@ def get_all_rooms():
         this_room = room_object.create_json()
         rooms_list.append(this_room)
 
-    return jsonify({'rooms': rooms_list})
+    return jsonify(rooms_list)
 
 
 @rooms_blueprint.route('/rooms/create', methods=['POST'])
@@ -168,10 +168,21 @@ def room_mute(room_id):
 @jwt_required()
 def edit_single_room(room_id):
     auth_user_id = get_jwt_identity()
-    user = get_user(auth_user_id)
-    room = get_room(room_id)
+    auth_user = get_user(auth_user_id)
 
     json_input = request.get_json(force=True)
+    changed_room = json_input['room'].items()
+
+    if not is_room_member(room_id, auth_user_id):
+        return jsonify({'Error': 'Not authorized'}), 403
+
+    changeable_values = ['emoji', 'name']
+    for kvp in changed_room:
+        if kvp[0] not in changeable_values:
+            return jsonify({'Error': 'You can only edit email, real_name, or username.'}), 400
+
+    update_room(room_id, changed_room)
+    return jsonify({'Success': 'Room modified.'})
 
 
 @rooms_blueprint.route('/rooms/<room_id>/messages', methods=['GET'])
@@ -233,6 +244,46 @@ def toggle_room_admin(room_id):
     toggle_admin(room_id, user_id)
 
     return jsonify({'Success': 'Toggled admin'})
+
+
+# this code was saved from a trashed commit, need to reintegrate it later
+@rooms_blueprint.route('/rooms/<room_id>/members_test', methods=['GET', 'POST'])
+@jwt_required()
+def single_room_members_test(room_id):
+    user_id = get_jwt_identity()
+    current_app.logger.info('{} requested members for {}'.format(user_id, room_id))
+
+    members_from_db = get_room_members(room_id)
+    this_room = get_room(room_id)
+    members = []
+
+    if not this_room or not members_from_db:
+        return jsonify({'Error': 'Room not found.'}), 404
+
+    if not is_room_member(room_id, user_id):
+        return jsonify({'Error': 'You are not a member of the requested room.'}), 403
+
+    if request.method == 'GET':
+        for member in members_from_db:
+            try:
+                some_user = get_user(str(member['_id']['user_id']))
+            except KeyError as e:
+                continue
+            except TypeError as e:
+                return jsonify({'Error': e}), 400
+            if not some_user:
+                continue
+
+            members.append(some_user.create_json())
+
+        return jsonify(members), 200
+    elif request.method == 'POST':
+        json_input = request.get_json(force=True)
+
+        try:
+            new_members = json_input['add_members']
+        except Exception as e:
+            return jsonify({'Error': 'Bad input'}), 400
 
 
 @rooms_blueprint.route('/rooms/<room_id>/members', methods=['GET'])
