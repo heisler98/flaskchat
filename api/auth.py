@@ -55,9 +55,6 @@ def login():
     if len(password) == 0:
         return jsonify({'Error': 'Please provide a password'}), 400
 
-    if not re.match("^[A-Za-z_]*$", username):
-        return jsonify({'Error': 'Invalid username.'}), 400
-
     if request.method == 'POST':
         try:
             user_id = get_user_id(username)
@@ -96,18 +93,10 @@ def create_account():
         email = json_input['email']
         full_name = json_input['name']
         current_app.logger.info('{} trying to create a new account, {}'.format(request.remote_addr, username))
-        if len(username) == 0 or len(password) == 0 or len(email) == 0 or len(full_name) == 0:
-            raise KeyError('Empty field.')
     except KeyError as e:
         return jsonify({'Error': 'Invalid request: Missing required field. {}'.format(e)}), 400
     except TypeError as e:
         return jsonify({'Error': 'Invalid request: Must be a json/dict. {}'.format(e)}), 400
-
-    regex_email = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-    if not re.match(regex_email, email):
-        return jsonify({'Error': 'Invalid email address.'}), 400
-    if not re.match("^[A-Za-z ]*$", full_name):
-        return jsonify({'Error': 'Invalid full name.'}), 400
 
     if re.match("^[A-Za-z_]*$", username):
         if len(password) < 6:
@@ -119,7 +108,7 @@ def create_account():
             add_log_event(200, user_id, 'Signup', ip_address=ip)
             return jsonify({'Success': 'User created.'.format(user_id)}), 200
         except DuplicateKeyError:
-            return jsonify({'Error': 'Username or email is already in use.'}), 400
+            return jsonify({'Error': 'User {} already exists.'.format(username)}), 400
     else:
         return jsonify({'Error': 'Bad username.'}), 400
 

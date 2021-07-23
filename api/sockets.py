@@ -11,12 +11,7 @@ from .app import socketio
 import redis
 
 from db import save_message, get_room_members, get_user_id, update_checkout, get_user, get_apn, add_reaction, \
-    get_latest_bucket_number, purge_apn, get_room
-
-
-# threading
-import logging 
-import threading
+    get_latest_bucket_number, purge_apn
 
 sockets_blueprint = Blueprint('sockets_blueprint', __name__)
 global connected_sockets
@@ -114,19 +109,13 @@ def handle_send_message_event(data):
     username = data['username']
     room = data['room']  # client must pass room id here
     message = data['text']
-    
     try:
         image_id = data['image_id']
     except Exception as e:
         image_id = None
-
-    if len(message) == 0 and not image_id:
-        return None
-    
     time_sent = time.time()
     data['time_sent'] = time_sent
     user = get_user(user_id)
-    room = get_room(room)
     data['user_id'] = user_id
     data['avatar_id'] = user.avatar
 
@@ -160,26 +149,17 @@ def handle_send_message_event(data):
                 else:
                     apns_targets.extend(user_apn_tokens)
         # room_id, text, sender, bucket_number=0, image_id=None
-        current_app.logger.info("Emitting APNS and storing message".format())
-        apns_thread = threading.Thread(handle_apns_load, args=(apns_targets, data, room.is_dm))
-        # current_app.logger.info("SAVING MESSAGE")
-        db_thread = threading.Thread(save_message, args=(room, message, user_id, image_id))  # to db
-        apns_thread.start()
-        db_thread.start()
-        current_app.logger.info("{} {}".format(apns_thread, db_thread))
+        handle_apns_load(apns_targets, data)
+        current_app.logger.info("SAVING MESSAGE")
+        save_message(room, message, user_id, image_id)  # to db
     else:
         current_app.logger.info("{} not authorized to send to {}".format(username, room))
 
 
-def handle_apns_load(apns_targets, data, is_dm=False):
+def handle_apns_load(apns_targets, data):
     bad_tokens = []
-    if is_dm:
-        room_type = 1
-    else:
-        room_type = 0
     for token in apns_targets:
-        # author, body, room_title='Channel', type=0
-        new_payload = notification_interface.payload_message(data['username'], data['text'], data['room'], room_type)
+        new_payload = notification_interface.payload_message(data['username'], data['text'])
         success = notification_interface.send_payload(new_payload, token)
         if not success:
             bad_tokens.append(token)
