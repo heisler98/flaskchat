@@ -47,7 +47,7 @@ def get_all_rooms():
         this_room = room_object.create_json()
         rooms_list.append(this_room)
 
-    return jsonify({'rooms': rooms_list})
+    return jsonify(rooms_list)
 
 
 @rooms_blueprint.route('/rooms/create', methods=['POST'])
