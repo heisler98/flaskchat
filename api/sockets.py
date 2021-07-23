@@ -11,7 +11,7 @@ from .app import socketio
 import redis
 
 from db import save_message, get_room_members, get_user_id, update_checkout, get_user, get_apn, add_reaction, \
-    get_latest_bucket_number
+    get_latest_bucket_number, purge_apn
 
 sockets_blueprint = Blueprint('sockets_blueprint', __name__)
 global connected_sockets
@@ -103,6 +103,7 @@ def update_last_seen(username):
 @socketio.on('send_message')
 @jwt_required(fresh=True)
 def handle_send_message_event(data):
+    current_app.logger.info('Caught message from client.')
     user_id = get_jwt_identity()
 
     username = data['username']
@@ -149,18 +150,22 @@ def handle_send_message_event(data):
                     apns_targets.extend(user_apn_tokens)
         # room_id, text, sender, bucket_number=0, image_id=None
         handle_apns_load(apns_targets, data)
-        bucket_number = get_latest_bucket_number(room)
-        save_message(room, message, user_id, int(bucket_number), image_id)  # to db
+        current_app.logger.info("SAVING MESSAGE")
+        save_message(room, message, user_id, image_id)  # to db
     else:
         current_app.logger.info("{} not authorized to send to {}".format(username, room))
 
 
 def handle_apns_load(apns_targets, data):
+    bad_tokens = []
     for token in apns_targets:
         new_payload = notification_interface.payload_message(data['username'], data['text'])
-        resp = notification_interface.send_payload(new_payload, token)
-        if resp.status != 200:
-            current_app.logger.info('{} : {} as response from APNS for {}.'.format(resp.status, resp.read(), token))
+        success = notification_interface.send_payload(new_payload, token)
+        if not success:
+            bad_tokens.append(token)
+    for bad_token in bad_tokens:
+        purge_apn(bad_token)
+        
 
 
 @socketio.on('send_react')

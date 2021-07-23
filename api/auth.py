@@ -127,6 +127,7 @@ def create_account():
 
 
 @auth_blueprint.route("/refresh")
+@cross_origin()
 @jwt_required(refresh=True)
 def refresh():
     ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)

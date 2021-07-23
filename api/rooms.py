@@ -7,7 +7,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from db import get_room_members, get_user, get_user_id, get_messages, is_room_member, get_room, create_dm, find_dm, \
     save_room, get_rooms_for_user, add_room_member, delete_room, is_room_admin, toggle_admin, add_room_members, \
-    get_latest_bucket_number, get_room_admins, add_log_event, room_is_mute, toggle_mute
+    get_latest_bucket_number, get_room_admins, add_log_event, room_is_mute, toggle_mute, is_room
 from helper_functions import parse_json
 from model.room import Message
 from model.user import User
@@ -30,7 +30,7 @@ def get_rooms():
     for item in room_list:
         id_list.append(item['_id']['room_id']['$oid'])
 
-    return jsonify({'rooms': id_list}), 200
+    return jsonify(id_list), 200
 
 
 @rooms_blueprint.route('/rooms/all', methods=['GET'])
@@ -72,6 +72,9 @@ def create_room():
 def delete_some_room(room_id):
     user_id = get_jwt_identity()
 
+    if not is_room(room_id):
+        return jsonify({'Error': 'Not Found'}), 404
+
     if is_room_admin(room_id, user_id):
         print('is admin')
         delete_room(room_id)
@@ -97,8 +100,8 @@ def get_room_more(room_id):
 def view_dm(user_id):
     auth_user_id = get_jwt_identity()
 
-    user_one = get_user(auth_user_id)
-    user_two = get_user(user_id)
+    user_one = get_user(str(auth_user_id))
+    user_two = get_user(str(user_id))
 
     if user_one.ID == user_two.ID:
         return jsonify({'Error': 'Requested DM with self.'}), 400
@@ -123,6 +126,9 @@ def view_dm(user_id):
 def single_room(room_id):
     if room_id == 'create':
         return jsonify({'Error': ''}), 405
+
+    if not is_room(room_id):
+        return jsonify({'Error': 'Not Found'}), 404
 
     user_id = get_jwt_identity()
     room = get_room(room_id)
@@ -174,24 +180,47 @@ def get_room_messages(room_id):
     room = get_room(room_id)
     user_id = get_jwt_identity()
 
-    if room and is_room_member(room_id, user_id):
-        bucket_number = int(get_latest_bucket_number(room_id))  # defaulted to latest bucket if none given in args
-        requested_bucket_number = int(request.args.get('bucket_number', bucket_number))
+    if not room:
+        return jsonify({'Error': 'Not Found'}), 404
 
-        message_bson = get_messages(room_id, requested_bucket_number)
-        messages = []
-        users = {}
-        for item in message_bson:
-            try:
-                user_id = str(item['sender'])
-                if user_id not in users:
-                    users[user_id] = get_user(user_id)
-                # time_sent, text, username, user_id, avatar, image_id)
-                messages.append(Message(item['time_sent'], item['text'], users[user_id].username, users[user_id].ID,
-                                        users[user_id].avatar, str(item['image_id'])).create_json())
-            except Exception as e:
-                current_app.logger.info(e)
-        return jsonify(messages)
+    if not is_room(room_id):
+        return jsonify({'Error': 'Not Found'}), 404
+
+    if room and is_room_member(room_id, user_id):
+        bucket_number = get_latest_bucket_number(room_id)  # defaulted to latest bucket if none given in args
+        requested_bucket_number = int(request.args.get('bucket_number', default=bucket_number))
+        
+        if not requested_bucket_number:
+            return jsonify({'Error': 'Stinky stinky'}), 500
+
+        try:
+            message_bson = get_messages(str(room.room_id), requested_bucket_number)
+            return jsonify(message_bson)
+
+            if not message_bson:
+                return jsonify([]), 200
+            
+            if len(message_bson) == 0:
+                return jsonify([]), 200
+
+            messages = []
+            users = {}
+            for item in message_bson:
+                try:
+                    user_id = str(item['sender'])
+                    if user_id not in users:
+                        users[user_id] = get_user(user_id)
+                    # time_sent, text, username, user_id, avatar, image_id)
+                    messages.append(Message(item['time_sent'], item['text'], users[user_id].username, users[user_id].ID,
+                                            users[user_id].avatar, str(item['image_id'])).create_json())
+                except Exception as e:
+                    current_app.logger.info(e)
+
+            return jsonify(messages)
+        except Exception as e:
+            current_app.logger.info(e)
+        
+        return jsonify({'e': 'e'}), 500
     else:
         return jsonify({'Error': 'Room not found'}), 400
 
@@ -229,7 +258,7 @@ def single_room_members(room_id):
         if not this_user:
             continue
 
-        new_member = get_user(this_user)
+        new_member = get_user(this_user.ID)
         members.append(new_member.create_json())
 
     return jsonify(members), 200
@@ -283,6 +312,8 @@ def search_messages():  # !! this is a slow (brute-force) implementation of sear
         bucket_max = get_latest_bucket_number(room)
         for bucket in range(1, bucket_max):
             messages = get_messages(room, bucket)
+            if not messages:
+                continue
             for message in messages:
                 for word in key_words:
                     if word in message:

@@ -9,19 +9,28 @@ class Message:
         self.time_sent = time_sent
         self.text = text
         self.username = username
-        self.user_id = user_id
+        self.user_id = str(user_id)
         self.avatar = avatar
-        self.image_id = image_id
+        self.image_id = str(image_id)
 
     def create_json(self):
-        return {
-            'time_sent': self.time_sent,
-            'text': self.text,
-            'username': self.username,
-            'user_id': self.user_id,
-            'avatar_id': self.avatar,
-            'image_id': self.image_id
-        }
+        if self.image_id != None:
+            return {
+                'time_sent': self.time_sent,
+                'text': self.text,
+                'username': self.username,
+                'user_id': self.user_id,
+                'avatar_id': self.avatar,
+                'image_id': self.image_id
+            }
+        else:
+            return {
+                'time_sent': self.time_sent,
+                'text': self.text,
+                'username': self.username,
+                'user_id': self.user_id,
+                'avatar_id': self.avatar
+            }
 
 
 class Room:
