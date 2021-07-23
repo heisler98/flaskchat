@@ -235,10 +235,13 @@ def get_room(room_id):
 
     room = rooms_collection.find_one({'_id': ObjectId(room_id)})
     bucket_number = get_latest_bucket_number(room_id)
+    
+    if room['emoji']:
+        emoji = room['emoji']
+    else:
+        emoji = None
 
-    # message_bson = 
-
-    room_object = Room(room['name'], str(room_id), room['is_dm'], bucket_number, str(room['created_by']))
+    room_object = Room(room['name'], str(room_id), room['is_dm'], bucket_number, str(room['created_by'], emoji=emoji))
     room_object.set_messages(get_messages(str(room_id), bucket_number))  # this line may be causing issues
     return room_object
 
@@ -291,9 +294,9 @@ def save_room(room_name, created_by):
     return room_id
 
 
-def update_room(room_id, attribute_type, value):
-    rooms_collection.update_one({'_id': ObjectId(room_id)}, {'$set': {attribute_type: value}})
-    # room_members_collection.update_many({'_id.room_id': ObjectId(room_id)}, {'$set': {'name': room_name}})
+def update_room(room_id, itemized_room):
+    for kvp in itemized_room:
+        users_collection.update_one({'_id': ObjectId(room_id)}, {'$set': {kvp[0]: kvp[1]}})
 
 
 # refactor to not require room_name ?

@@ -168,10 +168,21 @@ def room_mute(room_id):
 @jwt_required()
 def edit_single_room(room_id):
     auth_user_id = get_jwt_identity()
-    user = get_user(auth_user_id)
-    room = get_room(room_id)
+    auth_user = get_user(auth_user_id)
 
     json_input = request.get_json(force=True)
+    changed_room = json_input['user'].items()
+
+    if not is_room_member(room_id, auth_user_id):
+        return jsonify({'Error': 'Not authorized'}), 403
+
+    changeable_values = ['emoji', 'name']
+    for kvp in changed_user:
+        if kvp[0] not in changeable_values:
+            return jsonify({'Error': 'You can only edit email, real_name, or username.'}), 400
+
+    update_room(user_id, changed_user)
+    return jsonify({'Success': 'Room modified.'})
 
 
 @rooms_blueprint.route('/rooms/<room_id>/messages', methods=['GET'])
