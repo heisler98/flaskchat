@@ -20,7 +20,6 @@ class Message:
                 'text': self.text,
                 'username': self.username,
                 'user_id': self.user_id,
-                'avatar_id': self.avatar,
                 'image_id': self.image_id
             }
         else:
@@ -28,8 +27,7 @@ class Message:
                 'time_sent': self.time_sent,
                 'text': self.text,
                 'username': self.username,
-                'user_id': self.user_id,
-                'avatar_id': self.avatar
+                'user_id': self.user_id
             }
 
 
