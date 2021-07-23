@@ -160,11 +160,13 @@ def handle_send_message_event(data):
                 else:
                     apns_targets.extend(user_apn_tokens)
         # room_id, text, sender, bucket_number=0, image_id=None
+        current_app.logger.info("Emitting APNS and storing message".format())
         apns_thread = threading.Thread(handle_apns_load, args=(apns_targets, data, room.is_dm))
         # current_app.logger.info("SAVING MESSAGE")
         db_thread = threading.Thread(save_message, args=(room, message, user_id, image_id))  # to db
         apns_thread.start()
         db_thread.start()
+        current_app.logger.info("{} {}".format(apns_thread, db_thread))
     else:
         current_app.logger.info("{} not authorized to send to {}".format(username, room))
 

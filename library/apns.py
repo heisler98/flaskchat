@@ -23,6 +23,8 @@ class NotificationSystem:
         self.conn = HTTP20Connection(APNS_PRODUCTION_SERVER, force_proto='h2')
 
     def send_payload(self, payload, target_token):
+        print('Generated APNS payload.')
+
         token = jwt.encode(
             {
                 'iss': TEAM_ID,
@@ -53,6 +55,7 @@ class NotificationSystem:
         )
 
         resp = self.conn.get_response()
+        print('Sent APNS payload.')
 
         print(resp.read())
 
@@ -62,6 +65,8 @@ class NotificationSystem:
         return True
 
     def payload_message(self, author, body, room_title='Channel', type=0):
+        print('Generated APNS payload message.')
+
         if type == 0:  # room
             payload_data = {
                 'aps': {
