@@ -17,42 +17,43 @@ BUNDLE_ID = 'com.squidsquad.Squidchat'
 
 
 class NotificationSystem:
-    token = jwt.encode(
-        {
-            'iss': TEAM_ID,
-            'iat': time.time()
-        },
-        secret,
-        algorithm='ES256',
-        headers={
-            'alg': 'ES256',
-            'kid': APNS_KEY_ID
-        }
-    )
-
-    request_headers = {
-        'apns-expiration': '0',
-        'apns-priority': '10',
-        'apns-topic': BUNDLE_ID,
-        'authorization': 'bearer {0}'.format(token)
-    }
+    
 
     def __init__(self):
         self.conn = HTTP20Connection(APNS_PRODUCTION_SERVER, force_proto='h2')
 
     def send_payload(self, payload, target_token):
+        token = jwt.encode(
+            {
+                'iss': TEAM_ID,
+                'iat': time.time()
+            },
+            secret,
+            algorithm='ES256',
+            headers={
+                'alg': 'ES256',
+                'kid': APNS_KEY_ID
+            }
+        )
+
+        request_headers = {
+            'apns-expiration': '0',
+            'apns-priority': '10',
+            'apns-topic': BUNDLE_ID,
+            'authorization': 'bearer {0}'.format(token)
+        }
+        
         path = '/3/device/{0}'.format(target_token)
 
         self.conn.request(
             'POST',
             path,
             payload,
-            headers=self.request_headers
+            headers=request_headers
         )
 
         resp = self.conn.get_response()
 
-        # print(resp.status)
         print(resp.read())
 
         if resp.status == 410 or resp.status == 400:
