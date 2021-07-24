@@ -112,7 +112,7 @@ def handle_send_message_event(data):
     user_id = get_jwt_identity()
 
     username = data['username']
-    room = data['room']  # client must pass room id here
+    room_id = data['room']  # client must pass room id here
     message = data['text']
     
     try:
@@ -126,15 +126,16 @@ def handle_send_message_event(data):
     time_sent = time.time()
     data['time_sent'] = time_sent
     user = get_user(user_id)
-    room = get_room(room)
+    room = get_room(room_id)
     data['user_id'] = user_id
     data['avatar_id'] = user.avatar
+    data['room_name'] = room.name
 
     if user_id not in connected_sockets:
         current_app.logger.info('!!: {} tried to send a message without being connected to a room.'.format(username))
 
     room_member_ids = []
-    room_member_objects = get_room_members(room)  # determine who should receive this message
+    room_member_objects = get_room_members(room_id)  # determine who should receive this message
     for db_item in room_member_objects:
         room_member_ids.append(str(db_item['_id']['user_id']))
 
@@ -161,9 +162,9 @@ def handle_send_message_event(data):
                     apns_targets.extend(user_apn_tokens)
         # room_id, text, sender, bucket_number=0, image_id=None
         current_app.logger.info("Emitting APNS and storing message".format())
-        apns_thread = threading.Thread(handle_apns_load, args=(apns_targets, data, room.is_dm))
+        apns_thread = threading.Thread(target=handle_apns_load, args=(apns_targets, data, room.is_dm))
         # current_app.logger.info("SAVING MESSAGE")
-        db_thread = threading.Thread(save_message, args=(room, message, user_id, image_id))  # to db
+        db_thread = threading.Thread(target=save_message, args=(room_id, message, user_id, image_id))  # to db
         apns_thread.start()
         db_thread.start()
         current_app.logger.info("{} {}".format(apns_thread, db_thread))
@@ -179,7 +180,7 @@ def handle_apns_load(apns_targets, data, is_dm=False):
         room_type = 0
     for token in apns_targets:
         # author, body, room_title='Channel', type=0
-        new_payload = notification_interface.payload_message(data['username'], data['text'], data['room'], room_type)
+        new_payload = notification_interface.payload_message(data['username'], data['text'], data['room_name'], room_type)
         success = notification_interface.send_payload(new_payload, token)
         if not success:
             bad_tokens.append(token)
