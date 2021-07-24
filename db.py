@@ -297,7 +297,6 @@ def save_room(room_name, created_by):
 
 
 def update_room(room_id, itemized_room):
-    print(itemized_room)
     for kvp in itemized_room:
         users_collection.update_one({'_id': ObjectId(room_id)}, {'$set': {kvp[0]: kvp[1]}})
 

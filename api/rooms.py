@@ -178,7 +178,6 @@ def edit_single_room(room_id):
 
     changeable_values = ['emoji', 'name']
     for kvp in changed_room:
-        current_app.logger.info(kvp)
         if kvp[0] not in changeable_values:
             return jsonify({'Error': 'You can only edit email, real_name, or username.'}), 400
 
