@@ -29,7 +29,7 @@ class NotificationSystem:
     def generate_token(self):
         if os.path.isfile(TOKEN_TIME_STORAGE):
             jwt_birthtime_file = open(TOKEN_TIME_STORAGE, 'r')
-            jwt_birthtime = int(jwt_birthtime_file.read())
+            jwt_birthtime = float(jwt_birthtime_file.read())
             jwt_birthtime_file.close()
         else:
             jwt_birthtime = 0
