@@ -19,6 +19,7 @@ BUNDLE_ID = 'com.squidsquad.Squidchat'
 
 class NotificationSystem:
     def __init__(self):
+        self.token = None
         self.generate_token()
         self.conn = HTTP20Connection(APNS_PRODUCTION_SERVER, force_proto='h2')
 
