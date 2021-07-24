@@ -9,6 +9,8 @@ import os
 APNS_DEVELOPMENT_SERVER = 'api.sandbox.push.apple.com:443'
 APNS_PRODUCTION_SERVER = 'api.push.apple.com:443'
 
+TOKEN_TIME_STORAGE = '/tiny/flaskchat/jwt_birthtime'
+
 APNS_AUTH_KEY = open('/tiny/flaskchat/key.p8')
 APNS_KEY_ID = open('/tiny/flaskchat/key_id').read().strip()
 secret = APNS_AUTH_KEY.read()
@@ -25,8 +27,8 @@ class NotificationSystem:
 
     # Generate a new JWT for APNS every 30 minutes
     def generate_token(self):
-        if os.path.isfile("jwt_birthtime"):
-            jwt_birthtime_file = open("jwt_birthtime", "r")
+        if os.path.isfile(TOKEN_TIME_STORAGE):
+            jwt_birthtime_file = open(TOKEN_TIME_STORAGE, 'r')
             jwt_birthtime = int(jwt_birthtime_file.read())
             jwt_birthtime_file.close()
         else:
@@ -54,7 +56,7 @@ class NotificationSystem:
                 }
             )
 
-            jwt_birthtime_file = open('jwt_birthtime', 'w')
+            jwt_birthtime_file = open(TOKEN_TIME_STORAGE, 'w')
             jwt_birthtime_file.write(str(now))
             jwt_birthtime_file.close()
 
