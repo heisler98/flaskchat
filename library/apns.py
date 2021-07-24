@@ -22,21 +22,28 @@ class NotificationSystem:
         self.generate_token()
         self.conn = HTTP20Connection(APNS_PRODUCTION_SERVER, force_proto='h2')
 
+    # Generate a new JWT for APNS every 30 minutes
     def generate_token(self):
+        if os.path.isfile("jwt_birthtime"):
+            jwt_birthtime_file = open("jwt_birthtime", "r")
+            jwt_birthtime = int(jwt_birthtime_file.read())
+            jwt_birthtime_file.close()
+        else:
+            jwt_birthtime = 0
+        
         now = time.time()
         create_new = False
         if not self.token:
             create_new = True
         else:
-            if now - self.time_generated > 1800:
+            if now - jwt_birthtime > 1800:  # 1800 seconds in 30 min
                 create_new = True
         
         if create_new:
-            self.time_generated = now()
             self.token = jwt.encode(
                 {
                     'iss': TEAM_ID,
-                    'iat': time.time()
+                    'iat': now
                 },
                 secret,
                 algorithm='ES256',
@@ -46,16 +53,20 @@ class NotificationSystem:
                 }
             )
 
+            jwt_birthtime_file = open('jwt_birthtime', 'w')
+            jwt_birthtime_file.write(str(now))
+            jwt_birthtime_file.close()
+
     def send_payload(self, payload, target_token):
         print('Generated APNS payload.')
 
-        self.token
+        self.generate_token()
 
         request_headers = {
             'apns-expiration': '0',
             'apns-priority': '10',
             'apns-topic': BUNDLE_ID,
-            'authorization': 'bearer {0}'.format(token)
+            'authorization': 'bearer {0}'.format(self.token)
         }
         
         path = '/3/device/{0}'.format(target_token)
