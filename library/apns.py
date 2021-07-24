@@ -4,6 +4,7 @@ import jwt
 import time
 import json
 from hyper import HTTPConnection, HTTP20Connection
+import os
 
 APNS_DEVELOPMENT_SERVER = 'api.sandbox.push.apple.com:443'
 APNS_PRODUCTION_SERVER = 'api.push.apple.com:443'
@@ -17,26 +18,38 @@ BUNDLE_ID = 'com.squidsquad.Squidchat'
 
 
 class NotificationSystem:
-    
-
     def __init__(self):
+        self.generate_token()
         self.conn = HTTP20Connection(APNS_PRODUCTION_SERVER, force_proto='h2')
+
+    def generate_token(self):
+        now = time.time()
+        create_new = False
+        if not self.token:
+            create_new = True
+        else:
+            if now - self.time_generated > 1800:
+                create_new = True
+        
+        if create_new:
+            self.time_generated = now()
+            self.token = jwt.encode(
+                {
+                    'iss': TEAM_ID,
+                    'iat': time.time()
+                },
+                secret,
+                algorithm='ES256',
+                headers={
+                    'alg': 'ES256',
+                    'kid': APNS_KEY_ID
+                }
+            )
 
     def send_payload(self, payload, target_token):
         print('Generated APNS payload.')
 
-        token = jwt.encode(
-            {
-                'iss': TEAM_ID,
-                'iat': time.time()
-            },
-            secret,
-            algorithm='ES256',
-            headers={
-                'alg': 'ES256',
-                'kid': APNS_KEY_ID
-            }
-        )
+        self.token
 
         request_headers = {
             'apns-expiration': '0',
