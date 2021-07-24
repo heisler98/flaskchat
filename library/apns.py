@@ -17,42 +17,46 @@ BUNDLE_ID = 'com.squidsquad.Squidchat'
 
 
 class NotificationSystem:
-    token = jwt.encode(
-        {
-            'iss': TEAM_ID,
-            'iat': time.time()
-        },
-        secret,
-        algorithm='ES256',
-        headers={
-            'alg': 'ES256',
-            'kid': APNS_KEY_ID
-        }
-    )
-
-    request_headers = {
-        'apns-expiration': '0',
-        'apns-priority': '10',
-        'apns-topic': BUNDLE_ID,
-        'authorization': 'bearer {0}'.format(token)
-    }
+    
 
     def __init__(self):
         self.conn = HTTP20Connection(APNS_PRODUCTION_SERVER, force_proto='h2')
 
     def send_payload(self, payload, target_token):
+        print('Generated APNS payload.')
+
+        token = jwt.encode(
+            {
+                'iss': TEAM_ID,
+                'iat': time.time()
+            },
+            secret,
+            algorithm='ES256',
+            headers={
+                'alg': 'ES256',
+                'kid': APNS_KEY_ID
+            }
+        )
+
+        request_headers = {
+            'apns-expiration': '0',
+            'apns-priority': '10',
+            'apns-topic': BUNDLE_ID,
+            'authorization': 'bearer {0}'.format(token)
+        }
+        
         path = '/3/device/{0}'.format(target_token)
 
         self.conn.request(
             'POST',
             path,
             payload,
-            headers=self.request_headers
+            headers=request_headers
         )
 
         resp = self.conn.get_response()
+        print('Sent APNS payload.')
 
-        # print(resp.status)
         print(resp.read())
 
         if resp.status == 410 or resp.status == 400:
@@ -60,17 +64,31 @@ class NotificationSystem:
 
         return True
 
-    def payload_message(self, author, body):
-        payload_data = {
-            'aps': {
-                'alert': {
-                    'title': 'New Message',
-                    'body': f'{author}: {body}',
-                    'sound': 'bingbong.aiff'
-                },
-                'badge': 420
+    def payload_message(self, author, body, room_title='Channel', type=0):
+        print('Generated APNS payload message.')
+
+        if type == 0:  # room
+            payload_data = {
+                'aps': {
+                    'alert': {
+                        'title': f'{room_title}',
+                        'body': f'{author}: {body}',
+                        'sound': 'bingbong.aiff'
+                    },
+                    'badge': 68
+                }
             }
-        }
+        elif type == 1:  # DM
+            payload_data = {
+                'aps': {
+                    'alert': {
+                        'title': f'{author}',
+                        'body': f'{body}',
+                        'sound': 'bingbong.aiff'
+                    },
+                    'badge': 70
+                }
+            }
 
         payload = json.dumps(payload_data).encode('utf-8')
 
