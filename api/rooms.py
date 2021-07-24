@@ -181,7 +181,7 @@ def edit_single_room(room_id):
         if kvp[0] not in changeable_values:
             return jsonify({'Error': 'You can only edit email, real_name, or username.'}), 400
 
-    update_room(room_id, changed_room[0])
+    update_room(room_id, changed_room)
     return jsonify({'Success': 'Room modified.'})
 
 
