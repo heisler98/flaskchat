@@ -129,6 +129,7 @@ def handle_send_message_event(data):
     room = get_room(room_id)
     data['user_id'] = user_id
     data['avatar_id'] = user.avatar
+    data['room_name'] = room.name
 
     if user_id not in connected_sockets:
         current_app.logger.info('!!: {} tried to send a message without being connected to a room.'.format(username))
@@ -179,7 +180,7 @@ def handle_apns_load(apns_targets, data, is_dm=False):
         room_type = 0
     for token in apns_targets:
         # author, body, room_title='Channel', type=0
-        new_payload = notification_interface.payload_message(data['username'], data['text'], data['room'], room_type)
+        new_payload = notification_interface.payload_message(data['username'], data['text'], data['room_name'], room_type)
         success = notification_interface.send_payload(new_payload, token)
         if not success:
             bad_tokens.append(token)

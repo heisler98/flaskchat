@@ -92,7 +92,7 @@ class NotificationSystem:
         return True
 
     def payload_message(self, author, body, room_title='Channel', type=0):
-        print('Generated APNS payload message.')
+        # print('Generated APNS payload message.')  # for debug
 
         if type == 0:  # room
             payload_data = {
