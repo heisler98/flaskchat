@@ -126,13 +126,16 @@ def get_avatar(user_id):
         if not target_image:
             return jsonify({'File not found': str(user_id + ' avatar')}), 400
         image_location = target_image['location']
-
-        if os.path.exists(image_location):
-            # abs_path = os.path.abspath(os.path.join('..', image_location))
-            abs_path = os.path.join('..', image_location)
-            return send_file(abs_path)
+        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], image_location)
+        current_app.logger.info(file_path)
+        
+        if os.path.exists(file_path):
+            return send_file(file_path)
         else:
-            return jsonify({'File not found': image_location}), 400
+            return jsonify({'I could not find the requested file': upload_id}), 404
+
+    else:
+        return jsonify('Method Not Allowed'), 405
 
 
 @images_blueprint.route('/avatar/<user_id>/create', methods=['POST'])

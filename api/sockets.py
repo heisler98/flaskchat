@@ -128,7 +128,7 @@ def handle_send_message_event(data):
     user = get_user(user_id)
     room = get_room(room_id)
     data['user_id'] = user_id
-    data['avatar_id'] = user.avatar
+    # data['avatar_id'] = user.avatar
     data['room_name'] = room.name
 
     if user_id not in connected_sockets:
