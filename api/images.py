@@ -122,7 +122,7 @@ def get_avatar(user_id):
         target_image_id = target_user.avatar
         if not target_image_id:
             # Return the 'default' avatar
-            image_name = 'squid_default'
+            image_name = 'squid_default.jpg'
             file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], image_name)
             current_app.logger.info(file_path)
             if os.path.exists(file_path):
