@@ -116,21 +116,32 @@ def get_avatar(user_id):
     target_user = get_user(user_id)
 
     if not target_user:
-        return jsonify({'Error': 'User not found'}), 400
+        return jsonify({'Error': 'User not found'}), 404
 
     if request.method == 'GET':
         target_image_id = target_user.avatar
         if not target_image_id:
-            return jsonify({'Error': 'No associated avatar with this user'}), 400
+            # Return the 'default' avatar
+            image_name = 'squid_default.jpg'
+            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], image_name)
+            current_app.logger.info(file_path)
+            if os.path.exists(file_path):
+                return send_file(file_path)
+            else:
+                return jsonify(['Cannot find default avatar']), 500
+            # return jsonify({'Error': 'No associated avatar with this user'}), 404
+            
         target_image = locate_image(image_id=target_image_id)
         if not target_image:
-            return jsonify({'File not found': str(user_id + ' avatar')}), 400
+            return jsonify({'File not found': str(user_id + ' avatar')}), 404
+            
         image_location = target_image['location']
         file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], image_location)
         current_app.logger.info(file_path)
         
         if os.path.exists(file_path):
             return send_file(file_path)
+            
         else:
             return jsonify({'I could not find the requested file': upload_id}), 404
 
