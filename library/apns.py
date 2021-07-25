@@ -103,7 +103,7 @@ class NotificationSystem:
                         'sound': 'bingbong.aiff'
                     },
                     'badge': 68
-                }
+                },
                 'room_id': room_id
             }
         elif type == 1:  # DM
@@ -115,7 +115,7 @@ class NotificationSystem:
                         'sound': 'bingbong.aiff'
                     },
                     'badge': 70
-                }
+                },
                 'room_id': room_id
             }
 
