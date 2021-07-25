@@ -137,7 +137,7 @@ def get_avatar(user_id):
         target_image = locate_image(image_id=target_image_id)
         if not target_image:
             current_app.logger.info('Avatar image not found in DB for ' + user_id)
-            return get_default_avatar
+            return get_default_avatar()
             
         image_location = target_image['location']
         file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], image_location)
@@ -148,7 +148,7 @@ def get_avatar(user_id):
             
         else:
             current_app.logger.info('Avatar file not found for user ' + user_id)
-            return get_default_avatar
+            return get_default_avatar()
 
     else:
         return jsonify('Method Not Allowed'), 405
