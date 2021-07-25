@@ -91,7 +91,7 @@ class NotificationSystem:
 
         return True
 
-    def payload_message(self, author, body, room_title='Channel', type=0):
+    def payload_message(self, author, body, room_id, room_title='Channel', type=0):
         # print('Generated APNS payload message.')  # for debug
 
         if type == 0:  # room
@@ -100,10 +100,11 @@ class NotificationSystem:
                     'alert': {
                         'title': f'{room_title}',
                         'body': f'{author}: {body}',
-                        'sound': 'bingbong.aiff'
+                        'sound': 'default'
                     },
                     'badge': 68
-                }
+                },
+                'room_id': room_id
             }
         elif type == 1:  # DM
             payload_data = {
@@ -111,10 +112,11 @@ class NotificationSystem:
                     'alert': {
                         'title': f'{author}',
                         'body': f'{body}',
-                        'sound': 'bingbong.aiff'
+                        'sound': 'default'
                     },
                     'badge': 70
-                }
+                },
+                'room_id': room_id
             }
 
         payload = json.dumps(payload_data).encode('utf-8')
