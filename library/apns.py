@@ -100,7 +100,7 @@ class NotificationSystem:
                     'alert': {
                         'title': f'{room_title}',
                         'body': f'{author}: {body}',
-                        'sound': 'bingbong.aiff'
+                        'sound': 'default'
                     },
                     'badge': 68
                 },
@@ -112,7 +112,7 @@ class NotificationSystem:
                     'alert': {
                         'title': f'{author}',
                         'body': f'{body}',
-                        'sound': 'bingbong.aiff'
+                        'sound': 'default'
                     },
                     'badge': 70
                 },
