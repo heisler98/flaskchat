@@ -180,7 +180,7 @@ def handle_apns_load(apns_targets, data, is_dm=False):
         room_type = 0
     for token in apns_targets:
         # author, body, room_title='Channel', type=0
-        new_payload = notification_interface.payload_message(data['username'], data['text'], data['room_name'], room_type)
+        new_payload = notification_interface.payload_message(data['username'], data['text'], data['room_name'], data['room'], room_type)
         success = notification_interface.send_payload(new_payload, token)
         if not success:
             bad_tokens.append(token)

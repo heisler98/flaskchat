@@ -91,7 +91,7 @@ class NotificationSystem:
 
         return True
 
-    def payload_message(self, author, body, room_title='Channel', type=0):
+    def payload_message(self, author, body, room_title='Channel', room_id, type=0):
         # print('Generated APNS payload message.')  # for debug
 
         if type == 0:  # room
@@ -104,6 +104,7 @@ class NotificationSystem:
                     },
                     'badge': 68
                 }
+                'room_id': room_id
             }
         elif type == 1:  # DM
             payload_data = {
@@ -115,6 +116,7 @@ class NotificationSystem:
                     },
                     'badge': 70
                 }
+                'room_id': room_id
             }
 
         payload = json.dumps(payload_data).encode('utf-8')
