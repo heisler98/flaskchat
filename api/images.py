@@ -112,6 +112,17 @@ def get_image(upload_id):
 @images_blueprint.route('/avatar/<user_id>', methods=['GET'])
 @jwt_required()
 def get_avatar(user_id):
+
+    def get_default_avatar():
+        # Return the 'default' avatar
+        image_name = 'squid_default.jpg'
+        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], image_name)
+        current_app.logger.info(file_path)
+        if os.path.exists(file_path):
+            return send_file(file_path)
+        else:
+            return jsonify(['Cannot find default avatar']), 500
+
     os.chdir(os.path.dirname(sys.argv[0]))
     target_user = get_user(user_id)
 
@@ -121,19 +132,12 @@ def get_avatar(user_id):
     if request.method == 'GET':
         target_image_id = target_user.avatar
         if not target_image_id:
-            # Return the 'default' avatar
-            image_name = 'squid_default.jpg'
-            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], image_name)
-            current_app.logger.info(file_path)
-            if os.path.exists(file_path):
-                return send_file(file_path)
-            else:
-                return jsonify(['Cannot find default avatar']), 500
-            # return jsonify({'Error': 'No associated avatar with this user'}), 404
+            return get_default_avatar()
             
         target_image = locate_image(image_id=target_image_id)
         if not target_image:
-            return jsonify({'File not found': str(user_id + ' avatar')}), 404
+            current_app.logger.info('Avatar image not found in DB for ' + user_id)
+            return get_default_avatar
             
         image_location = target_image['location']
         file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], image_location)
@@ -143,7 +147,8 @@ def get_avatar(user_id):
             return send_file(file_path)
             
         else:
-            return jsonify({'I could not find the requested file': upload_id}), 404
+            current_app.logger.info('Avatar file not found for user ' + user_id)
+            return get_default_avatar
 
     else:
         return jsonify('Method Not Allowed'), 405
