@@ -382,9 +382,12 @@ def return_room(room, username, user_id):
         if user_id in room.name:  # new nomenclature: ID concatentation
             other_id = room.name.replace(user_id, '')
             other_user = get_user(other_id)
-            new_name = other_user.username
+            new_name = other_user.real_name
         elif username in room.name:  # old nomenclature: name concatenation
-            new_name = room.name.replace(username, '')
+            other_username = room.name.replace(username, '')
+            other_user_id = get_user_id(other_username)
+            other_user = get_user(other_user_id)
+            new_name = other_user.real_name
         else:  # unknown state (perhaps nomenclature changed once more)
             new_name = room.name
     return room.create_personalized_json(new_name)
