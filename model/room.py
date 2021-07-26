@@ -55,3 +55,21 @@ class Room:
             'emoji': self.emoji
         }
         return json.loads(json_util.dumps(new_dict))
+
+    def create_personalized_json(self, username):
+        newName = self.name
+        if self.is_dm:
+            temp = str.maketrans(self.name, "")
+            newName = self.name.translate(temp)
+        
+        new_dict = { 
+            'name': newName,
+            'room_id': self.room_id,
+            'is_dm': self.is_dm,
+            'bucket_number': self.bucket_number,
+            'created_by': str(self.created_by),
+            'messages': self.messages,
+            'emoji': self.emoji
+        }
+        return json.loads(json_util.dumps(new_dict))
+    
