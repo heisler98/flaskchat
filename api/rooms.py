@@ -45,7 +45,7 @@ def get_all_rooms():
     for room_raw in room_list_raw:
         room_parsed = parse_json(room_raw)
         room_object = get_room(str(room_parsed['_id']['room_id']['$oid']))
-        this_room = room_object.create_personalized_json(user.username, user_id)
+        this_room = return_room(room_object, user.username, user_id)
         rooms_list.append(this_room)
 
     return jsonify(rooms_list)
@@ -111,11 +111,11 @@ def view_dm(user_id):
         target_room = find_dm(user_one, user_two)  # find_dm orders params properly to prevent duplicate DMs
         if target_room:
             room_object = get_room(target_room)
-            return jsonify(room_object.create_personalized_json(user_one.username, auth_user_id)), 200
+            return jsonify(return_room(room_object, user_one.username, auth_user_id)), 200
         else:
             new_dm = create_dm(user_one, user_two)
             room_object = get_room(new_dm)
-            return jsonify(room_object.create_personalized_json(user_one.username, auth_user_id)), 200
+            return jsonify(return_room(room_object, user_one.username, auth_user_id)), 200
     except BrokenPipeError as e:
         ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
         add_log_event(200, auth_user_id, '{}'.format(e), ip_address=ip)
@@ -141,7 +141,7 @@ def single_room(room_id):
     if not is_room_member(room_id, user_id):
         return jsonify({'Error': 'You are not a member of this room.'}), 403
     else:
-        return jsonify(room.create_personalized_json(user.username, user_id))
+        return jsonify(return_room(room, user.username, user_id)), 200
 
     return jsonify({'Error': ''}), 500
 
@@ -376,3 +376,15 @@ def search_messages():  # !! this is a slow (brute-force) implementation of sear
         'results': output
     })
 
+def return_room(room, username, user_id):
+    new_name = room.name
+    if room.is_dm:
+        if user_id in room.name:  # new nomenclature: ID concatentation
+            other_id = room.name.replace(user_id, '')
+            other_user = get_user(other_id)
+            new_name = other_user.username
+        elif username in room.name:  # old nomenclature: name concatenation
+            new_name = self.name.replace(username, '')
+        else:  # unknown state (perhaps nomenclature changed once more)
+            new_name = room.name
+    return room.create_personalized_json(new_name)
