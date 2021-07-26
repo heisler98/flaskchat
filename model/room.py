@@ -57,7 +57,8 @@ class Room:
 
     def create_personalized_json(self, new_name):
         new_dict = { 
-            'name': new_name,
+            'name': self.name,
+            'display_name': new_name,
             'room_id': self.room_id,
             'is_dm': self.is_dm,
             'bucket_number': self.bucket_number,
