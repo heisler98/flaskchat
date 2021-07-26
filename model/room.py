@@ -56,18 +56,9 @@ class Room:
         }
         return json.loads(json_util.dumps(new_dict))
 
-    def create_personalized_json(self, username, user_id):
-        newName = self.name
-        if self.is_dm:
-            if user_id in self.name: # new nomenclature: ID concatenation
-                other_id = newName.replace(user_id, '')
-                other_user = get_user(other_id)
-                newName = other_user.username
-            else: # old nomenclature: username concatenation
-                newName = self.name.replace(username, '') # remove the current user's name
-
+    def create_personalized_json(self, new_name):
         new_dict = { 
-            'name': newName,
+            'name': new_name,
             'room_id': self.room_id,
             'is_dm': self.is_dm,
             'bucket_number': self.bucket_number,
