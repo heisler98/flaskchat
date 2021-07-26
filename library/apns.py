@@ -82,6 +82,7 @@ class NotificationSystem:
         )
 
         resp = self.conn.get_response()
+        print('Token is ' + target_token)
         print('Sent APNS payload.')
 
         print(resp.read())
