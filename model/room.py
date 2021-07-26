@@ -59,8 +59,7 @@ class Room:
     def create_personalized_json(self, username):
         newName = self.name
         if self.is_dm:
-            temp = str.maketrans(self.name, "")
-            newName = self.name.translate(temp)
+            newName = self.name.replace(username, '')
         
         new_dict = { 
             'name': newName,
