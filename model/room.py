@@ -2,7 +2,7 @@
 import json
 
 from bson import json_util
-
+from db import get_user
 
 class Message:
     def __init__(self, time_sent, text, username, user_id, avatar, image_id):
@@ -56,11 +56,16 @@ class Room:
         }
         return json.loads(json_util.dumps(new_dict))
 
-    def create_personalized_json(self, username):
+    def create_personalized_json(self, username, user_id):
         newName = self.name
         if self.is_dm:
-            newName = self.name.replace(username, '')
-        
+            if user_id in self.name: # new nomenclature: ID concatenation
+                other_id = newName.replace(user_id, '')
+                other_user = get_user(other_id)
+                newName = other_user.username
+            else: # old nomenclature: username concatenation
+                newName = self.name.replace(username, '') # remove the current user's name
+
         new_dict = { 
             'name': newName,
             'room_id': self.room_id,
