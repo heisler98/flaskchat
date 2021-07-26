@@ -2,7 +2,6 @@
 import json
 
 from bson import json_util
-from db import get_user
 
 class Message:
     def __init__(self, time_sent, text, username, user_id, avatar, image_id):
