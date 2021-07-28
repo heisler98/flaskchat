@@ -20,7 +20,7 @@ def get_aggregate(): # collects and returns all end-user related objects
     # collect data
     rooms_retval = get_rooms(user_id)
     users_retval = get_users()
-    me_retval = get_me()
+    me_retval = get_me(user_id)
 
     # return data
     retval = { 
@@ -54,7 +54,7 @@ def get_rooms(user_id):
         
         # get room members
         members_raw = get_room_members(room_id)
-        members = map(lambda m: get_user(str(m['_id']['user_id'])).create_json, members_raw)
+        members = map(lambda m: get_user(str(m['_id']['user_id'])).create_json(), members_raw)
         # ignoring check for is_room_member, some bug for me to complain about later
 
         # get room
