@@ -38,7 +38,7 @@ def get_me(user_id):
 # logged-in user will NOT be returned first 
 def get_users():
     users_raw = get_all_users()
-    users = map(lambda u: u.create_json(), users_raw)
+    users = list(map(lambda u: u.create_json(), users_raw))
     return jsonify(users)
 
 
@@ -54,7 +54,7 @@ def get_rooms(user_id):
         
         # get room members
         members_raw = get_room_members(room_id)
-        members = map(lambda m: get_user(str(m['_id']['user_id'])).create_json(), members_raw)
+        members = list(map(lambda m: get_user(str(m['_id']['user_id'])).create_json(), members_raw))
         # ignoring check for is_room_member, some bug for me to complain about later
 
         # get room
