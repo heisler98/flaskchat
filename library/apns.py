@@ -23,7 +23,7 @@ class NotificationSystem:
     def __init__(self):
         self.token = None
         self.generate_token()
-        self.conn = HTTP20Connection(APNS_PRODUCTION_SERVER, force_proto='h2')
+        self.conn = HTTP20Connection(APNS_DEVELOPMENT_SERVER, force_proto='h2')
 
     # Generate a new JWT for APNS every 30 minutes
     def generate_token(self):
@@ -82,6 +82,7 @@ class NotificationSystem:
         )
 
         resp = self.conn.get_response()
+        print('Token is ' + target_token)
         print('Sent APNS payload.')
 
         print(resp.read())
