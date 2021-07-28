@@ -28,20 +28,18 @@ def get_aggregate(): # collects and returns all end-user related objects
         'users': users_retval,
         'me': me_retval
     }
-    response = jsonify(retval)
-    response.status_code = 200
-    return response
+    return jsonify(retval), 200
 
 
 def get_me(user_id):
     user = get_user(user_id)
-    return jsonify(user.create_json())
+    return user.create_json()
 
 # logged-in user will NOT be returned first 
 def get_users():
     users_raw = get_all_users()
     users = list(map(lambda u: u.create_json(), users_raw))
-    return jsonify(users)
+    return users
 
 
 def get_rooms(user_id):
@@ -64,7 +62,7 @@ def get_rooms(user_id):
         this_room = return_enumerated_room(room_object, user.username, user_id, members)
         room_list.append(this_room)
 
-    return jsonify(room_list) # returns an array of rooms
+    return room_list # returns an array of rooms
 
 
 def return_enumerated_room(room, username, user_id, members):
