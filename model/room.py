@@ -67,4 +67,18 @@ class Room:
             'emoji': self.emoji
         }
         return json.loads(json_util.dumps(new_dict))
+
+    def create_aggregate_json(self, new_name, members):
+        new_dict = { 
+            'name': self.name,
+            'display_name': new_name,
+            'room_id': self.room_id,
+            'is_dm': self.is_dm,
+            'bucket_number': self.bucket_number,
+            'created_by': str(self.created_by),
+            'messages': self.messages,
+            'emoji': self.emoji,
+            'members': members
+        }
+        return json.loads(json_util.dumps(new_dict))
     
