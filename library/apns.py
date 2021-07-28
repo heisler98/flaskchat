@@ -100,10 +100,10 @@ class NotificationSystem:
                 'aps': {
                     'alert': {
                         'title': f'{room_title}',
-                        'body': f'{author}: {body}',
-                        'sound': 'default'
+                        'body': f'{author}: {body}'  
                     },
-                    'badge': 68
+                    'sound': 'default',
+                    'badge': 0
                 },
                 'room_id': room_id
             }
@@ -112,10 +112,10 @@ class NotificationSystem:
                 'aps': {
                     'alert': {
                         'title': f'{author}',
-                        'body': f'{body}',
-                        'sound': 'default'
+                        'body': f'{body}'
                     },
-                    'badge': 70
+                    'sound': 'default',
+                    'badge': 0
                 },
                 'room_id': room_id
             }
