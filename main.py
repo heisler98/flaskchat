@@ -7,6 +7,7 @@ from api.rooms import rooms_blueprint
 from api.sockets import sockets_blueprint
 from api.users import users_blueprint
 from api.images import images_blueprint
+from api.aggregate import aggregate_blueprint
 from api.app import create_app, socketio
 
 from flask_cors import CORS
@@ -24,7 +25,7 @@ app.register_blueprint(rooms_blueprint, url_prefix='/api')
 app.register_blueprint(users_blueprint, url_prefix='/api')
 app.register_blueprint(images_blueprint, url_prefix='/api')
 app.register_blueprint(sockets_blueprint, url_prefix='/api')
-
+app.register_blueprint(aggregate_blueprint, url_prefix='/api')
 
 log = logging.getLogger('werkzeug')
 log.disabled = True
