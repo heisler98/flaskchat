@@ -28,7 +28,8 @@ def get_aggregate(): # collects and returns all end-user related objects
         'users': users_retval,
         'me': me_retval
     }
-    return jsonify(retval), 200
+    magic_json_object = json.loads(json_util.dumps(retval))
+    return jsonify(magic_json_object), 200
 
 
 def get_me(user_id):
