@@ -65,6 +65,16 @@ def create_room():
     room_id = save_room(name, user_id)
     add_room_member(room_id, name, user_id, user_id, True, True)
 
+    try:
+        members = json_input['members']
+        if len(members) == 1:
+            add_room_member(room_id, name, members[0], user_id)
+        elif len(members) > 1:
+            add_room_members(room_id, name, members, user_id)
+    except Exception as e:
+        current_app.logger.info('No members passed or incorrect args {}'.format(e))
+        return jsonify({'Success': '{}'.format(room_id)}), 200
+
     return jsonify({'Success': '{}'.format(room_id)}), 200
 
 
