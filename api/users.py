@@ -83,6 +83,16 @@ def edit_user(user_id):
     json_input = request.get_json()
     changed_user = json_input['user'].items()
 
+    if changed_user['email']:
+        if len(changed_user['name']) == 0:
+            return jsonify({'Error': 'Empty field.'}), 400
+    if changed_user['real_name']:
+        if len(changed_user['real_name']) == 0:
+            return jsonify({'Error': 'Empty field.'}), 400
+    if changed_user['username']:
+        if len(changed_user['username']) == 0:
+            return jsonify({'Error': 'Empty field.'}), 400
+
     if target_user.ID != auth_user.ID:
         return jsonify({'Error': 'Not authorized'}), 403
 
