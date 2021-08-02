@@ -289,9 +289,9 @@ def create_dm(user_one, user_two):
     return room_id
 
 
-def save_room(room_name, created_by):
+def save_room(room_name, created_by, emoji):
     room_id = rooms_collection.insert_one(
-        {'name': room_name, 'is_dm': False, 'created_by': ObjectId(created_by), 'bucket_number': 0,
+        {'name': room_name, 'emoji': emoji, 'is_dm': False, 'created_by': ObjectId(created_by), 'bucket_number': 0,
          'created_at': time.time()}).inserted_id
     return room_id
 

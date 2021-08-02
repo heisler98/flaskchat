@@ -59,10 +59,11 @@ def create_room():
 
     try:
         name = json_input['name']
+        emoji = json_input['emoji']
     except Exception as e:
         return jsonify({'Error': 'Issue parsing JSON.'}), 400
 
-    room_id = save_room(name, user_id)
+    room_id = save_room(name, user_id, emoji)
     add_room_member(room_id, name, user_id, user_id, True, True)
 
     try:
