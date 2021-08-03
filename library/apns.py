@@ -5,6 +5,7 @@ import time
 import json
 from hyper import HTTPConnection, HTTP20Connection
 import os
+import threading
 
 APNS_DEVELOPMENT_SERVER = 'api.sandbox.push.apple.com:443'
 APNS_PRODUCTION_SERVER = 'api.push.apple.com:443'
@@ -24,6 +25,14 @@ class NotificationSystem:
         self.token = None
         self.generate_token()
         self.conn = HTTP20Connection(APNS_DEVELOPMENT_SERVER, force_proto='h2')
+
+        refresh_thread = threading.Thread(target=self.consistent_connection, args=())
+        refresh_thread.start()
+
+    def consistent_connection(self):
+        while True:
+            time.sleep(2700)
+            self.generate_token()
 
     # Generate a new JWT for APNS every 30 minutes
     def generate_token(self):
