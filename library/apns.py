@@ -16,8 +16,8 @@ APNS_AUTH_KEY = open('/tiny/flaskchat/key.p8')
 APNS_KEY_ID = open('/tiny/flaskchat/key_id').read().strip()
 secret = APNS_AUTH_KEY.read()
 
-TEAM_ID = 'TN69P7NFS6'
-BUNDLE_ID = 'com.squidsquad.Squidchat'
+TEAM_ID = 'UR4RG553ZN'
+BUNDLE_ID = 'com.squids.Squidchat'
 
 
 class NotificationSystem:
