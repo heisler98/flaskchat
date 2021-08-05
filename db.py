@@ -37,6 +37,14 @@ images_collection = chat_db.get_collection('images')
 # USERS
 
 
+# a safe way to purge all traces of a user from the database
+def delete_user(user_id):
+    users_collection.delete_one({'_id': ObjectId(user_id)})
+    deleted = room_members_collection.delete_many({'_id.user_id': ObjectId(user_id)})
+    for room in deleted:  # man oh man
+        rooms_collection.delete_one({'_id': ObjectId(room['room_id'])})
+    
+
 # create a new user record, used for signups
 def save_user(username, email, password, fullname):
     if users_collection.find_one({'username': username}, {'username': 1}):
