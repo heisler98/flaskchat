@@ -16,11 +16,18 @@ def check_if_token_revoked(jwt_header, jwt_payload):
     pass
 
 
+def check_valid_email(some_input):
+    regex_email = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    if not re.match(regex_email, some_input):
+        return False
+    else:
+        return True
+
+
 @auth_blueprint.route('/apn', methods=['POST'])
 @jwt_required()
 def register_apn_token():
     user_id = get_jwt_identity()
-    # user_id = get_user_id(identity)
     current_app.logger.info('APN ENDPOINT')
     ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
     json_input = request.get_json(force=True)
@@ -30,9 +37,9 @@ def register_apn_token():
     current_app.logger.info(res)
 
     if res:
-        return jsonify({'Good': 'Yeah'}), 200
+        return jsonify({'Success': ''}), 200
     else:
-        return jsonify({'Alright': 'Okay'}), 200
+        return jsonify({'Error': ''}), 500
 
 
 @auth_blueprint.route('/login', methods=['POST'])
@@ -76,10 +83,10 @@ def login():
 
             return jsonify({'Token': access_token, 'Refresh': refresh_token}), 200
         elif not user:
-            return jsonify({'Error': 'User not found.'}), 400
+            return jsonify({'Error': 'Invalid username or password.'}), 400
         else:
-            current_app.logger.info('%s failed to log in', username)
-            return jsonify({'Error': 'Wrong password.'}), 403
+            current_app.logger.info('%s failed to log in', username)  # wrong password
+            return jsonify({'Error': 'Invalid username or password.'}), 403
     else:
         return jsonify({'Error': 'Request must be POST'}), 405
 
@@ -104,7 +111,7 @@ def create_account():
         return jsonify({'Error': 'Invalid request: Must be a json/dict. {}'.format(e)}), 400
 
     regex_email = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-    if not re.match(regex_email, email):
+    if not check_valid_email(email):
         return jsonify({'Error': 'Invalid email address.'}), 400
     if not re.match("^[A-Za-z ]*$", full_name):
         return jsonify({'Error': 'Invalid full name.'}), 400

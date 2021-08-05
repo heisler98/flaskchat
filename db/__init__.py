@@ -74,11 +74,11 @@ def store_apn(user_id, token):
         else:
             apn_tokens.append(token)
             users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'apn': apn_tokens}})
-            return 'Yes'
+            return True
     else:
         apn_tokens = [token]
         users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'apn': apn_tokens}})
-        return 'Yes'
+        return True
 
 
 def purge_apn(token):
@@ -378,6 +378,10 @@ def add_reaction(message, reaction, username):
 
 
 # MESSAGES
+
+
+def soft_delete_message(message_id):
+    messages_collection.update_one({'_id': ObjectId(message_id)}, {'$set': {'deleted': True}})
 
 
 # turns a list (from DB) of jsons into a list of message objects

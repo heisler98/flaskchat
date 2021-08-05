@@ -11,6 +11,7 @@ class Message:
         self.user_id = str(user_id)
         self.avatar = avatar
         self.image_id = str(image_id)
+        self.deleted = False
 
     def create_json(self):
         if self.image_id != None:
@@ -19,14 +20,16 @@ class Message:
                 'text': self.text,
                 'username': self.username,
                 'user_id': self.user_id,
-                'image_id': self.image_id
+                'image_id': self.image_id,
+                'deleted': self.deleted
             }
         else:
             return {
                 'time_sent': self.time_sent,
                 'text': self.text,
                 'username': self.username,
-                'user_id': self.user_id
+                'user_id': self.user_id,
+                'deleted': self.deleted
             }
 
 

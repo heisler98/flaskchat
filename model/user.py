@@ -12,6 +12,7 @@ class User:
         self.email = email
         self.password = password
         self.date_joined = date_joined
+        self.balance = 0
         if avatar:
             self.avatar = str(avatar)
         else:
@@ -53,6 +54,7 @@ class User:
             'avatar': self.avatar,
             'ID': str(self.ID),
             'real_name': self.real_name,
-            'previous_avatars': self.previous_avatars
+            'previous_avatars': self.previous_avatars,
+            'squidcoin': self.balance
         }
         return json.loads(json_util.dumps(new_dict))
