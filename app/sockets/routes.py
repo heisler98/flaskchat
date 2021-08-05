@@ -13,14 +13,14 @@ import redis
 from db import save_message, get_room_members, get_user_id, update_checkout, get_user, get_apn, add_reaction, \
     get_latest_bucket_number, purge_apn, get_room
 
+from app.sockets import sockets_blueprint
 
 # threading
 import logging 
 import threading
 
-sockets_blueprint = Blueprint('sockets_blueprint', __name__)
 global connected_sockets
-connected_sockets = {}
+connected_sockets = {}  # will need to move off into something like redis
 
 notification_interface = NotificationSystem()
 
