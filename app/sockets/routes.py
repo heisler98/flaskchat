@@ -7,8 +7,8 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_socketio import join_room, SocketIO, join_room, rooms
 
 from library.apns import NotificationSystem
-from .app import socketio
-import redis
+from app import socketio
+# import redis
 
 from db import save_message, get_room_members, get_user_id, update_checkout, get_user, get_apn, add_reaction, \
     get_latest_bucket_number, purge_apn, get_room
@@ -16,7 +16,6 @@ from db import save_message, get_room_members, get_user_id, update_checkout, get
 from app.sockets import sockets_blueprint
 
 # threading
-import logging 
 import threading
 
 global connected_sockets
