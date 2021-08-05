@@ -7,7 +7,7 @@ from flask import Blueprint, current_app, request, jsonify, send_file
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from werkzeug.utils import secure_filename
 
-from app.sockets import update_clients_avatar
+from app.sockets.routes import update_clients_avatar
 from db import save_image, change_user_avatar, get_user, locate_image, is_room_member, get_user_id
 from helper_functions import allowed_file
 
