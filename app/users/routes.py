@@ -93,6 +93,8 @@ def edit_user(user_id):
     if changed_user['username']:
         if len(changed_user['username']) == 0:
             return jsonify({'Error': 'Empty field.'}), 400
+        if len(changed_user['username']) > 25:
+            return jsonify({'Error': 'Username too long.'}), 400
 
     if target_user.ID != auth_user.ID:
         return jsonify({'Error': 'Not authorized'}), 403

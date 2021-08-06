@@ -116,7 +116,7 @@ def create_account():
     if not re.match("^[A-Za-z ]*$", full_name):
         return jsonify({'Error': 'Invalid full name.'}), 400
 
-    if re.match("^[A-Za-z_]*$", username):
+    if re.match("^[A-Za-z_]*$", username) and len(username) < 26:
         if len(password) < 6:
             return jsonify({'Error': 'Password must be 6+ characters.'}), 400
         try:
