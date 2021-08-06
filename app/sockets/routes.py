@@ -11,7 +11,7 @@ from app import socketio
 # import redis
 
 from db import save_message, get_room_members, get_user_id, update_checkout, get_user, get_apn, add_reaction, \
-    get_latest_bucket_number, purge_apn, get_room
+    get_latest_bucket_number, purge_apn, get_room, room_is_mute
 
 from app.sockets import sockets_blueprint
 
@@ -114,6 +114,10 @@ def update_last_seen(username):
     update_checkout(user_id)
 
 
+def check_mute(user_id, room_id):
+    return room_is_mute(room_id, user_id)
+
+
 @socketio.on('send_message')
 @jwt_required(fresh=True)
 def handle_send_message_event(data):
@@ -172,7 +176,8 @@ def handle_send_message_event(data):
                 if not user_apn_tokens:
                     continue
                 else:
-                    apns_targets.extend(user_apn_tokens)
+                    if not check_mute(member, room_id):
+                        apns_targets.extend(user_apn_tokens)
         # room_id, text, sender, bucket_number=0, image_id=None
         current_app.logger.info("Emitting APNS and storing message".format())
         apns_thread = threading.Thread(target=handle_apns_load, args=(apns_targets, data, room.is_dm))

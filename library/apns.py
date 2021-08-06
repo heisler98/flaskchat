@@ -91,10 +91,10 @@ class NotificationSystem:
         )
 
         resp = self.conn.get_response()
-        print('Token is ' + target_token)
-        print('Sent APNS payload.')
+        # print('Token is ' + target_token)
+        print('Sent APNS payload.', resp.read())
 
-        print(resp.read())
+        # print(resp.read())
 
         if resp.status == 410 or resp.status == 400:
             return False
@@ -104,30 +104,29 @@ class NotificationSystem:
     def payload_message(self, author, body, room_id, room_title='Channel', type=0):
         # print('Generated APNS payload message.')  # for debug
 
-        if type == 0:  # room
-            payload_data = {
-                'aps': {
-                    'alert': {
-                        'title': f'{room_title}',
-                        'body': f'{author}: {body}'  
-                    },
-                    'sound': 'default',
-                    'badge': 0
+        # check if message is in a DM or might be an image
+        if type == 0:
+            if len(body) == 0:
+                content_body = 'Image'
+            else:
+                content_body = f'{author}: {body}'
+        elif type == 1:
+            if len(body) == 0:
+                content_body = 'Image'
+            else:
+                content_body = f'{body}'
+
+        payload_data = {
+            'aps': {
+                'alert': {
+                    'title': f'{room_title}',
+                    'body': content_body 
                 },
-                'room_id': room_id
-            }
-        elif type == 1:  # DM
-            payload_data = {
-                'aps': {
-                    'alert': {
-                        'title': f'{author}',
-                        'body': f'{body}'
-                    },
-                    'sound': 'default',
-                    'badge': 0
-                },
-                'room_id': room_id
-            }
+                'sound': 'default',
+                'badge': 0
+            },
+            'room_id': room_id
+        }
 
         payload = json.dumps(payload_data).encode('utf-8')
 
