@@ -226,24 +226,32 @@ def attach_reaction(data):
 @socketio.on('im_typing')
 @jwt_required()
 def is_typing(data):
+    user_id = get_jwt_identity()
     try:
         room = data['room_id']
     except TypeError as e:
         current_app.logger.info('Broken typing socket event')
+    data['user_id'] = user_id
     socketio.emit('is_typing', data)
 
 
 @socketio.on('im_not_typing')
 @jwt_required()
 def not_typing(data):
+    user_id = get_jwt_identity()
     try:
         username = data['room_id']
     except TypeError as e:
         current_app.logger.info('Broken typing socket event')
+    data['user_id'] = user_id
     socketio.emit('not_typing', data)
 
 
 # for updating all clients regarding misc server-wide activity
-def update_clients_avatar(data):
-    socketio.emit('avatar_changed', data)
+@socketio.on('i_changed')
+@jwt_required()
+def update_user(data):
+    user_id = get_jwt_identity()
+    data['user_id'] = user_id
+    socketio.emit('user_update', data)
 
