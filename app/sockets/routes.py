@@ -126,6 +126,10 @@ def handle_send_message_event(data):
     data['time_sent'] = time_sent
     user = get_user(user_id)
     room = get_room(room_id)
+
+    if not room:
+        current_app.logger.info('Missing room', room_id)
+
     data['user_id'] = user_id
     # data['avatar_id'] = user.avatar
     data['room_name'] = room.name
@@ -212,14 +216,20 @@ def attach_reaction(data):
 @socketio.on('im_typing')
 @jwt_required()
 def is_typing(data):
-    room = data['room_id']
+    try:
+        room = data['room_id']
+    except TypeError as e:
+        current_app.logger.info('Broken typing socket event')
     socketio.emit('is_typing', data)
 
 
 @socketio.on('im_not_typing')
 @jwt_required()
 def not_typing(data):
-    username = data['room_id']
+    try:
+        username = data['room_id']
+    except TypeError as e:
+        current_app.logger.info('Broken typing socket event')
     socketio.emit('not_typing', data)
 
 
