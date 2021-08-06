@@ -2,7 +2,7 @@
 from datetime import datetime
 import time
 
-from flask import Blueprint, current_app, request
+from flask import Blueprint, current_app, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_socketio import join_room, SocketIO, join_room, rooms
 
@@ -34,6 +34,16 @@ def announce_disconnect(user_id):
     socketio.emit('user_offline', {
         'user_id': f'{user_id}'
     })
+
+
+@sockets_blueprint.route('/online', methods=['GET'])
+@jwt_required()
+def who_online():
+    online_users = []
+    for user_id in connected_sockets.keys():
+        if len(connected_sockets[user_id]) > 1:
+            online_users.append(user_id)
+    return jsonify(online_users), 200
 
 
 # this event is automatic, triggered by a new socket connection
