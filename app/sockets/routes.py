@@ -46,6 +46,17 @@ def who_online():
     return jsonify(online_users), 200
 
 
+# return user_id list of currently online members of a given room
+def room_online_members(room_id):
+    room_members_list = get_room_members(room_id)
+    output = []
+
+    for room_member in room_members_list:
+        output.append(str(room_member['_id']['user_id']))
+
+    return output
+
+
 # this event is automatic, triggered by a new socket connection
 @socketio.on('connect')
 @jwt_required()
