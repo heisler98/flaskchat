@@ -35,9 +35,35 @@ reactions_collection = chat_db.get_collection('reactions')
 emoji_collection = chat_db.get_collection('emoji')
 logging_collection = chat_db.get_collection('logs')
 images_collection = chat_db.get_collection('images')
+stats_collection = chat_db.get_collection('statistics')
 
 
 # USERS
+
+
+def get_message_count_room(user_id, room_id):
+    room_messages = messages_collection.find({'room_id': ObjectId(room_id)})
+    user_messages = 0
+    for bucket in room_messages:
+        for message in bucket['messages']:
+            if message['user_id'] == ObjectId(user_id):
+                user_messages += 1
+    return user_messages
+
+
+def get_message_count_room_recent(user_id, room_id, time_seconds):
+    now = time.time()
+    room_messages = messages_collection.find({'room_id': ObjectId(room_id)})
+    user_messages = 0
+    for bucket in room_messages:
+        for message in bucket['messages']:
+            if message['user_id'] == ObjectId(user_id) and now - time_seconds >= message['time_sent']:
+                user_messages += 1
+    return user_messages
+
+
+def get_message_count_total(user_id):
+    pass
 
 
 # a safe way to purge all traces of a user from the database
@@ -539,3 +565,12 @@ def save_image(sender, room_id, is_avatar):
 
 def locate_image(image_id):
     return images_collection.find_one({'_id': ObjectId(image_id)})
+
+
+# STATS / STATISTICS
+
+
+# user opened some room at some time
+def store_click_openroom(user_id, room_id):
+    current_time = time.time()
+    stats_collection.insert_one({'user_id': ObjectId(user_id), 'room_id': ObjectId(room_id), 'time': current_time})
