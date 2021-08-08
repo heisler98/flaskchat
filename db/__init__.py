@@ -239,8 +239,7 @@ def room_is_mute(room_id, user_id):
         return False
     if not is_room_member(room_id, user_id):
         raise FileNotFoundError('Unauthorized')
-    output = room_members_collection.find_one({'_id': {'user_id': ObjectId(user_id), 'room_id': ObjectId(room_id)}},
-                                              {'mute', 1})
+    output = room_members_collection.find_one({'_id': {'user_id': ObjectId(user_id), 'room_id': ObjectId(room_id)}})
     if not output:
         room_members_collection.update_one({'_id': {'user_id': ObjectId(user_id), 'room_id': ObjectId(room_id)}},
                                            {'$set': {'mute': False}})
@@ -250,8 +249,7 @@ def room_is_mute(room_id, user_id):
 
 
 def toggle_mute(room_id, user_id):
-    output = room_members_collection.find_one({'_id': {'user_id': ObjectId(user_id), 'room_id': ObjectId(room_id)}},
-                                              {'mute', 1})
+    output = room_members_collection.find_one({'_id': {'user_id': ObjectId(user_id), 'room_id': ObjectId(room_id)}})
     if not is_room_member(room_id, user_id):
         raise FileNotFoundError('Unauthorized')
 
