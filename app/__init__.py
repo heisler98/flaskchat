@@ -1,5 +1,7 @@
+# github.com/colingoodman
+# flask app creation
+
 from datetime import timedelta
-import os
 
 from flask import Flask
 from flask_cors import CORS
@@ -16,17 +18,13 @@ def create_app(debug=True):
     app.debug = debug
     app.secret_key = "dev"
 
-    # cors = CORS(app, resources={r"/*": {"origins": "*"}})
-    # cors = CORS(app, resources={r"/api/*": {"origins": "*", "allow_headers": "*", "expose_headers": "*"}})
-    # app.config['CORS_HEADERS'] = 'Content-Type' ggg
-
     jwt = JWTManager(app)
     app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)  # = timedelta(minutes=15) !!!
     app.config["JWT_REFRESH_TOKEN_EXPIRES"] = timedelta(days=30)
     app.config["JWT_HEADER_NAME"] = 'tasty_token'
 
-    # app.config['UPLOAD_FOLDER'] = '/tiny/development/uploads' # dev
-    app.config['UPLOAD_FOLDER'] = '/tiny/flaskchat/uploads' # prod
+    # app.config['UPLOAD_FOLDER'] = '/tiny/development/uploads'
+    app.config['UPLOAD_FOLDER'] = '/tiny/flaskchat/uploads'
 
     limiter = Limiter(
         app,

@@ -12,7 +12,7 @@ from helper_functions import parse_json
 from model.room import Message
 from model.user import User
 
-rooms_blueprint = Blueprint('rooms_blueprint', __name__)
+from app.rooms import rooms_blueprint
 
 
 @rooms_blueprint.route('/rooms/list', methods=['GET'])

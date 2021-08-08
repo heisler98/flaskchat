@@ -1,4 +1,7 @@
 # github.com/colingoodman
+# future home for database methods
+
+# github.com/colingoodman
 
 from datetime import datetime
 import time
@@ -32,10 +35,44 @@ reactions_collection = chat_db.get_collection('reactions')
 emoji_collection = chat_db.get_collection('emoji')
 logging_collection = chat_db.get_collection('logs')
 images_collection = chat_db.get_collection('images')
+stats_collection = chat_db.get_collection('statistics')
 
 
 # USERS
 
+
+def get_message_count_room(user_id, room_id):
+    room_messages = messages_collection.find({'room_id': ObjectId(room_id)})
+    user_messages = 0
+    for bucket in room_messages:
+        for message in bucket['messages']:
+            if message['user_id'] == ObjectId(user_id):
+                user_messages += 1
+    return user_messages
+
+
+def get_message_count_room_recent(user_id, room_id, time_seconds):
+    now = time.time()
+    room_messages = messages_collection.find({'room_id': ObjectId(room_id)})
+    user_messages = 0
+    for bucket in room_messages:
+        for message in bucket['messages']:
+            if message['user_id'] == ObjectId(user_id) and now - time_seconds >= message['time_sent']:
+                user_messages += 1
+    return user_messages
+
+
+def get_message_count_total(user_id):
+    pass
+
+
+# a safe way to purge all traces of a user from the database
+def delete_user(user_id):
+    users_collection.delete_one({'_id': ObjectId(user_id)})
+    deleted = room_members_collection.delete_many({'_id.user_id': ObjectId(user_id)})
+    for room in deleted:  # man oh man
+        rooms_collection.delete_one({'_id': ObjectId(room['room_id'])})
+    
 
 # create a new user record, used for signups
 def save_user(username, email, password, fullname):
@@ -63,11 +100,11 @@ def store_apn(user_id, token):
         else:
             apn_tokens.append(token)
             users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'apn': apn_tokens}})
-            return 'Yes'
+            return True
     else:
         apn_tokens = [token]
         users_collection.update_one({'_id': ObjectId(user_id)}, {'$set': {'apn': apn_tokens}})
-        return 'Yes'
+        return True
 
 
 def purge_apn(token):
@@ -202,10 +239,14 @@ def room_is_mute(room_id, user_id):
         return False
     if not is_room_member(room_id, user_id):
         raise FileNotFoundError('Unauthorized')
-    output = room_members_collection.find_one({'_id.user_id': ObjectId(user_id), '_id.room_id': ObjectId(room_id)},
-                                              {'mute', 1})
+    try:
+        output = room_members_collection.find_one({'_id': {'user_id': ObjectId(user_id), 'room_id': ObjectId(room_id)}})['muted']
+    except TypeError:
+        room_members_collection.update_one({'_id': {'user_id': ObjectId(user_id), 'room_id': ObjectId(room_id)}},
+                                           {'$set': {'mute': False}})
+        return False
     if not output:
-        room_members_collection.update_one({'_id.user_id': ObjectId(user_id), '_id.room_id': ObjectId(room_id)},
+        room_members_collection.update_one({'_id': {'user_id': ObjectId(user_id), 'room_id': ObjectId(room_id)}},
                                            {'$set': {'mute': False}})
         return False
     else:
@@ -213,18 +254,22 @@ def room_is_mute(room_id, user_id):
 
 
 def toggle_mute(room_id, user_id):
-    output = room_members_collection.find_one({'_id.user_id': ObjectId(user_id), '_id.room_id': ObjectId(room_id)},
-                                              {'mute', 1})
+    try:
+        output = room_members_collection.find_one({'_id': {'user_id': ObjectId(user_id), 'room_id': ObjectId(room_id)}})['muted']
+    except TypeError:
+        room_members_collection.update_one({'_id': {'user_id': ObjectId(user_id), 'room_id': ObjectId(room_id)}},
+                                           {'$set': {'mute': True}})
+        return True
     if not is_room_member(room_id, user_id):
         raise FileNotFoundError('Unauthorized')
 
     if not output:
-        room_members_collection.update_one({'_id.user_id': ObjectId(user_id), '_id.room_id': ObjectId(room_id)},
+        room_members_collection.update_one({'_id': {'user_id': ObjectId(user_id), 'room_id': ObjectId(room_id)}},
                                            {'$set': {'mute': True}})
         return True
     else:
         toggle = not output
-        room_members_collection.update_one({'_id.user_id': ObjectId(user_id), '_id.room_id': ObjectId(room_id)},
+        room_members_collection.update_one({'_id': {'user_id': ObjectId(user_id), 'room_id': ObjectId(room_id)}},
                                            {'$set': {'mute': toggle}})
         return toggle
 
@@ -243,8 +288,13 @@ def get_room(room_id):
     except TypeError as e:
         emoji = ''
 
-    room_object = Room(room['name'], str(room_id), room['is_dm'], bucket_number, str(room['created_by']), emoji=emoji)
-    room_object.set_messages(get_messages(str(room_id), bucket_number))  # this line may be causing issues
+    try:
+        room_object = Room(room['name'], str(room_id), room['is_dm'], bucket_number, str(room['created_by']), emoji=emoji)
+        room_object.set_messages(get_messages(str(room_id), bucket_number))  # this line may be causing issues
+    except TypeError as e:
+        print('DB, get_room,', e)
+        return None
+    
     return room_object
 
 
@@ -367,6 +417,10 @@ def add_reaction(message, reaction, username):
 
 
 # MESSAGES
+
+
+def soft_delete_message(message_id):
+    messages_collection.update_one({'_id': ObjectId(message_id)}, {'$set': {'deleted': True}})
 
 
 # turns a list (from DB) of jsons into a list of message objects
@@ -519,3 +573,12 @@ def save_image(sender, room_id, is_avatar):
 
 def locate_image(image_id):
     return images_collection.find_one({'_id': ObjectId(image_id)})
+
+
+# STATS / STATISTICS
+
+
+# user opened some room at some time
+def store_click_openroom(user_id, room_id):
+    current_time = time.time()
+    stats_collection.insert_one({'user_id': ObjectId(user_id), 'room_id': ObjectId(room_id), 'time': current_time})

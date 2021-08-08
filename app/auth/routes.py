@@ -2,6 +2,8 @@
 import re
 from datetime import timedelta
 
+from app.auth import auth_blueprint
+
 from flask import Blueprint, request, jsonify, current_app
 from flask_cors import cross_origin
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, get_jwt
@@ -9,18 +11,23 @@ from pymongo.errors import DuplicateKeyError
 
 from db import get_user_id, get_user, save_user, add_log_event, store_apn
 
-auth_blueprint = Blueprint('auth_blueprint', __name__)
-
 
 def check_if_token_revoked(jwt_header, jwt_payload):
     pass
+
+
+def check_valid_email(some_input):
+    regex_email = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
+    if not re.match(regex_email, some_input):
+        return False
+    else:
+        return True
 
 
 @auth_blueprint.route('/apn', methods=['POST'])
 @jwt_required()
 def register_apn_token():
     user_id = get_jwt_identity()
-    # user_id = get_user_id(identity)
     current_app.logger.info('APN ENDPOINT')
     ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
     json_input = request.get_json(force=True)
@@ -30,9 +37,9 @@ def register_apn_token():
     current_app.logger.info(res)
 
     if res:
-        return jsonify({'Good': 'Yeah'}), 200
+        return jsonify({'Success': ''}), 200
     else:
-        return jsonify({'Alright': 'Okay'}), 200
+        return jsonify({'Error': ''}), 500
 
 
 @auth_blueprint.route('/login', methods=['POST'])
@@ -76,10 +83,10 @@ def login():
 
             return jsonify({'Token': access_token, 'Refresh': refresh_token}), 200
         elif not user:
-            return jsonify({'Error': 'User not found.'}), 400
+            return jsonify({'Error': 'Invalid username or password.'}), 400
         else:
-            current_app.logger.info('%s failed to log in', username)
-            return jsonify({'Error': 'Wrong password.'}), 403
+            current_app.logger.info('%s failed to log in', username)  # wrong password
+            return jsonify({'Error': 'Invalid username or password.'}), 403
     else:
         return jsonify({'Error': 'Request must be POST'}), 405
 
@@ -104,12 +111,12 @@ def create_account():
         return jsonify({'Error': 'Invalid request: Must be a json/dict. {}'.format(e)}), 400
 
     regex_email = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-    if not re.match(regex_email, email):
+    if not check_valid_email(email):
         return jsonify({'Error': 'Invalid email address.'}), 400
     if not re.match("^[A-Za-z ]*$", full_name):
         return jsonify({'Error': 'Invalid full name.'}), 400
 
-    if re.match("^[A-Za-z_]*$", username):
+    if re.match("^[A-Za-z_]*$", username) and len(username) < 26:
         if len(password) < 6:
             return jsonify({'Error': 'Password must be 6+ characters.'}), 400
         try:
@@ -157,6 +164,4 @@ def who():
 def hello():
     ip = request.environ.get('HTTP_X_REAL_IP', request.remote_addr)
     return jsonify({'Hello World': ip}), 200
-
-
 

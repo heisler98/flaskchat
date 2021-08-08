@@ -5,7 +5,8 @@ from flask_jwt_extended import get_jwt_identity, jwt_required
 from db import change_user_password, get_user, get_user_id, get_all_users, add_log_event, \
     update_user
 
-users_blueprint = Blueprint('users_blueprint', __name__)
+
+from app.users import users_blueprint
 
 
 @users_blueprint.route('/users/<user_id>', methods=['GET'])
@@ -92,6 +93,8 @@ def edit_user(user_id):
     if changed_user['username']:
         if len(changed_user['username']) == 0:
             return jsonify({'Error': 'Empty field.'}), 400
+        if len(changed_user['username']) > 25:
+            return jsonify({'Error': 'Username too long.'}), 400
 
     if target_user.ID != auth_user.ID:
         return jsonify({'Error': 'Not authorized'}), 403

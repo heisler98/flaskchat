@@ -2,25 +2,24 @@
 from datetime import datetime
 import time
 
-from flask import Blueprint, current_app, request
+from flask import Blueprint, current_app, request, jsonify
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from flask_socketio import join_room, SocketIO, join_room, rooms
 
 from library.apns import NotificationSystem
-from .app import socketio
-import redis
+from app import socketio
+# import redis
 
 from db import save_message, get_room_members, get_user_id, update_checkout, get_user, get_apn, add_reaction, \
-    get_latest_bucket_number, purge_apn, get_room
+    get_latest_bucket_number, purge_apn, get_room, room_is_mute
 
+from app.sockets import sockets_blueprint
 
 # threading
-import logging 
 import threading
 
-sockets_blueprint = Blueprint('sockets_blueprint', __name__)
 global connected_sockets
-connected_sockets = {}
+connected_sockets = {}  # will need to move off into something like redis
 
 notification_interface = NotificationSystem()
 
@@ -35,6 +34,27 @@ def announce_disconnect(user_id):
     socketio.emit('user_offline', {
         'user_id': f'{user_id}'
     })
+
+
+@sockets_blueprint.route('/online', methods=['GET'])
+@jwt_required()
+def who_online():
+    online_users = []
+    for user_id in connected_sockets.keys():
+        if len(connected_sockets[user_id]) > 1:
+            online_users.append(user_id)
+    return jsonify(online_users), 200
+
+
+# return user_id list of currently online members of a given room
+def room_online_members(room_id):
+    room_members_list = get_room_members(room_id)
+    output = []
+
+    for room_member in room_members_list:
+        output.append(str(room_member['_id']['user_id']))
+
+    return output
 
 
 # this event is automatic, triggered by a new socket connection
@@ -105,6 +125,10 @@ def update_last_seen(username):
     update_checkout(user_id)
 
 
+def check_mute(user_id, room_id):
+    return room_is_mute(room_id, user_id)
+
+
 @socketio.on('send_message')
 @jwt_required(fresh=True)
 def handle_send_message_event(data):
@@ -127,6 +151,10 @@ def handle_send_message_event(data):
     data['time_sent'] = time_sent
     user = get_user(user_id)
     room = get_room(room_id)
+
+    if not room:
+        current_app.logger.info('Missing room', room_id)
+
     data['user_id'] = user_id
     # data['avatar_id'] = user.avatar
     data['room_name'] = room.name
@@ -159,7 +187,8 @@ def handle_send_message_event(data):
                 if not user_apn_tokens:
                     continue
                 else:
-                    apns_targets.extend(user_apn_tokens)
+                    if not check_mute(member, room_id):
+                        apns_targets.extend(user_apn_tokens)
         # room_id, text, sender, bucket_number=0, image_id=None
         current_app.logger.info("Emitting APNS and storing message".format())
         apns_thread = threading.Thread(target=handle_apns_load, args=(apns_targets, data, room.is_dm))
@@ -213,18 +242,32 @@ def attach_reaction(data):
 @socketio.on('im_typing')
 @jwt_required()
 def is_typing(data):
-    room = data['room_id']
+    user_id = get_jwt_identity()
+    try:
+        room = data['room_id']
+    except TypeError as e:
+        current_app.logger.info('Broken typing socket event')
+    data['user_id'] = user_id
     socketio.emit('is_typing', data)
 
 
 @socketio.on('im_not_typing')
 @jwt_required()
 def not_typing(data):
-    username = data['room_id']
+    user_id = get_jwt_identity()
+    try:
+        username = data['room_id']
+    except TypeError as e:
+        current_app.logger.info('Broken typing socket event')
+    data['user_id'] = user_id
     socketio.emit('not_typing', data)
 
 
 # for updating all clients regarding misc server-wide activity
-def update_clients_avatar(data):
-    socketio.emit('avatar_changed', data)
+@socketio.on('i_changed')
+@jwt_required()
+def update_user(data):
+    user_id = get_jwt_identity()
+    data['user_id'] = user_id
+    socketio.emit('user_update', data)
 
