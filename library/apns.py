@@ -108,18 +108,22 @@ class NotificationSystem:
         if type == 0:
             if len(body) == 0:
                 content_body = 'Image'
+                title = f'{room_title}'
             else:
                 content_body = f'{author}: {body}'
+                title = f'{room_title}'
         elif type == 1:
             if len(body) == 0:
                 content_body = 'Image'
+                title = f'{author}'
             else:
                 content_body = f'{body}'
+                title = f'{author}'
 
         payload_data = {
             'aps': {
                 'alert': {
-                    'title': f'{room_title}',
+                    'title': title,
                     'body': content_body 
                 },
                 'sound': 'default',
