@@ -100,7 +100,7 @@ def remove_connection(disconnected_id):
                                                                                          connected_sockets[key]))
 
             if len(user_sockets) == 0:
-                update_last_seen(key)
+                update_last_seen(key)  # broke?
                 announce_disconnect(key)
 
     current_app.logger.info(connected_sockets)
@@ -129,76 +129,91 @@ def check_mute(user_id, room_id):
     return room_is_mute(room_id, user_id)
 
 
-@socketio.on('send_message')
-@jwt_required(fresh=True)
-def handle_send_message_event(data):
-    current_app.logger.info('Caught message from client.')
-    user_id = get_jwt_identity()
+# return true if emit, false if apns
+def handle_message_emit(target_user_id, data):
+    if target_user_id in connected_sockets and len(connected_sockets[target_user_id]) != 0:
+        target_socket_ids = connected_sockets[target_user_id]
+        try:
+            for socket in target_socket_ids:
+                socketio.emit('receive_message', data, room=socket)  # emit to specific user
+                current_app.logger.info('Sent to {}'.format(socket))
+                return True
+        except TypeError as e:
+            current_app.logger.info('Failed to emit message to {}, connected on {}. They may not have an open '
+                                    'connection. {}'.format(target_user_id, connected_sockets[target_user_id], e))
+    else:  # send push notifications for anyone offline
+        return False
 
-    username = data['username']
-    room_id = data['room']  # client must pass room id here
-    message = data['text']
-    
+
+def grab_and_validate_message_data(data, user_id):
+    username = str(data['username'])
+    user = get_user(user_id)
+
+    room_id = str(data['room'])
+    room = get_room(room_id)
+
+    message = str(data['text'])
+
+    time_sent = time.time()
+    data['time_sent'] = time_sent
+
+    data['user_id'] = user_id
+    data['room_name'] = room.name
+
     try:
         image_id = data['image_id']
     except Exception as e:
         image_id = None
 
+    if len(message) > 4000:  # character count limit
+        raise TypeError('Bad message length')
+
     if len(message) == 0 and not image_id:
-        return None
-    
-    time_sent = time.time()
-    data['time_sent'] = time_sent
-    user = get_user(user_id)
-    room = get_room(room_id)
+        raise TypeError('Bad message length')
 
     if not room:
-        current_app.logger.info('Missing room', room_id)
+        raise TypeError('Invalid room')
 
-    data['user_id'] = user_id
-    # data['avatar_id'] = user.avatar
-    data['room_name'] = room.name
+    return data, room, user
 
-    if user_id not in connected_sockets:
-        current_app.logger.info('!!: {} tried to send a message without being connected to a room.'.format(username))
+
+@socketio.on('send_message')
+@jwt_required(fresh=True)
+def handle_send_message_event(data):
+    auth_user_id = get_jwt_identity()
+
+    try:
+        data, room, user = grab_and_validate_message_data(data, auth_user_id)
+    except TypeError:
+        current_app.logger.info("Invalid inputs on message from {}".format(auth_user_id))
+        return None
 
     room_member_ids = []
-    room_member_objects = get_room_members(room_id)  # determine who should receive this message
+    room_member_objects = get_room_members(room.room_id)  # determine who should receive this message
     for db_item in room_member_objects:
         room_member_ids.append(str(db_item['_id']['user_id']))
 
-    if user_id in room_member_ids:  # if the author/sender is in the room they are trying to send to
-        current_app.logger.info("{} ({}) has sent message to the room {} at {}".format(user_id, username, room, time_sent))
+    if auth_user_id in room_member_ids:  # if the author/sender is in the room they are trying to send to
+        current_app.logger.info("{} ({}) has sent message to the room {} at {}".format(auth_user_id, user.username, room, data['time_sent']))
         apns_targets = []
 
-        for member in room_member_ids:  # for person in room
-            member_id = get_user(member).ID
-            if member_id in connected_sockets and len(connected_sockets[member_id]) != 0:
-                target_socket_ids = connected_sockets[member_id]
-                try:
-                    for socket in target_socket_ids:
-                        socketio.emit('receive_message', data, room=socket)  # emit to specific user
-                        current_app.logger.info('Sent to {}'.format(socket))
-                except TypeError as e:
-                    current_app.logger.info('Failed to emit message to {}, connected on {}. They may not have an open '
-                                            'connection. {}'.format(member_id, connected_sockets[member_id], e))
-            else:  # send push notifications for anyone offline
-                user_apn_tokens = get_apn(member)
-                if not user_apn_tokens:
-                    continue
-                else:
-                    if not check_mute(member, room_id):
-                        apns_targets.extend(user_apn_tokens)
-        # room_id, text, sender, bucket_number=0, image_id=None
+        for some_user_id in room_member_ids:  # for person in room
+            res = handle_message_emit(some_user_id, data)
+            if not res:
+                user_apn_tokens = get_apn(some_user_id)
+                if user_apn_tokens and not check_mute(some_user_id, room.room_id):
+                    apns_targets.extend(user_apn_tokens)
+        
+        # kick off threads
         current_app.logger.info("Emitting APNS and storing message".format())
+
         apns_thread = threading.Thread(target=handle_apns_load, args=(apns_targets, data, room.is_dm))
-        # current_app.logger.info("SAVING MESSAGE")
-        db_thread = threading.Thread(target=save_message, args=(room_id, message, user_id, image_id))  # to db
+        db_thread = threading.Thread(target=save_message, args=(room.room_id, data['message'], auth_user_id, data['image_id']))  # to db
+
         apns_thread.start()
         db_thread.start()
-        current_app.logger.info("{} {}".format(apns_thread, db_thread))
     else:
-        current_app.logger.info("{} not authorized to send to {}".format(username, room))
+        current_app.logger.info("{} not authorized to send to {}".format(user.ID, room.room_id))
 
 
 def handle_apns_load(apns_targets, data, is_dm=False):
