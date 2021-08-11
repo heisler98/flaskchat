@@ -16,9 +16,10 @@ from flask_cors import CORS
 import logging
 
 # App Setup
-app = create_app(debug=True)
-CORS(app)
 production = False
+cwd = os.getcwd()
+app = create_app(debug=True, production=production, directory=cwd)
+CORS(app)
 
 # API Blueprints
 app.register_blueprint(auth_blueprint, url_prefix='/api')
@@ -31,11 +32,8 @@ app.register_blueprint(aggregate_blueprint, url_prefix='/api')
 log = logging.getLogger('werkzeug')
 log.disabled = True
 
-cwd = os.getcwd()
-
 if __name__ == '__main__':
     if production:
-        os.chdir(os.path.dirname(sys.argv[0]))
         socketio.run(app, host='0.0.0.0', debug=True, port=5000)
     else:
-        socketio.run(app, host='0.0.0.0', debug=True, port=5001)
+        socketio.run(app, debug=True, port=5001)

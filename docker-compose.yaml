@@ -1,8 +1,8 @@
 version: "3.7"
 
 services:
-  flaskchat:
+  api:
     build:
       context: ./
     ports:
-      - 5000:5000
+      - 5000:5001
