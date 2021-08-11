@@ -31,6 +31,7 @@ app.register_blueprint(aggregate_blueprint, url_prefix='/api')
 log = logging.getLogger('werkzeug')
 log.disabled = True
 
+cwd = os.getcwd()
 
 if __name__ == '__main__':
     if production:
