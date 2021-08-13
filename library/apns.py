@@ -7,14 +7,9 @@ from hyper import HTTPConnection, HTTP20Connection
 import os
 import threading
 
+# Alter the variable in the connection object around line 27
 APNS_DEVELOPMENT_SERVER = 'api.sandbox.push.apple.com:443'
 APNS_PRODUCTION_SERVER = 'api.push.apple.com:443'
-
-TOKEN_TIME_STORAGE = '/tiny/flaskchat/jwt_birthtime'
-
-APNS_AUTH_KEY = open('/tiny/flaskchat/key.p8')
-APNS_KEY_ID = open('/tiny/flaskchat/key_id').read().strip()
-secret = APNS_AUTH_KEY.read()
 
 TEAM_ID = 'UR4RG553ZN'
 BUNDLE_ID = 'com.squids.Squidchat'
@@ -22,9 +17,16 @@ BUNDLE_ID = 'com.squids.Squidchat'
 
 class NotificationSystem:
     def __init__(self):
+        cwd = os.getcwd()
+
+        # these keys must be kept private: do not push to git
+        self.secret = open(os.path.join(cwd, 'key.p8')).read()
+        self.id = open(os.path.join(cwd, 'key_id')).read().strip()
+        self.token_storage = os.path.join(cwd, 'jwt_birthtime')
+
         self.token = None
         self.generate_token()
-        self.conn = HTTP20Connection(APNS_DEVELOPMENT_SERVER, force_proto='h2')
+        self.conn = HTTP20Connection(APNS_PRODUCTION_SERVER, force_proto='h2')
 
         refresh_thread = threading.Thread(target=self.consistent_connection, args=())
         refresh_thread.start()
@@ -36,8 +38,8 @@ class NotificationSystem:
 
     # Generate a new JWT for APNS every 30 minutes
     def generate_token(self):
-        if os.path.isfile(TOKEN_TIME_STORAGE):
-            jwt_birthtime_file = open(TOKEN_TIME_STORAGE, 'r')
+        if os.path.isfile(self.token_storage):
+            jwt_birthtime_file = open(self.token_storage, 'r')
             jwt_birthtime = float(jwt_birthtime_file.read())
             jwt_birthtime_file.close()
         else:
@@ -57,15 +59,15 @@ class NotificationSystem:
                     'iss': TEAM_ID,
                     'iat': now
                 },
-                secret,
+                self.secret,
                 algorithm='ES256',
                 headers={
                     'alg': 'ES256',
-                    'kid': APNS_KEY_ID
+                    'kid': self.id
                 }
             )
 
-            jwt_birthtime_file = open(TOKEN_TIME_STORAGE, 'w')
+            jwt_birthtime_file = open(self.token_storage, 'w')
             jwt_birthtime_file.write(str(now))
             jwt_birthtime_file.close()
 

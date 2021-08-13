@@ -4,13 +4,13 @@ import json
 from bson import json_util
 
 class Message:
-    def __init__(self, time_sent, text, username, user_id, avatar, image_id):
+    def __init__(self, time_sent, text, username, user_id, avatar, image_id=None):
         self.time_sent = time_sent
         self.text = text
         self.username = username
         self.user_id = str(user_id)
         self.avatar = avatar
-        self.image_id = str(image_id)
+        self.image_id = image_id
         self.deleted = False
 
     def create_json(self):
