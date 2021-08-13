@@ -18,7 +18,7 @@ import logging
 # App Setup
 production = False
 cwd = os.getcwd()
-app = create_app(debug=True, production=production, directory=cwd)
+app = create_app(debug=True, production=production)
 CORS(app)
 
 # API Blueprints
@@ -36,4 +36,4 @@ if __name__ == '__main__':
     if production:
         socketio.run(app, host='0.0.0.0', debug=True, port=5000)
     else:
-        socketio.run(app, debug=True, port=5001)
+        socketio.run(app, host='0.0.0.0', debug=True, port=5001)

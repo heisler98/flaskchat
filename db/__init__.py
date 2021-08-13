@@ -16,15 +16,11 @@ from model.user import User
 from model.room import Room
 from model.room import Message
 
-
-class Connect(object):
-    @staticmethod
-    def get_connection():
-        return MongoClient(host='localhost', port=27017, username='flaskuser', password='193812465340',
-                           authSource='admin')
-
-
-client = MongoClient(host='localhost', port=27017, username='flaskuser', password='193812465340', authSource='admin')
+production = False  # set to False when running locally via Docker
+if production:
+    client = MongoClient(host='localhost', port=27017, username='flaskuser', password='193812465340', authSource='admin')
+else:
+    client = MongoClient(host='192.168.1.226', port=27017, username='flaskuser', password='193812465340', authSource='admin')
 
 chat_db = client['chatdb']
 users_collection = chat_db.get_collection('users')

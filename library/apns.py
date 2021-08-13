@@ -7,6 +7,7 @@ from hyper import HTTPConnection, HTTP20Connection
 import os
 import threading
 
+# Alter the variable in the connection object around line 27
 APNS_DEVELOPMENT_SERVER = 'api.sandbox.push.apple.com:443'
 APNS_PRODUCTION_SERVER = 'api.push.apple.com:443'
 
@@ -17,13 +18,15 @@ BUNDLE_ID = 'com.squids.Squidchat'
 class NotificationSystem:
     def __init__(self):
         cwd = os.getcwd()
+
+        # these keys must be kept private: do not push to git
         self.secret = open(os.path.join(cwd, 'key.p8')).read()
         self.id = open(os.path.join(cwd, 'key_id')).read().strip()
         self.token_storage = os.path.join(cwd, 'jwt_birthtime')
 
         self.token = None
         self.generate_token()
-        self.conn = HTTP20Connection(APNS_DEVELOPMENT_SERVER, force_proto='h2')
+        self.conn = HTTP20Connection(APNS_PRODUCTION_SERVER, force_proto='h2')
 
         refresh_thread = threading.Thread(target=self.consistent_connection, args=())
         refresh_thread.start()
