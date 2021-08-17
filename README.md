@@ -1,7 +1,5 @@
-FLASK CHAT
+docker build --tag squid-api .
+docker run --publish 5001:5001 squid-api
 
-// for Linux to install
-pip3 install -r requirements.txt
-
-// for Linux to start
-python3 main.py
+note, use 5000 for prod and 50001 for dev
+you must rebuild the image with any file changes
