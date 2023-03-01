@@ -464,13 +464,13 @@ def get_latest_bucket_number(room_id):
     return latest_bucket_number
 
 
-def save_message(room_id, text, user_id, image_id=None):
+def save_message(room_id, text, user_id, time_sent, image_id=None):
     if type(room_id) == Room:
         raise TypeError('Using Room object instead of room_id.')
     if type(user_id) == User:
         raise TypeError('Using User object instead of user_id.')
 
-    current_time = time.time()
+    current_time = time_sent
     print('DB: SAVE_MESSAGE', room_id, text, user_id, current_time)
 
     if image_id:
